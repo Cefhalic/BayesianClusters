@@ -34,8 +34,10 @@ void InteractiveDisplay( Functors&&... aFunctors )
   gStyle->SetPalette ( 1 ) ; // set nicer colors than default
   gStyle->SetOptTitle ( 0 ) ; // suppress title box
 
-  TCanvas* c = new TCanvas( "c" , "" , 0 , 0 , 1600 , 800 );
-  c->Divide( sizeof...(Functors) , 1 );
+  constexpr std::size_t cnt( sizeof...(Functors) );
+
+  TCanvas* c = new TCanvas( "c" , "" , 0 , 0 , 800*cnt , 800 );
+  c->Divide( cnt , 1 );
   DisplayHelper( c , 1 , std::forward<Functors>( aFunctors)... );
 
   TRootCanvas *rc = (TRootCanvas *)c->GetCanvasImp();

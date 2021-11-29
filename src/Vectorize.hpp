@@ -12,8 +12,7 @@ template< typename tContainer , typename T = typename std::remove_reference<tCon
 typename std::enable_if< not std::is_same<U, void>::value, std::vector< U > >::type
 Vectorize( tContainer&& aFunctionQueue )
 {
-  std::vector< U > lRet;
-  lRet.reserve( aFunctionQueue.size() );
+  std::vector< U > lRet( aFunctionQueue.size() );
 
   std::mutex lQueueMutex , lRetMutex;
   auto lIt( aFunctionQueue.begin() );
@@ -24,11 +23,12 @@ Vectorize( tContainer&& aFunctionQueue )
     {
       std::unique_lock<std::mutex> lLock(lQueueMutex);
       if (lIt == aFunctionQueue.end()) return;
+      std::size_t lIndex( lIt - aFunctionQueue.begin() );
       auto lFunc = *lIt++;
       lLock.unlock();
       auto lRetVal = lFunc();
       std::unique_lock<std::mutex> lLock2(lRetMutex);
-      lRet.push_back( lRetVal );
+      lRet[lIndex] = lRetVal;
       lLock2.unlock();
     }
   };
