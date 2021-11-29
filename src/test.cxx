@@ -9,6 +9,7 @@
 #include "TAxis.h"
 #include "TGraph.h"
 #include "TGraph2D.h"
+#include "TH2F.h"
 
 /* ===== Local utilities ===== */
 #include "ListComprehension.hpp"
@@ -79,6 +80,7 @@ std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& a
 /* ===== Function for plotting data ===== */
 void DrawPoints( const std::vector< Data >& aData )
 {
+  gPad -> SetMargin( 0.01 , 0.01 , 0.01 , 0.01 );
   TGraph* lGraph = new TGraph( aData.size() , ( &Data::x | aData ).data() , ( &Data::y | aData ).data() );
   auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
   FormatAxis( lGraph->GetXaxis() );
@@ -115,17 +117,29 @@ void DrawWeights()
 }
 
 
-/* ===== Perform clustering ===== */
-double ClusterOne( const int& aIndex , const std::vector<Data>& aData , const double& maxdR , const double& maxdR2 )
+/* ===== Function for plotting output hist ===== */
+void DrawHisto( TH2F* aHist )
 {
+  gPad -> SetLeftMargin( 0.15);
+  gPad -> SetRightMargin( 0.15);
+  gPad->SetLogz();
+  aHist->Draw("colz");  
+}
+
+
+
+
+/* ===== Perform clustering ===== */
+TH2F* ClusterOne( const int& aIndex , const std::vector<Data>& aData , const double& maxdR )
+{
+  const double maxdR2( maxdR * maxdR ); // Could be calculated outside and passed in, but cost is minimal and code is cleaner this way
+
   auto lPlus( aData.begin() + aIndex );
   auto lMinus( aData.rbegin() + aData.size() - 1 - aIndex );
 
-   // Clear the list of neighbours
+   // Create a container for storing distances to neighbours
   std::vector< double > NeighbourR;
   NeighbourR.reserve( aData.size() - 1 );
-
-  double c(0);
 
   // Iterate over other hits and populate the neighbour list
   for( auto lPlusIt( lPlus + 1 ); lPlusIt != aData.end() ; lPlusIt++ )
@@ -147,40 +161,52 @@ double ClusterOne( const int& aIndex , const std::vector<Data>& aData , const do
 
   // Iterate over sorted distances, updating the localization score for each distance
   double lCumWeight( 0.0 );
-  uint32_t lCounter(0);
-  for( auto lDist : NeighbourR )
+  const double LocalizationConstant( 4.0 / ( pi * (aData.size()-1) ) ); 
+
+
+  static thread_local const std::string lTitle( "Histo"+std::to_string( std::hash<std::thread::id>{}(std::this_thread::get_id()) ) );
+  static thread_local TH2F* lRet = new TH2F( lTitle.c_str() , lTitle.c_str() , 101 , 0.0 , maxdR , 101 , 0.0 , 2.5 * maxdR );
+
+  const double lRstep( maxdR / 100 );
+  double lR( lRstep );
+  auto lIt( NeighbourR.begin() );
+
+  for( int i(0) ; i!=100 ; ++i , lR += lRstep )
   { 
-    lCumWeight += EdgeCorrectedWeight( *lPlus , lDist );
-    double LocalizationScore = sqrt( (4.0 / pi) * lCumWeight / ++lCounter );
-    c += LocalizationScore;
+    while( lIt != NeighbourR.end() )
+    {
+      if ( *lIt > lR ) break;
+      lCumWeight += EdgeCorrectedWeight( *lPlus , *lIt++ );
+    }
+    if( lCumWeight > 0 ) lRet->Fill( lR , sqrt( LocalizationConstant * lCumWeight ) );
   }
 
-  return c;
+  return lRet;
 }
 
 
-
-
 /* ===== Perform clustering ===== */
-void ClusterAll( std::vector<Data>& aData , const double& maxdR )
+TH2F* ClusterAll( std::vector<Data>& aData , const double& maxdR )
 {
   std::cout << "Sorting" << std::endl;
   std::sort( aData.begin() , aData.end() );
 
-  const double maxdR2( maxdR * maxdR );
+  std::vector< TH2F*> lRet;
 
-// Single-threaded version
-// double c(0);
-// ProgressBar lProgressBar( "Clustering" , aData.size() );
-// for( uint32_t i(0) ; i!=aData.size() ; ++i , ++lProgressBar ) c += ClusterOne( i , aData , maxdR , maxdR2 );
-// std::cout << c << std::endl;
+  {
+    ProgressBar2 lProgressBar( "Clustering" , aData.size() );
+    auto CreateLambda = [ &aData, &maxdR ]( const uint32_t& i ){ return [ &i, &aData, &maxdR ](){ return ClusterOne( i, aData, maxdR ); }; }; // Create a lambda which returns a lambda
+    lRet = Vectorize( CreateLambda | range( aData.size() ) );                                                                            // Then use list comprehension to create a vector of lambdas and pass to the threadpool
+  }                                                                                                                                        // Nerd level cranked to 11
 
-  ProgressBar2 lProgressBar( "Clustering" , aData.size() );
-  auto CreateLambda = [ &aData, &maxdR, &maxdR2 ]( const uint32_t& i ){ return [ &i, &aData, &maxdR, &maxdR2 ](){ return ClusterOne( i, aData, maxdR, maxdR2 ); }; }; // Create a lambda which returns a lambda
-  auto lRet = Vectorize( CreateLambda | range( aData.size() ) );                                                                                                      // Then use list comprehension to create a vector of lambdas and pass to the threadpool
-                                                                                                                                                                      // Nerd level cranked to 11
+  std::cout << "Aggregating output" << std::endl;
+  std::unordered_set<TH2F*> s;
+  for ( auto i : lRet ) s.insert(i); // Apparently much faster than using the constructor!!
 
-  std::cout << std::accumulate( lRet.begin() , lRet.end() , 0.0 ) << std::endl;
+  TH2F* lHist = new TH2F( "Hist" , "Hist;r;L(r)" , 101 , 0.0 , maxdR , 101 , 0.0 , 2.5 * maxdR );
+  for( auto i: s ) *lHist = *lHist + *i;
+
+  return lHist;
 }
 
 
@@ -188,12 +214,12 @@ void ClusterAll( std::vector<Data>& aData , const double& maxdR )
 int main(int argc, char **argv)
 {
   auto lData = CreatePseudoData( 70000 , 500 , 500 , .01 );
+  auto lHist = ClusterAll( lData , 0.04 );
 
-
-  ClusterAll( lData , 0.03 );
 
   // InteractiveDisplay( [](){ DrawWeights(); } );
-  // InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } );
+  // InteractiveDisplay(  );
+  InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } , [ lHist ](){ DrawHisto( lHist ); } );
 
   return 0;
 }

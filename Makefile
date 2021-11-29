@@ -14,5 +14,5 @@ buildall: _all
 _all: test.exe
 
 
-test.exe : test.cxx
+test.exe : src/test.cxx
 	g++ -march=native -std=c++11 -Wall -O3 $^ -lm `root-config --glibs --cflags --libs` -o $@
