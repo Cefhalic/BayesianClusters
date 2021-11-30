@@ -27,8 +27,8 @@ std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& a
 
   for( int i(0); i!= aBackgroundCount; ++i )
   {
-    double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) );
-    lData.emplace_back( x , y );
+    double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) ) , s( lRand.Gaus( aClusterScale/10 , aClusterScale/30 ) );
+    lData.emplace_back( x , y , s );
   }
 
   for( int i(0); i!= aClusterCount; ++i )
@@ -37,9 +37,9 @@ std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& a
     double sigma( fabs( lRand.Gaus( aClusterScale , aClusterScale/3 ) ) );
     for( int j(0) ; j!= aClusterSize ; /* */ )
     {
-      double x2( lRand.Gaus( x , sigma ) ) , y2( lRand.Gaus( y , sigma ) );  
+      double x2( lRand.Gaus( x , sigma ) ) , y2( lRand.Gaus( y , sigma ) ) , s( lRand.Gaus( aClusterScale/10 , aClusterScale/30 ) );  
       if( x2 > 1 or x2 < -1 or y2 > 1 or y2 < -1 ) continue;    
-      lData.emplace_back( x2 , y2 );
+      lData.emplace_back( x2 , y2 , s );
       ++j;
     }
   }
@@ -85,10 +85,16 @@ std::vector< Data > LoadCSV( const std::string& aFilename , const double& m , co
       ReadUntil( ',' ); //"x [nm]"
       double x = m*(strtod( ch , &lPtr ) - c_x);
       ReadUntil( ',' ); //"y [nm]"
-      double y = m*(strtod( ch , &lPtr ) - c_y);
-      ReadUntil( '\n' ); // Throw away rest of line
+      double y = m*(strtod( ch , &lPtr ) - c_y);      
+      ReadUntil( ',' ); //"sigma [nm]"      
+      ReadUntil( ',' ); //"intensity [photon]"
+      ReadUntil( ',' ); //"offset [photon]"
+      ReadUntil( ',' ); //"bkgstd [photon]"
+      ReadUntil( ',' ); //"chi2"
+      ReadUntil( '\n' ); //"uncertainty_xy [nm]"
+      double s = strtod( ch , &lPtr );      
 
-      if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( x , y );
+      if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( x , y , s );
     }
   }
   fclose(f);
