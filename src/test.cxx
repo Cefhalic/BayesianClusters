@@ -159,6 +159,7 @@ void DrawHisto( TH2F* aHist )
   gPad -> SetLeftMargin( 0.15);
   gPad -> SetRightMargin( 0.15);
   gPad->SetLogz();
+  aHist->SetContour(1e6);
   aHist->Draw("colz");  
 }
 
@@ -251,6 +252,8 @@ TH2F* ProfileOneDatum( const int& aIndex , const std::vector<Data>& aData , cons
   static thread_local TH2F* lRet = new TH2F( lTitle.c_str() , lTitle.c_str() , 101 , 0.0 , maxdR , 101 , 0.0 , 2.5 * maxdR );
 
   const double lRstep( maxdR / 100 );
+  const double lTstep( 2.5 * lRstep );
+
   double lR( lRstep );
   auto lIt( NeighbourR.begin() );
 
@@ -261,7 +264,13 @@ TH2F* ProfileOneDatum( const int& aIndex , const std::vector<Data>& aData , cons
       if ( *lIt > lR ) break;
       lCumWeight += EdgeCorrectedWeight( *lPlus , *lIt++ );
     }
-    if( lCumWeight > 0 ) lRet->Fill( lR , sqrt( LocalizationConstant * lCumWeight ) );
+    if( lCumWeight > 0 )
+    {
+      auto L_r =  sqrt( LocalizationConstant * lCumWeight );
+      auto lT( lTstep );
+      for( int j(0) ; j!=100 ; ++j , lT += lTstep )
+        if( L_r > lT ) lRet->Fill( lR , lT );
+    }
   }
 
   return lRet;
@@ -286,7 +295,7 @@ TH2F* ProfileAllData( std::vector<Data>& aData , const double& maxdR )
   std::unordered_set<TH2F*> s;
   for ( auto& i : lRet ) s.insert(i); // Apparently much faster than using the constructor!!
 
-  TH2F* lHist = new TH2F( "Hist" , "Hist;r;L(r)" , 101 , 0.0 , maxdR , 101 , 0.0 , 2.5 * maxdR );
+  TH2F* lHist = new TH2F( "Hist" , "Hist;r;T" , 101 , 0.0 , maxdR , 101 , 0.0 , 2.5 * maxdR );
   for( auto& i: s ) *lHist = *lHist + *i;
 
   return lHist;
@@ -469,10 +478,10 @@ int main(int argc, char **argv)
 
   // InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } );
 
-  ClusterAllData( lData , 0.0035 , 0.007 );
+  //ClusterAllData( lData , 0.0035 , 0.007 );
 
-  //auto lHist = ProfileAllData( lData , 1e-2 );
-  //InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } , [ lHist ](){ DrawHisto( lHist ); } );
+  auto lHist = ProfileAllData( lData , 3e-2 );
+  InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } , [ lHist ](){ DrawHisto( lHist ); } );
 
   // InteractiveDisplay( [](){ DrawWeights(); } );
   return 0;
