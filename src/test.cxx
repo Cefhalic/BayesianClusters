@@ -1,17 +1,20 @@
-/* ===== C++ ===== */
+/* ===== Cluster sources ===== */
+#include "Cluster_Data.hpp"
+#include "Cluster_DataSources.hpp"
+#include "Cluster_PlotTools.hpp"
+#include "Cluster_EdgeCorrection.hpp"
+
+// /* ===== C++ ===== */
+#include <thread>
 #include <iostream>
+#include <math.h>
 #include <vector>
-#include <list>
-#include <numeric>
-#include <math.h> 
+#include <unordered_set>
+// #include <list>
+// #include <numeric>
 
 /* ===== For Root ===== */
-#include "TRandom3.h"
-#include "TAxis.h"
-#include "TGraph.h"
-#include "TGraph2D.h"
 #include "TH2F.h"
-#include "TEllipse.h"
 
 /* ===== Local utilities ===== */
 #include "ListComprehension.hpp"
@@ -20,196 +23,11 @@
 #include "Vectorize.hpp"
 
 
-constexpr double pi = atan(1)*4;
-
-// class Data;
-
-// struct Cluster
-// {
-//   std::list< Data* > members;
-//   void merge( Cluster* aOther );
-// };
-
-
-/* ===== Struct for storing data ===== */
-class Data
-{
-public:
-  Data( double aX , double aY ) : x(aX) , y(aY) , r( sqrt( (aX*aX) + (aY*aY) ) ), phi( atan2( aY , aX ) ), parent( NULL ){}
-
-  bool operator< ( const Data& aOther ) const { return r < aOther.r; }
-
-  double dR2( const Data& aOther ) const
-  {
-    double dX( x - aOther.x ), dY( y - aOther.y );
-    return ( dX*dX ) + ( dY*dY );
-  }
-
-  double dR( const Data& aOther ) const
-  {
-    return sqrt( dR2( aOther ) );
-  }
-
-  Data* GetParent()
-  {
-    if( parent == NULL ) return NULL;    
-    if( parent == this ) return this;
-    return parent->GetParent();
-  }
-
-  void SetParent( Data* aParent )
-  {
-    if( parent == this ) parent = aParent;
-    else parent->SetParent( aParent );
-  }
-
-  void Cluster( Data& aData )
-  {
-    SetParent( aData.GetParent() );
-    // std::cout << parent << " | " << this << " | " << aData.parent << " | " << &aData << std::endl;
-    // if( aData.parent == &aData ) aData.parent = this; // The other cluster is it's own cluster - take ownership
-    // else if( parent == this ) parent = aData.parent;        // The other cluster is in a cluster and we are not - we join theirs
-    //else std::cout << "2" << std::endl;
-  }
-
-public:
-  double x, y, r, phi;
-  Data* parent;
-};
 
 
 
 
-/* ===== Utility function for creating a vector of data ===== */
-std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& aClusterCount , const int& aClusterSize , const double& aClusterScale )
-{
-  std::cout << "Generating Pseudodata" << std::endl;
 
-  std::vector< Data > lData;
-  lData.reserve( aBackgroundCount + ( aClusterCount * aClusterSize ) );
-
-  TRandom3 lRand( 23423 );
-
-  for( int i(0); i!= aBackgroundCount; ++i )
-  {
-    double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) );
-    lData.emplace_back( x , y );
-  }
-
-  for( int i(0); i!= aClusterCount; ++i )
-  {
-    double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) );
-    double sigma( fabs( lRand.Gaus( aClusterScale , aClusterScale/3 ) ) );
-    for( int j(0) ; j!= aClusterSize ; /* */ )
-    {
-      double x2( lRand.Gaus( x , sigma ) ) , y2( lRand.Gaus( y , sigma ) );  
-      if( x2 > 1 or x2 < -1 or y2 > 1 or y2 < -1 ) continue;    
-      lData.emplace_back( x2 , y2 );
-      ++j;
-    }
-  }
-
-  return lData;
-}
-
-
-/* ===== Function for plotting data ===== */
-void DrawPoints( const std::vector< Data >& aData )
-{
-  gPad -> SetMargin( 0.01 , 0.01 , 0.01 , 0.01 );
-  TGraph* lGraph = new TGraph( aData.size() , ( &Data::x | aData ).data() , ( &Data::y | aData ).data() );
-  auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
-  FormatAxis( lGraph->GetXaxis() );
-  FormatAxis( lGraph->GetYaxis() );
-  lGraph->Draw( "ap" );
-}
-
-
-/* ===== Approximation to correct area of circle overlapping the edge of the square ===== */
-double EdgeCorrectedWeight( const Data& aPt , const double& aDist )
-{
-  double Weight( 1.0 );
-  const double X( 1 - fabs( aPt.x ) ) , Y( 1 - fabs( aPt.y ) );
-  if( X < aDist )  Weight *= ( 1 + pow( acos( X/aDist ) * (2/pi) , 4) );
-  if( Y < aDist )  Weight *= ( 1 + pow( acos( Y/aDist ) * (2/pi) , 4) );
-  return Weight;
-}
-
-
-/* ===== Function for plotting weights ===== */
-void DrawWeights()
-{
-  int Counter(0);
-  TGraph2D* lGraph = new TGraph2D( 201 * 201 );
-  for( int i(-100) ; i!=101 ; ++i )
-    for( int j(-100) ; j!=101 ; ++j )
-      lGraph-> SetPoint( Counter++ , i/100.0 , j/100.0 , EdgeCorrectedWeight( Data( i/100.0 , j/100.0 ) , 0.2 ) );
-
-  auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
-  FormatAxis( lGraph->GetXaxis() );
-  FormatAxis( lGraph->GetYaxis() );
-  lGraph->GetZaxis()->SetLimits(0,4);
-  lGraph->Draw( "surf1" );  
-}
-
-
-/* ===== Function for plotting output hist ===== */
-void DrawHisto( TH2F* aHist )
-{
-  gPad -> SetLeftMargin( 0.15);
-  gPad -> SetRightMargin( 0.15);
-  gPad->SetLogz();
-  aHist->SetContour(1e6);
-  aHist->Draw("colz");  
-}
-
-
-/* ===== Function for plotting data ===== */
-void DrawPoints( const std::map< Data* , std::vector< Data* > >& aData )
-{
-  gPad -> SetMargin( 0.01 , 0.01 , 0.01 , 0.01 );
-
-  auto GetX = []( const Data* i ){ return i->x; };
-  auto GetY = []( const Data* i ){ return i->y; };
-
-  auto i( aData.begin() );
-  TGraph* lGraph = new TGraph( i->second.size() , ( GetX | i->second ).data() , ( GetY | i->second ).data() );
-
-  auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
-  FormatAxis( lGraph->GetXaxis() );
-  FormatAxis( lGraph->GetYaxis() );
-  lGraph->SetMarkerColor( 1 );
-  lGraph->Draw( "ap" );
-
-  i++;
-  int cnt(0);
-  for( ; i != aData.end() ; ++i , ++cnt )
-  {
-    double x(0.0) , y(0.0) , x2(0.0) , y2(0.0);
-    for( auto& j: i->second )
-    {
-      x += (j->x);
-      x2 += (j->x)*(j->x);
-      y += (j->y);      
-      y2 += (j->y)*(j->y);
-    }
-
-    x /= i->second.size();
-    x2 /= i->second.size();
-    y /= i->second.size();
-    y2 /= i->second.size();
-
-    TEllipse *el1 = new TEllipse( x , y , 4 * sqrt( x2 - (x*x) ) , 4 * sqrt( y2 - (y*y) ) );
-    el1->SetFillStyle(0);
-    el1->SetLineColor( (cnt%8)+2 );    
-    el1->Draw();
-
-    TGraph* lGraph = new TGraph( i->second.size() , ( GetX | i->second ).data() , ( GetY | i->second ).data() );
-    lGraph->SetMarkerColor( (cnt%8)+2 );
-    lGraph->Draw( "samep" );
-
-  }
-}
 
 
 
@@ -245,6 +63,7 @@ TH2F* ProfileOneDatum( const int& aIndex , const std::vector<Data>& aData , cons
 
   // Iterate over sorted distances, updating the localization score for each distance
   double lCumWeight( 0.0 );
+  constexpr double pi = atan(1)*4;  
   const double LocalizationConstant( 4.0 / ( pi * (aData.size()-1) ) ); 
 
 
@@ -336,6 +155,7 @@ bool ClusterOneDatum( const int& aIndex , std::vector<Data>& aData, const double
   double lCumWeight( 0.0 );
   for( auto& lDist : NeighbourR ) lCumWeight += EdgeCorrectedWeight( *lPlus , lDist );
 
+  constexpr double pi = atan(1)*4;
   const double LocalizationConstant( 4.0 / ( pi * (aData.size()-1) ) ); 
   
   if( sqrt( LocalizationConstant * lCumWeight ) > T )
@@ -415,55 +235,6 @@ void ClusterAllData( std::vector<Data>& aData , const double& maxdR , const doub
 
 
 
-/* ===== Utility function for creating a vector of data ===== */
-std::vector< Data > LoadCSV( const std::string& aFilename , const double& m , const double& c_x , const double& c_y )
-{
-  auto f = fopen( aFilename.c_str() , "r");
-  if ( f == NULL ) throw std::runtime_error( "File is not available" );
-
-  fseek(f, 0, SEEK_END); // seek to end of file
-  auto lSize = ftell(f); // get current file pointer
-  fseek(f, 0, SEEK_SET); // seek back to beginning of file
-
-  std::vector< Data > lData;
-  lData.reserve( 3e6 );
-
-  {
-    char ch[256];
-    char* lPtr( ch );
-    ProgressBar lProgressBar( "Reading File" , lSize+9 ); // Not sure why the progress bar "overflows" by one without this tweak
-
-    auto ReadUntil = [ &ch , &f , &lPtr , &lProgressBar ]( const char& aChar ){
-      lPtr = ch;
-      while ( ( *lPtr = fgetc(f)) != EOF )
-      {
-        lProgressBar++;
-        if( *lPtr == aChar ) return;
-        lPtr++;
-      }
-    };
-
-    ReadUntil( '\n' ); // Throw away first line
-    while( true )
-    {
-      ReadUntil( ',' ); //"id"
-      if( *lPtr == EOF ) break;
-      ReadUntil( ',' ); //"frame"
-      ReadUntil( ',' ); //"x [nm]"
-      double x = m*(strtod( ch , &lPtr ) - c_x);
-      ReadUntil( ',' ); //"y [nm]"
-      double y = m*(strtod( ch , &lPtr ) - c_y);
-      ReadUntil( '\n' ); // Throw away rest of line
-
-      if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( x , y );
-    }
-  }
-  fclose(f);
-
-  std::cout << "Read " << lData.size() << " points" << std::endl;
-
-  return lData;
-}
 
 
 
@@ -476,12 +247,12 @@ int main(int argc, char **argv)
    //auto lData = CreatePseudoData( 10000 , 500 , 500 , .01 );
    //auto lData = CreatePseudoData( 70000 , 500 , 500 , .01 );
 
-  // InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } );
+  InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } );
 
   //ClusterAllData( lData , 0.0035 , 0.007 );
 
-  auto lHist = ProfileAllData( lData , 3e-2 );
-  InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } , [ lHist ](){ DrawHisto( lHist ); } );
+  // auto lHist = ProfileAllData( lData , 3e-2 );
+  // InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } , [ lHist ](){ DrawHisto( lHist ); } );
 
   // InteractiveDisplay( [](){ DrawWeights(); } );
   return 0;
