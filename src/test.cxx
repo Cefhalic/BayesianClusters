@@ -78,12 +78,6 @@ public:
 };
 
 
-// void Cluster::merge( Cluster* aOther )
-// {
-//   for( auto i : aOther->members ) i->cluster = this;
-//   members.splice( members.end() , aOther->members , aOther->members.begin() , aOther->members.end() );
-// }
-
 
 
 /* ===== Utility function for creating a vector of data ===== */
@@ -203,8 +197,6 @@ void DrawPoints( const std::map< Data* , std::vector< Data* > >& aData )
     x2 /= i->second.size();
     y /= i->second.size();
     y2 /= i->second.size();
-
-    // std::cout << sqrt( x2 - (x*x) ) << " " << sqrt( y2 - (y*y) ) << std::endl;
 
     TEllipse *el1 = new TEllipse( x , y , 4 * sqrt( x2 - (x*x) ) , 4 * sqrt( y2 - (y*y) ) );
     el1->SetFillStyle(0);
@@ -340,13 +332,10 @@ bool ClusterOneDatum( const int& aIndex , std::vector<Data>& aData, const double
   if( sqrt( LocalizationConstant * lCumWeight ) > T )
   {
     lPlus->parent = &*lPlus;
-    // lPlus->cluster = new Cluster();
-    // lPlus->cluster->members.push_back( &*lPlus );
     return true;
   }
   else
   {
-    // lPlus->parent = NULL;
     return false;
   }
 }
@@ -392,14 +381,10 @@ void ClusterAllData( std::vector<Data>& aData , const double& maxdR , const doub
   std::vector< bool > lRet;
 
   {
-    ProgressBar2 lProgressBar( "Clustering" , aData.size() );
+    ProgressBar2 lProgressBar( "Clustering 1" , aData.size() );
     auto CreateLambda = [ &aData, &maxdR, &T ]( const uint32_t& i ){ return [ &i, &aData, &maxdR, &T ](){ return ClusterOneDatum( i, aData, maxdR, T ); }; }; // Create a lambda which returns a lambda
     lRet = Vectorize( CreateLambda | range( aData.size() ) );                                                                                      // Then use list comprehension to create a vector of lambdas and pass to the threadpool
   }                                                                                                                                                // Nerd level cranked to 11
-
-  // uint32_t lCount( 0 );
-  // for( auto i : aData ) lCount += bool( i.cluster );
-  // std::cout << lCount << std::endl;
 
   {
     ProgressBar lProgressBar( "Clustering 2" , aData.size() );
@@ -420,19 +405,75 @@ void ClusterAllData( std::vector<Data>& aData , const double& maxdR , const doub
 }
 
 
+
+/* ===== Utility function for creating a vector of data ===== */
+std::vector< Data > LoadCSV( const std::string& aFilename , const double& m , const double& c_x , const double& c_y )
+{
+  auto f = fopen( aFilename.c_str() , "r");
+  if ( f == NULL ) throw std::runtime_error( "File is not available" );
+
+  fseek(f, 0, SEEK_END); // seek to end of file
+  auto lSize = ftell(f); // get current file pointer
+  fseek(f, 0, SEEK_SET); // seek back to beginning of file
+
+  std::vector< Data > lData;
+  lData.reserve( 3e6 );
+
+  {
+    char ch[256];
+    char* lPtr( ch );
+    ProgressBar lProgressBar( "Reading File" , lSize+9 ); // Not sure why the progress bar "overflows" by one without this tweak
+
+    auto ReadUntil = [ &ch , &f , &lPtr , &lProgressBar ]( const char& aChar ){
+      lPtr = ch;
+      while ( ( *lPtr = fgetc(f)) != EOF )
+      {
+        lProgressBar++;
+        if( *lPtr == aChar ) return;
+        lPtr++;
+      }
+    };
+
+    ReadUntil( '\n' ); // Throw away first line
+    while( true )
+    {
+      ReadUntil( ',' ); //"id"
+      if( *lPtr == EOF ) break;
+      ReadUntil( ',' ); //"frame"
+      ReadUntil( ',' ); //"x [nm]"
+      double x = m*(strtod( ch , &lPtr ) - c_x);
+      ReadUntil( ',' ); //"y [nm]"
+      double y = m*(strtod( ch , &lPtr ) - c_y);
+      ReadUntil( '\n' ); // Throw away rest of line
+
+      if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( x , y );
+    }
+  }
+  fclose(f);
+
+  std::cout << "Read " << lData.size() << " points" << std::endl;
+
+  return lData;
+}
+
+
+
 /* ===== Main function ===== */
 int main(int argc, char **argv)
 {
+//  auto lData = LoadCSV( "1_un_red.csv" , 1./64000. , -1. , -1. ); // Full file
+  auto lData = LoadCSV( "1_un_red.csv" , 1./10000. , 87000. , 32000. ); // One cluster
+
    //auto lData = CreatePseudoData( 10000 , 500 , 500 , .01 );
-   auto lData = CreatePseudoData( 70000 , 500 , 500 , .01 );
+   //auto lData = CreatePseudoData( 70000 , 500 , 500 , .01 );
 
-  ClusterAllData( lData , 0.005 , 0.0075 );
+  // InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } );
 
-  //auto lHist = ProfileAllData( lData , 0.04 );
+  ClusterAllData( lData , 0.0035 , 0.007 );
+
+  //auto lHist = ProfileAllData( lData , 1e-2 );
+  //InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } , [ lHist ](){ DrawHisto( lHist ); } );
 
   // InteractiveDisplay( [](){ DrawWeights(); } );
-  //InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } );
-  // InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } , [ lHist ](){ DrawHisto( lHist ); } );
-
   return 0;
 }
