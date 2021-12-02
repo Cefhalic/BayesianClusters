@@ -76,7 +76,7 @@ double Score( std::pair< const Data* const , std::vector< Data* > >& aCluster )
     }
 
     double phi_x( ROOT::Math::normal_cdf( sqrt_n_tilde * (1.0-nu_bar_x) ) - ROOT::Math::normal_cdf( sqrt_n_tilde * (-1.0-nu_bar_x) ) ) , phi_y( ROOT::Math::normal_cdf( sqrt_n_tilde * (1.0-nu_bar_y) ) - ROOT::Math::normal_cdf( sqrt_n_tilde * (-1.0-nu_bar_y) ) );
-    auto sum = logA + pi_term - log( n_tilde ) + sum_log_w - ( 0.5 * S2 ) + log( phi_x ) + log( phi_y ) + GlobalVars::log_probability_sigma[ i ];
+    auto sum = logA + pi_term - log( n_tilde ) + sum_log_w - ( 0.5 * S2 ) + log( phi_x ) + log( phi_y ) + Parameters.log_probability_sigma( i );
 
     // std::cout << "==================================" << std::endl;
     // PRINT( logA );
@@ -93,12 +93,12 @@ double Score( std::pair< const Data* const , std::vector< Data* > >& aCluster )
     return sum;
   };    
 
-  auto Integrands = IntegrandExpr | range( GlobalVars::sigmacount );
+  auto Integrands = IntegrandExpr | range( Parameters.sigmacount() );
   auto& Max = *std::max_element( Integrands.begin() , Integrands.end() );
 
   double integral( 0.0 );
   for( auto& i : Integrands ) integral += exp( i - Max );
-  integral *= GlobalVars::sigmaspacing;  
+  integral *= Parameters.sigmaspacing();  
 
   return log( integral ) + Max; 
 
@@ -112,20 +112,24 @@ double Score( std::pair< const Data* const , std::vector< Data* > >& aCluster )
 
 double __Cluster__( std::vector<Data>& aData , const double& R , const double& T , std::map< const Data* , std::vector< Data* > >& aClusters )
 {
-  for( auto& i : aData ) i.parent = NULL; 
+  // -----------------------------------------------------------------------------------------
+  // Unclear why this is quicker than maintaining clusters from a scan with a higher threshold
+  for( auto& i : aData ) i.parent = NULL;
+  aClusters.clear();
+  // -----------------------------------------------------------------------------------------
 
   const double twoR2 = 4.0 * R * R;
   for( auto& i : aData ) i.Clusterize( twoR2 , T ); 
 
   for( auto& i : aData ) aClusters[ i.GetParent() ].push_back( &i ); // <-- Bodge - could be done internally analagous to parent calculation
 
-  double lScore ( 0.0 );
-  for( auto& k : aClusters ) lScore += Score( k );
+  // double lScore ( 0.0 );
+  // for( auto& k : aClusters ) lScore += Score( k );
 
-  // using type = decltype( *aClusters.begin() );
-  // auto CreateLambda2 = []( type& aData ){ return [ &aData ](){ return Score( aData ); }; }; // Create a lambda which returns a lambda. Then use list comprehension to create
-  // auto lRet = Vectorize( CreateLambda2 | aClusters );                                       // a vector of lambdas and pass to the threadpool. Nerd level cranked to 11 
-  // auto lScore = std::accumulate( lRet.begin() , lRet.end() , 0.0 );
+  using type = decltype( *aClusters.begin() );
+  auto CreateLambda2 = []( type& aData ){ return [ &aData ](){ return Score( aData ); }; }; // Create a lambda which returns a lambda. Then use list comprehension to create
+  auto lRet = Vectorize( CreateLambda2 | aClusters );                                       // a vector of lambdas and pass to the threadpool. Nerd level cranked to 11 
+  auto lScore = std::accumulate( lRet.begin() , lRet.end() , 0.0 );
 
   //std::cout << lScore << std::endl;
 
@@ -138,11 +142,11 @@ double __Cluster__( std::vector<Data>& aData , const double& R , const double& T
 void Cluster( std::vector<Data>& aData , const double& R , const double& T , std::map< const Data* , std::vector< Data* > >& aClusters )
 {
   const std::size_t Nminus1( aData.size() - 1 );
-  auto R2 = R * R;
+  const auto R2 = R * R;
 
   // Reset ahead of UpdateLocalization and Clusterize
   for( auto& i : aData ){
-    // i.parent = NULL;  
+    // i.parent = NULL;    // Uncomment this if resetting parent is removed from __Cluster__
     i.neighbourit = i.neighbours.begin();
   }
 
@@ -155,35 +159,32 @@ void Cluster( std::vector<Data>& aData , const double& R , const double& T , std
 
 
 
-double dR( 0.0005 );
-double dT( 0.0025 );
+TH2D *Nclust, *ClustSize, *ClustScore;
 
-TH2D* Nclust = new TH2D( "Nclust" , "N_{clusters};r;T" , 40 , 0.5*dR , (40+0.5)*dR , 41 , -0.5*dT , (41-0.5)*dT );
-TH2D* ClustSize = new TH2D( "ClustSize" , "<N_{points}>;r;T" , 40 , 0.5*dR , (40+0.5)*dR , 41 , -0.5*dT , (41-0.5)*dT );
-TH2D* ClustScore = new TH2D( "ClustScore" , "Score;r;T" , 40 , 0.5*dR , (40+0.5)*dR , 41 , -0.5*dT , (41-0.5)*dT );
 
 void ScanRT( std::vector<Data>& aData )
 {
   const std::size_t Nminus1( aData.size() - 1 );
 
-  double R( dR ) , R2( 0 ) , T( 0 );
+  double R( Parameters.minScanR() ) , R2( 0 ) , T( 0 );
 
-  ProgressBar lProgressBar( "Scan over RT" , 40*41 );
+  ProgressBar lProgressBar( "Scan over RT" , Parameters.Rbins() * Parameters.Tbins() );
 
-  for( uint32_t i(0) ; i!=40 ; ++i , R+=dR )
+  for( uint32_t i(0) ; i!=Parameters.Rbins() ; ++i , R+=Parameters.dR() )
   {
     R2 = R * R;
-    T = 40 * dT;
+    T = Parameters.maxScanT();
 
     //for( auto &i : aData ) i.UpdateLocalization( R2 , Nminus1 );
     auto CreateLambda = [ &Nminus1 , &R2 ]( Data& aData ){ return [ &aData,  &Nminus1 , &R2 ](){ aData.UpdateLocalization( R2 , Nminus1 ); }; }; // Create a lambda which returns a lambda. Then use list comprehension to create
     Vectorize( CreateLambda | aData );                                                                                                           // a vector of lambdas and pass to the threadpool. Nerd level cranked to 11 
 
-    // for( auto& i : aData ) i.parent = NULL; // Thought this would be quicker than resetting it in each call to __Cluster__, apparently not
+    // Thought this would be quicker than resetting it in each call to __Cluster__, apparently not
+    // for( auto& i : aData ) i.parent = NULL;               
+    std::map< const Data* , std::vector< Data* > > lClusters;
 
-    for( uint32_t j(0) ; j!=41 ; ++j , T-=dT , ++lProgressBar )
+    for( uint32_t j(0) ; j!=Parameters.Tbins() ; ++j , T-=Parameters.dT() , ++lProgressBar )
     {
-      std::map< const Data* , std::vector< Data* > > lClusters;
       auto lScore = __Cluster__( aData , R , T , lClusters );
 
       ClustScore -> Fill( R , T , lScore );
@@ -200,71 +201,20 @@ void ScanRT( std::vector<Data>& aData )
 }
 
 
-void FillBuffers( std::vector<Data>& aData , const std::size_t& aIndex , const double& maxR )
-{
-  const std::size_t Nminus1( aData.size() - 1 );
-  const double maxR2( maxR * maxR ); // Could be calculated outside and passed in, but cost is minimal and code is cleaner this way
-  const double max2R( 2.0 * maxR );  
-  const double max2R2( max2R * max2R );  
-
-  const auto lPlus( aData.begin() + aIndex );
-  const auto lMinus( aData.rbegin() + Nminus1 - aIndex );
-
-  auto lPlusIt( lPlus + 1 );
-  auto lMinusIt( lMinus + 1 );
-
-  // Alias the vector of distances
-  auto& lMap = lPlus->neighbours;
-  auto& lMap2 = lPlus->neighbours2;  
-  auto& lIt = lPlus->neighbourit;
-
-  // Iterate over other hits and populate the neighbour list
-  for( ; lPlusIt != aData.end() ; lPlusIt++ )
-  {
-    if( ( lPlusIt->r - lPlus->r ) > maxR ) break; // lPlusIt is always further out than lPlus  
-    double dR2 = lPlus->dR2( *lPlusIt );
-    if( dR2 < maxR2 ) lMap.push_back( std::make_pair( dR2 , &*lPlusIt ) );
-  }
-
-  for( ; lMinusIt != aData.rend() ; lMinusIt++ )
-  {
-    if( ( lMinus->r - lMinusIt->r ) > maxR ) break; // lMinus is always further out than lMinusIn
-    double dR2 = lMinus->dR2( *lMinusIt );    
-    if( dR2 < maxR2 ) lMap.push_back( std::make_pair( dR2 , &*lMinusIt ) );
-  }
-
-  std::sort( lMap.begin() , lMap.end() );
-  lIt = lMap.begin();
-
-  // Iterate over other hits and populate the neighbour2 list
-  for( ; lPlusIt != aData.end() ; lPlusIt++ )
-  {
-    if( ( lPlusIt->r - lPlus->r ) > max2R ) break; // lPlusIt is always further out than lPlus  
-    double dR2 = lPlus->dR2( *lPlusIt );
-    if( dR2 < max2R2 ) lMap2.push_back( std::make_pair( dR2 , &*lPlusIt ) );
-  }
-
-  for( ; lMinusIt != aData.rend() ; lMinusIt++ )
-  {
-    if( ( lMinus->r - lMinusIt->r ) > max2R ) break; // lMinus is always further out than lMinusIn
-    double dR2 = lMinus->dR2( *lMinusIt );    
-    if( dR2 < max2R2 ) lMap2.push_back( std::make_pair( dR2 , &*lMinusIt ) );
-  }
-
-  std::sort( lMap2.begin() , lMap2.end() );
-
-}
-
 
 
 void PrepData( std::vector<Data>& aData )
 {
   ProgressBar2 lProgressBar( "Preprocessing" , aData.size() );
+
+  // Crucial step is to sort!
   std::sort( aData.begin() , aData.end() );
 
-  const double maxR( 0.02 );
-  auto CreateLambda = [ &aData, &maxR ]( const uint32_t& i ){ return [ &i, &aData, &maxR ](){ return FillBuffers( aData, i, maxR ); }; }; // Create a lambda which returns a lambda. Then use list comprehension to create
-  Vectorize( CreateLambda | range( aData.size() ) );                                                                                      // a vector of lambdas and pass to the threadpool. Nerd level cranked to 11 
+  // Now populate the neighbour lists
+  auto CreateLambda = [ &aData ]( const uint32_t& aIndex ){ return [ &aIndex , &aData ](){
+    aData.at( aIndex ).PopulateNeighbours( aData.begin() + aIndex + 1 , aData.end() , aData.rbegin() + aData.size() - aIndex , aData.rend() );
+  }; };                                              // Create a lambda which returns a lambda. Then use list comprehension to create
+  Vectorize( CreateLambda | range( aData.size() ) ); // a vector of lambdas and pass to the threadpool. Nerd level cranked to 11 
 
   // ... any other preparation ...
 }
@@ -274,29 +224,33 @@ void PrepData( std::vector<Data>& aData )
 /* ===== Main function ===== */
 int main(int argc, char **argv)
 {
+  Parameters.SetSigmaCountAndSpacing( 10 , 1e-3 );
+  Parameters.SetProbabilitySigma( { 0.03631079, 0.110302441, 0.214839819, 0.268302465, 0.214839819, 0.110302441, 0.03631079, 0.007664194, 0.001037236, 9.00054E-05 } );
+  Parameters.SetMaxR( 0.02 );
+  Parameters.SetBins( 40 , 40 );
+
 //  auto lData = LoadCSV( "1_un_red.csv" , 1./64000. , -1. , -1. ); // Full file
   // auto lData = LoadCSV( "1_un_red.csv" , 1./10000. , 87000. , 32000. ); // One cluster
 //  auto lData = LoadCSV( "1_un_red.csv" , 1./1000. , 87000. , 32000. ); // Very zoomed
 
-  GlobalVars::sigmacount = 10;
-  GlobalVars::sigmaspacing = 1e-3;
-
-  GlobalVars::sigmabins = []( const int& i ){ return i * GlobalVars::sigmaspacing; } | range( GlobalVars::sigmacount );
-  GlobalVars::sigmabins2= []( const double& i ){ return i * i; }         | GlobalVars::sigmabins;
-
-  GlobalVars::probability_sigma = { 0.03631079, 0.110302441, 0.214839819, 0.268302465, 0.214839819, 0.110302441, 0.03631079, 0.007664194, 0.001037236, 9.00054E-05 };
-  GlobalVars::log_probability_sigma = []( const double& w){ return log(w); } | GlobalVars::probability_sigma;
-
-  GlobalVars::maxR = 0.02;
-  GlobalVars::maxR2 = GlobalVars::maxR * GlobalVars::maxR;
-  GlobalVars::max2R = 2.0 * GlobalVars::maxR;
-  GlobalVars::max2R2 = GlobalVars::max2R * GlobalVars::max2R;
-
-
 
   auto lData = CreatePseudoData( 10007 , 500 , 500 , .01 );
   //auto lData = CreatePseudoData( 70000 , 500 , 500 , .01 );
+
+  //InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } );
+
   PrepData( lData );
+
+
+  auto Rlo = Parameters.minScanR() - ( 0.5 * Parameters.dR() );
+  auto Rhi = Parameters.maxScanR() - ( 0.5 * Parameters.dR() );
+  auto Tlo = Parameters.minScanT() - ( 0.5 * Parameters.dT() );
+  auto Thi = Parameters.maxScanT() - ( 0.5 * Parameters.dT() );
+
+  Nclust     = new TH2D( "Nclust" , "N_{clusters};r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
+  ClustSize  = new TH2D( "ClustSize" , "<N_{points}>;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
+  ClustScore = new TH2D( "ClustScore" , "Score;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
+
 
   ScanRT( lData );
   // int x , y , z;

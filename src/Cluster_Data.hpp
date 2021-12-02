@@ -20,7 +20,7 @@ class Data
 public:
   Data( const double& aX , const double& aY , const double& aS ) : x(aX) , y(aY) , s(aS) , r( sqrt( (aX*aX) + (aY*aY) ) ), phi( atan2( aY , aX ) ),
   eX( 1 - fabs( aX ) ) , eY( 1 - fabs( aY ) ) , 
-  w( [ aS ]( const double& sig2 ){ return 1 / ( (aS*aS) + sig2 ); } | GlobalVars::sigmabins2 ), log_w( []( const double& w){ return log(w); } | w ),
+  w( [ aS ]( const double& sig2 ){ return 1 / ( (aS*aS) + sig2 ); } | Parameters.sigmabins2() ), log_w( []( const double& w){ return log(w); } | w ),
   localizationsum( 0.0 ) , localizationscore( 0.0 ),
   neighbourit( neighbours.end() ),
   parent( NULL )
@@ -46,16 +46,16 @@ public:
     // Iterate over other hits and populate the neighbour list
     for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
     {
-      if( ( aPlusIt->r - r ) > GlobalVars::maxR ) break; // aPlusIt is always further out than lPlus  
+      if( ( aPlusIt->r - r ) > Parameters.maxR() ) break; // aPlusIt is always further out than lPlus  
       double ldR2 = dR2( *aPlusIt );
-      if( ldR2 < GlobalVars::maxR2 ) neighbours.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
+      if( ldR2 < Parameters.maxR2() ) neighbours.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
     }
 
     for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
     {
-      if( ( r - aMinusIt->r ) > GlobalVars::maxR ) break; // lMinus is always further out than lMinusIn
+      if( ( r - aMinusIt->r ) > Parameters.maxR() ) break; // lMinus is always further out than lMinusIn
       double ldR2 = dR2( *aMinusIt );    
-      if( ldR2 < GlobalVars::maxR2 ) neighbours.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
+      if( ldR2 < Parameters.maxR2() ) neighbours.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
     }
 
     std::sort( neighbours.begin() , neighbours.end() );
@@ -64,16 +64,16 @@ public:
     // Iterate over other hits and populate the neighbour2 list
     for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
     {
-      if( ( aPlusIt->r - r ) > GlobalVars::max2R ) break; // aPlusIt is always further out than lPlus  
+      if( ( aPlusIt->r - r ) > Parameters.max2R() ) break; // aPlusIt is always further out than lPlus  
       double ldR2 = dR2( *aPlusIt );
-      if( ldR2 < GlobalVars::max2R2 ) neighbours2.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
+      if( ldR2 < Parameters.max2R2() ) neighbours2.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
     }
 
     for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
     {
-      if( ( r - aMinusIt->r ) > GlobalVars::max2R ) break; // lMinus is always further out than lMinusIn
+      if( ( r - aMinusIt->r ) > Parameters.max2R() ) break; // lMinus is always further out than lMinusIn
       double ldR2 = dR2( *aMinusIt );    
-      if( ldR2 < GlobalVars::max2R2 ) neighbours2.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
+      if( ldR2 < Parameters.max2R2() ) neighbours2.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
     }
 
     std::sort( neighbours2.begin() , neighbours2.end() );
