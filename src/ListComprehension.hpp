@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 /* ===== Super nerd template magic emulating list comprehension ===== */
 template< typename tContainer , typename tExpr >
 inline auto operator| ( tExpr&& aExpr , tContainer&& aContainer ) -> std::vector< decltype( aExpr( *aContainer.begin() ) ) >

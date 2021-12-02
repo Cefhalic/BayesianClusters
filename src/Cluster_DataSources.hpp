@@ -92,7 +92,7 @@ std::vector< Data > LoadCSV( const std::string& aFilename , const double& m , co
       ReadUntil( ',' ); //"bkgstd [photon]"
       ReadUntil( ',' ); //"chi2"
       ReadUntil( '\n' ); //"uncertainty_xy [nm]"
-      double s = strtod( ch , &lPtr );      
+      double s = m * strtod( ch , &lPtr );      
 
       if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( x , y , s );
     }

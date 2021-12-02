@@ -32,12 +32,16 @@ void InteractiveDisplay( Functors&&... aFunctors )
   gROOT->SetStyle ( "Plain" ) ; // set empty TStyle ( nicer o npaper )
   gStyle->SetOptStat ( 0 ) ; // print statistics on plots , ( 0 ) for no output
   gStyle->SetPalette ( 1 ) ; // set nicer colors than default
-  gStyle->SetOptTitle ( 0 ) ; // suppress title box
+  // gStyle->SetOptTitle ( 0 ) ; // suppress title box
 
   constexpr std::size_t cnt( sizeof...(Functors) );
 
-  TCanvas* c = new TCanvas( "c" , "" , 0 , 0 , 800*cnt , 800 );
-  c->Divide( cnt , 1 );
+  TCanvas* c = new TCanvas( "c" , "" , 0 , 0 , 1600 , 800 );
+
+  std::size_t i = ceil( sqrt( cnt ) );
+  std::size_t j = ceil( double(cnt) / i );
+
+  c->Divide( i , j );
   DisplayHelper( c , 1 , std::forward<Functors>( aFunctors)... );
 
   TRootCanvas *rc = (TRootCanvas *)c->GetCanvasImp();

@@ -6,7 +6,7 @@
 /* ===== Utility progress-bar ===== */
 struct ProgressBar
 {
-  ProgressBar( const std::string& aLabel , const uint32_t& aMax ) : mBlockSize( aMax / 100 ) , mNextThreshold( mBlockSize ) , mCount( 0 ) ,
+  ProgressBar( const std::string& aLabel , const uint32_t& aMax ) : mBlockSize( aMax / 100.0 ) , mNextThreshold( mBlockSize ) , mCount( 0 ) ,
   mStart( std::chrono::high_resolution_clock::now() )
   {
     std::cout << std::string( 102 + aLabel.size() , '=' ) << "]\r" << aLabel << " [" << std::flush;
@@ -14,12 +14,12 @@ struct ProgressBar
 
   virtual ~ProgressBar()
   {
-    std::cout << "#\nCompleted in " << (std::chrono::duration_cast< std::chrono::milliseconds>( std::chrono::high_resolution_clock::now() - mStart ).count()/1000.0) << " seconds" << std::endl;
+    std::cout << "#\n  Completed in " << (std::chrono::duration_cast< std::chrono::milliseconds>( std::chrono::high_resolution_clock::now() - mStart ).count()/1000.0) << " seconds" << std::endl;
   }
 
   inline void operator++ ()
   {
-    if( mNextThreshold == mCount++ )
+    if( mNextThreshold < mCount++ )
     {
       std::cout << '#' << std::flush;
       mNextThreshold += mBlockSize;
@@ -28,7 +28,8 @@ struct ProgressBar
 
   inline void operator++ ( int ) { operator++ (); }
 
-  uint32_t mBlockSize , mNextThreshold , mCount;
+  float mBlockSize , mNextThreshold ;
+  std::size_t mCount;
   std::chrono::high_resolution_clock::time_point mStart;  
 };
 
@@ -44,7 +45,7 @@ struct ProgressBar2
 
   virtual ~ProgressBar2()
   {
-    std::cout << "Completed in " << (std::chrono::duration_cast< std::chrono::milliseconds>( std::chrono::high_resolution_clock::now() - mStart ).count()/1000.0) << " seconds" << std::endl;
+    std::cout << "  Completed in " << (std::chrono::duration_cast< std::chrono::milliseconds>( std::chrono::high_resolution_clock::now() - mStart ).count()/1000.0) << " seconds" << std::endl;
   }
 
   inline void operator++ (){}

@@ -12,7 +12,7 @@
 #include "TAxis.h"
 #include "TGraph.h"
 #include "TGraph2D.h"
-#include "TH2F.h"
+#include "TH2D.h"
 #include "TEllipse.h"
 
 /* ===== Local utilities ===== */
@@ -49,10 +49,10 @@ void DrawPoints( const std::vector< Data >& aData )
 
 
 /* ===== Function for plotting output hist ===== */
-void DrawHisto( TH2F* aHist )
+void DrawHisto( TH2D* aHist )
 {
-  gPad -> SetLeftMargin( 0.15);
-  gPad -> SetRightMargin( 0.15);
+  gPad -> SetLeftMargin( 0.15 );
+  gPad -> SetRightMargin( 0.15 );
   gPad->SetLogz();
   aHist->SetContour(1e6);
   aHist->Draw("colz");  
@@ -60,7 +60,7 @@ void DrawHisto( TH2F* aHist )
 
 
 /* ===== Function for plotting data ===== */
-void DrawPoints( const std::map< Data* , std::vector< Data* > >& aData )
+void DrawPoints( const std::map< const Data* , std::vector< Data* > >& aData )
 {
   gPad -> SetMargin( 0.01 , 0.01 , 0.01 , 0.01 );
 

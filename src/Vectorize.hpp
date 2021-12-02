@@ -62,3 +62,66 @@ Vectorize ( tContainer&& aFunctionQueue )
   std::vector<std::thread> lThreadPool( Construct< std::thread >( Runner ) | range( std::thread::hardware_concurrency() ) );
   for ( auto& i : lThreadPool ) i.join();    
 }
+
+
+
+
+
+// class Threadpool
+// {
+// public:
+//   Threadpool(): lSize( 0 ) , lThreadPool( Construct< std::thread >( &Threadpool::Runner , this ) | range( std::thread::hardware_concurrency() - 1 ) )
+//   {}
+
+//   virtual ~Threadpool()
+//   {
+//     lTerminate = true;
+//     for ( auto& i : lThreadPool ) i.join();   
+//   }
+
+//   Threadpool& submit( const std::function< void() >& aFunc )
+//   {
+//     std::unique_lock<std::mutex> lLock(lQueueMutex);
+//     lFunctionQueue.push_back( aFunc );
+//     lSize++;
+//     return *this;
+//   }
+
+//   template< typename tContainer , typename T = typename std::remove_reference<tContainer>::type::value_type >
+//   Threadpool& submit( const tContainer& aFuncList )
+//   {
+//     std::unique_lock<std::mutex> lLock(lQueueMutex);
+//     for( auto&i : aFuncList ) lFunctionQueue.push_back( i );
+//     lSize += aFuncList.size();
+//     return *this;
+//   }
+
+
+//   void wait()
+//   {
+//     while ( lSize ){}
+//   }
+
+// private:
+//   void Runner()
+//   {
+//     while (true)
+//     {
+//       if( lTerminate ) return;
+//       std::unique_lock<std::mutex> lLock(lQueueMutex);
+//       if ( lFunctionQueue.empty() ) continue;
+//       auto lFunc = lFunctionQueue.front();
+//       lFunctionQueue.pop_front();
+//       lSize--;
+//       lLock.unlock();
+//       lFunc();
+//     }
+//   }
+
+//   std::atomic< int > lSize;
+//   std::atomic< bool > lTerminate;
+//   std::mutex lQueueMutex;
+//   std::list< std::function< void() > > lFunctionQueue;
+//   std::vector<std::thread> lThreadPool; // MUST BE LAST!
+   
+// };
