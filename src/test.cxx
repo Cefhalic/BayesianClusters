@@ -37,7 +37,7 @@
 // }
 
 
-#define PRINT( x ) std::cout << #x << " = " << x << std::endl;
+#define PRINT( x ) std::cout << ( #x ) << " = " << ( x ) << std::endl;
 
 double Score( std::pair< const Data* const , std::vector< Data* > >& aCluster )
 {
@@ -45,10 +45,10 @@ double Score( std::pair< const Data* const , std::vector< Data* > >& aCluster )
 
   constexpr double pi = atan(1)*4;
   constexpr double logA( -1.0 * log( 4.0 ) );
-  const std::size_t n( aCluster.second.size() );
+  const double n( aCluster.second.size() );
   const double pi_term( log( 2*pi ) * (1.0-n) ); // IF THE 1-n is integers, this gives the wrong answer!!!! WHY????????
 
-  auto IntegrandExpr = [ &aCluster , &logA , &pi_term ]( const uint32_t& i )
+  auto IntegrandExpr = [ &n , &aCluster , &logA , &pi_term ]( const uint32_t& i )
   {
     double n_tilde( 0.0 ) , sum_log_w( 0.0 );
     double nu_bar_x( 0.0 ) , nu_bar_y( 0.0 );
@@ -76,7 +76,7 @@ double Score( std::pair< const Data* const , std::vector< Data* > >& aCluster )
     }
 
     double phi_x( ROOT::Math::normal_cdf( sqrt_n_tilde * (1.0-nu_bar_x) ) - ROOT::Math::normal_cdf( sqrt_n_tilde * (-1.0-nu_bar_x) ) ) , phi_y( ROOT::Math::normal_cdf( sqrt_n_tilde * (1.0-nu_bar_y) ) - ROOT::Math::normal_cdf( sqrt_n_tilde * (-1.0-nu_bar_y) ) );
-    auto sum = logA + pi_term - log( n_tilde ) + sum_log_w - ( 0.5 * S2 ) + log( phi_x ) + log( phi_y ) + log_p_sigma[ i ];
+    auto sum = logA + pi_term - log( n_tilde ) + sum_log_w - ( 0.5 * S2 ) + log( phi_x ) + log( phi_y ) + GlobalVars::log_probability_sigma[ i ];
 
     // std::cout << "==================================" << std::endl;
     // PRINT( logA );
@@ -93,12 +93,12 @@ double Score( std::pair< const Data* const , std::vector< Data* > >& aCluster )
     return sum;
   };    
 
-  auto Integrands = IntegrandExpr | range( sigmacount );
+  auto Integrands = IntegrandExpr | range( GlobalVars::sigmacount );
   auto& Max = *std::max_element( Integrands.begin() , Integrands.end() );
 
   double integral( 0.0 );
   for( auto& i : Integrands ) integral += exp( i - Max );
-  integral *= sigmaspacing;  
+  integral *= GlobalVars::sigmaspacing;  
 
   return log( integral ) + Max; 
 
@@ -107,13 +107,6 @@ double Score( std::pair< const Data* const , std::vector< Data* > >& aCluster )
 
 
 
-
-double dR( 0.0005 );
-double dT( 0.0025 );
-
-TH2D* Nclust = new TH2D( "Nclust" , "N_{clusters};r;T" , 40 , 0.5*dR , (40+0.5)*dR , 41 , -0.5*dT , (41-0.5)*dT );
-TH2D* ClustSize = new TH2D( "ClustSize" , "<N_{points}>;r;T" , 40 , 0.5*dR , (40+0.5)*dR , 41 , -0.5*dT , (41-0.5)*dT );
-TH2D* ClustScore = new TH2D( "ClustScore" , "Score;r;T" , 40 , 0.5*dR , (40+0.5)*dR , 41 , -0.5*dT , (41-0.5)*dT );
 
 
 
@@ -126,26 +119,16 @@ double __Cluster__( std::vector<Data>& aData , const double& R , const double& T
 
   for( auto& i : aData ) aClusters[ i.GetParent() ].push_back( &i ); // <-- Bodge - could be done internally analagous to parent calculation
 
-  Nclust -> Fill( R , T , aClusters.size() );
-  double mean( 0.0 );
-  for ( auto& i: aClusters ) if( i.first ) mean += i.second.size();
-  ClustSize -> Fill( R , T , mean / aClusters.size() );
+  double lScore ( 0.0 );
+  for( auto& k : aClusters ) lScore += Score( k );
 
-
-  // std::cout << R << " | " << T << ": ";
-  // for ( auto& i: lClusters ) if( i.second.size() < 2 ) std::cout << ".";
-  // std::cout << std::endl;
-
-  // double lScore ( 0.0 );
-  // for( auto& k : aClusters ) lScore += Score( k );
-
-  using type = decltype( *aClusters.begin() );
-  auto CreateLambda2 = []( type& aData ){ return [ &aData ](){ return Score( aData ); }; }; // Create a lambda which returns a lambda. Then use list comprehension to create
-  auto lRet = Vectorize( CreateLambda2 | aClusters );                                       // a vector of lambdas and pass to the threadpool. Nerd level cranked to 11 
-  auto lScore = std::accumulate( lRet.begin() , lRet.end() , 0.0 );
+  // using type = decltype( *aClusters.begin() );
+  // auto CreateLambda2 = []( type& aData ){ return [ &aData ](){ return Score( aData ); }; }; // Create a lambda which returns a lambda. Then use list comprehension to create
+  // auto lRet = Vectorize( CreateLambda2 | aClusters );                                       // a vector of lambdas and pass to the threadpool. Nerd level cranked to 11 
+  // auto lScore = std::accumulate( lRet.begin() , lRet.end() , 0.0 );
 
   //std::cout << lScore << std::endl;
-  ClustScore -> Fill( R , T , lScore );
+
 
   return lScore;
 }
@@ -168,11 +151,16 @@ void Cluster( std::vector<Data>& aData , const double& R , const double& T , std
   Vectorize( CreateLambda | aData );                                                                                                           // a vector of lambdas and pass to the threadpool. Nerd level cranked to 11 
 
   __Cluster__( aData , R , T , aClusters );
-
-
-
 }
 
+
+
+double dR( 0.0005 );
+double dT( 0.0025 );
+
+TH2D* Nclust = new TH2D( "Nclust" , "N_{clusters};r;T" , 40 , 0.5*dR , (40+0.5)*dR , 41 , -0.5*dT , (41-0.5)*dT );
+TH2D* ClustSize = new TH2D( "ClustSize" , "<N_{points}>;r;T" , 40 , 0.5*dR , (40+0.5)*dR , 41 , -0.5*dT , (41-0.5)*dT );
+TH2D* ClustScore = new TH2D( "ClustScore" , "Score;r;T" , 40 , 0.5*dR , (40+0.5)*dR , 41 , -0.5*dT , (41-0.5)*dT );
 
 void ScanRT( std::vector<Data>& aData )
 {
@@ -197,6 +185,14 @@ void ScanRT( std::vector<Data>& aData )
     {
       std::map< const Data* , std::vector< Data* > > lClusters;
       auto lScore = __Cluster__( aData , R , T , lClusters );
+
+      ClustScore -> Fill( R , T , lScore );
+
+      Nclust -> Fill( R , T , lClusters.size() );
+      double mean( 0.0 );
+      for ( auto& i: lClusters ) if( i.first ) mean += i.second.size();
+      ClustSize -> Fill( R , T , mean / lClusters.size() );
+
     }
 
   }
@@ -209,7 +205,7 @@ void FillBuffers( std::vector<Data>& aData , const std::size_t& aIndex , const d
   const std::size_t Nminus1( aData.size() - 1 );
   const double maxR2( maxR * maxR ); // Could be calculated outside and passed in, but cost is minimal and code is cleaner this way
   const double max2R( 2.0 * maxR );  
-  const double max2R2( 4.0 * max2R * max2R );  
+  const double max2R2( max2R * max2R );  
 
   const auto lPlus( aData.begin() + aIndex );
   const auto lMinus( aData.rbegin() + Nminus1 - aIndex );
@@ -282,6 +278,22 @@ int main(int argc, char **argv)
   // auto lData = LoadCSV( "1_un_red.csv" , 1./10000. , 87000. , 32000. ); // One cluster
 //  auto lData = LoadCSV( "1_un_red.csv" , 1./1000. , 87000. , 32000. ); // Very zoomed
 
+  GlobalVars::sigmacount = 10;
+  GlobalVars::sigmaspacing = 1e-3;
+
+  GlobalVars::sigmabins = []( const int& i ){ return i * GlobalVars::sigmaspacing; } | range( GlobalVars::sigmacount );
+  GlobalVars::sigmabins2= []( const double& i ){ return i * i; }         | GlobalVars::sigmabins;
+
+  GlobalVars::probability_sigma = { 0.03631079, 0.110302441, 0.214839819, 0.268302465, 0.214839819, 0.110302441, 0.03631079, 0.007664194, 0.001037236, 9.00054E-05 };
+  GlobalVars::log_probability_sigma = []( const double& w){ return log(w); } | GlobalVars::probability_sigma;
+
+  GlobalVars::maxR = 0.02;
+  GlobalVars::maxR2 = GlobalVars::maxR * GlobalVars::maxR;
+  GlobalVars::max2R = 2.0 * GlobalVars::maxR;
+  GlobalVars::max2R2 = GlobalVars::max2R * GlobalVars::max2R;
+
+
+
   auto lData = CreatePseudoData( 10007 , 500 , 500 , .01 );
   //auto lData = CreatePseudoData( 70000 , 500 , 500 , .01 );
   PrepData( lData );
@@ -291,12 +303,12 @@ int main(int argc, char **argv)
   // ClustScore->GetMaximumBin( x , y , z );
   // std::cout << x*dR << " " << y*dT << " " << z << std::endl;
 
-  std::map< const Data* , std::vector< Data* > > lClusters;
-  Cluster( lData , 0.0075 , 0.02 , lClusters );
+  // std::map< const Data* , std::vector< Data* > > lClusters;
+  // Cluster( lData , 0.0075 , 0.02 , lClusters );
 
-  // InteractiveDisplay( [ &Nclust ](){ DrawHisto( Nclust ); } , [ &ClustSize ](){ DrawHisto( ClustSize ); } , [ &ClustScore ](){ DrawHisto( ClustScore ); } );
+  InteractiveDisplay( [ &Nclust ](){ DrawHisto( Nclust ); } , [ &ClustSize ](){ DrawHisto( ClustSize ); } , [ &ClustScore ](){ DrawHisto( ClustScore ); } );
 
-  InteractiveDisplay( [ &Nclust ](){ DrawHisto( Nclust ); } , [ &ClustSize ](){ DrawHisto( ClustSize ); } , [ &ClustScore ](){ DrawHisto( ClustScore ); } , [ lClusters ](){ DrawPoints( lClusters ); } );
+  //InteractiveDisplay( [ &Nclust ](){ DrawHisto( Nclust ); } , [ &ClustSize ](){ DrawHisto( ClustSize ); } , [ &ClustScore ](){ DrawHisto( ClustScore ); } , [ lClusters ](){ DrawPoints( lClusters ); } );
 
 
   // InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } );

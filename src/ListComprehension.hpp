@@ -11,11 +11,22 @@ inline auto operator| ( tExpr&& aExpr , tContainer&& aContainer ) -> std::vector
   return lRet;
 }
 
+// Handle pointer to member variable
 template<typename tContainer, typename tType , typename tContainerType = typename std::remove_reference<tContainer>::type::value_type >
 inline std::vector< tType > operator| ( tType tContainerType::* aPtr , tContainer&& aContainer )
 {
   return [ aPtr ]( const tContainerType& i ){ return i.*aPtr; } | std::forward< tContainer >( aContainer );
 }
+
+// /* ===== Handle Function Pointer ===== */
+// template< typename tContainer , typename tRet , typename tContainerType = typename std::remove_reference<tContainer>::type::value_type >
+// inline auto operator| ( tRet (*aFnPtr)( const tContainerType& ) , tContainer&& aContainer ) -> std::vector< decltype( aExpr( *aContainer.begin() ) ) >
+// {
+//   return [ aFnPtr ]( const tContainerType& i ){ return aFnPtr.*( i ); } | std::forward< tContainer >( aContainer );
+// }
+
+
+
 
 inline std::vector< uint32_t > range( const uint32_t& N )
 {
