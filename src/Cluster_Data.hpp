@@ -18,13 +18,42 @@
 class Data
 {
 public:
+  struct ClusterParameter
+  {
+    ClusterParameter( const double& aW ) : w(aW) , logw( log(aW) )
+    {}
+    
+    inline void Reset( const double& aX , const double& aY)
+    {
+      n_tilde = w;
+      sum_logw = logw;
+      nu_bar_x = w * aX;
+      nu_bar_y = w * aY;
+    }
+
+    inline ClusterParameter& operator+= ( const ClusterParameter& aOther )
+    {
+      n_tilde += aOther.n_tilde;
+      sum_logw += aOther.sum_logw;
+      nu_bar_x += aOther.nu_bar_x;
+      nu_bar_y += aOther.nu_bar_y;
+      return *this;
+    }
+
+    const double w , logw;
+    double n_tilde , sum_logw , nu_bar_x , nu_bar_y;
+  };  
+
+public:
   Data( const double& aX , const double& aY , const double& aS ) : x(aX) , y(aY) , s(aS) , r( sqrt( (aX*aX) + (aY*aY) ) ), phi( atan2( aY , aX ) ),
   eX( 1 - fabs( aX ) ) , eY( 1 - fabs( aY ) ) , 
-  w( [ aS ]( const double& sig2 ){ return 1 / ( (aS*aS) + sig2 ); } | Parameters.sigmabins2() ), log_w( []( const double& w){ return log(w); } | w ),
+  //w( [ aS ]( const double& sig2 ){ return  } | Parameters.sigmabins2() ), log_w( []( const double& w){ return log(w); } | w ),
   localizationsum( 0.0 ) , localizationscore( 0.0 ),
   neighbourit( neighbours.end() ),
-  parent( NULL )
-  {}
+  parent( NULL ), children( { this } )
+  {
+    for( auto& sig2 : Parameters.sigmabins2() ) ClusterParams.emplace_back( 1 / ( (aS*aS) + sig2 ) );
+  }
 
   bool operator< ( const Data& aOther ) const { return r < aOther.r; }
 
@@ -103,6 +132,19 @@ public:
   }
 
 
+  inline void ResetClusters()
+  {
+    parent = NULL;
+    for( auto lIt( children.begin() ) ; lIt != children.end() ;  ){
+      auto lIt_copy = lIt++;
+      if( *lIt_copy == this ) continue;
+      (**lIt_copy).children.splice( (**lIt_copy).children.end() , children , lIt_copy );
+    } 
+
+    for( auto& i : ClusterParams ) i.Reset( x , y );
+  }
+
+
   inline void Clusterize( const double& a2R2 , const double& aT )
   {
     if( parent ) return;
@@ -150,30 +192,99 @@ public:
   inline Data* GetParent()
   {
     if( parent == this or parent == NULL ) return parent;
-    return parent->GetParent();
+    return parent = parent->GetParent();
   }
 
   inline void SetParent( Data* aParent )
   {
     if( parent == aParent ) return;
-    if( parent == this or parent == NULL ) parent = aParent;
-    else parent->SetParent( aParent );
+    if( parent != this and parent != NULL ) parent->SetParent( aParent );
+    else parent = aParent;
+    
+    if( children.size() )
+    {
+      parent->children.splice( parent->children.end() , children );
+      for( auto lIt( ClusterParams.begin() ) , lIt2( parent->ClusterParams.begin() ) ; lIt != ClusterParams.end() ; ++lIt , ++lIt2 ) *lIt2 += *lIt;
+    }
   }
 
-  // void Cluster( Data& aData )
-  // {
-  //   SetParent( aData.GetParent() );
-  // }
+
+  inline double S2( const std::size_t& index , const double& nu_bar_x , const double& nu_bar_y ) const
+  {
+    auto lX( x - nu_bar_x ) , lY( y - nu_bar_y );
+    auto d2( (lX*lX) + (lY*lY) );
+    return ClusterParams[index].w * d2;
+  }
+
+
+  inline double ClusterScore() const
+  {
+    if( children.empty() ) return std::nan( "" );
+
+    static constexpr double pi = atan(1)*4;
+    static constexpr double logA( -1.0 * log( 4.0 ) );
+    static constexpr double log2pi( log( 2*pi ) );
+
+    const double n( children.size() );
+    const double pi_term( log2pi * (1.0-n) ); // IF THE 1-n is integers, this gives the wrong answer!!!! WHY????????
+
+
+    for( std::size_t i(0) ; i!=Parameters.sigmacount() ; ++i )
+    {
+      auto sqrt_n_tilde( sqrt( ClusterParams[i].n_tilde ) ) , inv_n_tilde( 1.0 / ClusterParams[i].n_tilde );
+      auto nu_bar_x ( ClusterParams[i].nu_bar_x * inv_n_tilde ) , nu_bar_y ( ClusterParams[i].nu_bar_y * inv_n_tilde );
+
+      double S2( 0.0 );
+      for( auto& j : children ) S2 += j->S2( i , nu_bar_x , nu_bar_y );
+
+
+    //   // double phi_x( ROOT::Math::normal_cdf( sqrt_n_tilde * (1.0-nu_bar_x) ) - ROOT::Math::normal_cdf( sqrt_n_tilde * (-1.0-nu_bar_x) ) ) , phi_y( ROOT::Math::normal_cdf( sqrt_n_tilde * (1.0-nu_bar_y) ) - ROOT::Math::normal_cdf( sqrt_n_tilde * (-1.0-nu_bar_y) ) );
+    //   // auto sum = logA + pi_term - log( n_tilde ) + sum_log_w - ( 0.5 * S2 ) + log( phi_x ) + log( phi_y ) + Parameters.log_probability_sigma( i );
+    }
+
+      // double sum( 0 );
+
+    //   // std::cout << "==================================" << std::endl;
+    //   // PRINT( logA );
+    //   // PRINT( pi_term );
+    //   // PRINT( - log( n_tilde ) );
+    //   // PRINT( sum_log_w );
+    //   // PRINT( - ( 0.5 * S2 ) );
+    //   // PRINT( log( phi_x ) );
+    //   // PRINT( log( phi_y ) );
+    //   // PRINT( log_p_sigma[ i ] );
+    //   // std::cout << "---------------" << std::endl;
+    //   // PRINT( sum );
+
+    //   return sum;
+    // };    
+
+    // auto Integrands = IntegrandExpr | range( Parameters.sigmacount() );
+    // auto& Max = *std::max_element( Integrands.begin() , Integrands.end() );
+
+    // double integral( 0.0 );
+    // for( auto& i : Integrands ) integral += exp( i - Max );
+    // integral *= Parameters.sigmaspacing();  
+    //return log( integral ) + Max; 
+
+    return 0.0;
+  }
+
 
 public:
   double x, y, s , r, phi;
   double eX , eY;
-  std::vector< double > w , log_w;
   double localizationsum , localizationscore;
 
-  std::vector< std::pair< double , Data* > > neighbours;
+  std::vector< std::pair< double , Data* > > neighbours , neighbours2;
   std::vector< std::pair< double , Data* > >::iterator neighbourit;
 
-  std::vector< std::pair< double , Data* > > neighbours2;
   Data* parent;
+  std::list< Data* > children;
+
+  std::vector< ClusterParameter > ClusterParams;
+
 };
+
+
+

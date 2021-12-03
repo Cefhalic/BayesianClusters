@@ -45,13 +45,6 @@ public:
 		mDR = ( mMaxScanR - mMinScanR ) / mRbins;
 		mDT = ( mMaxScanT - mMinScanT ) / mTbins;
 
-		// if( mMinScanR == 0.0 )
-		// {
-		// 	mMinScanR += mDR;
-		// 	mMaxScanR += mDR;
-		// }
-
-
 	}
 
 	inline const std::size_t& sigmacount() const { return mSigmacount; }
