@@ -121,8 +121,9 @@ int main(int argc, char **argv)
 {
 
 
-  Parameters.SetSigmaCountAndSpacing( 10 , 1e-3 , 1e-2 );
-  Parameters.SetProbabilitySigma( { 0.03631079, 0.110302441, 0.214839819, 0.268302465, 0.214839819, 0.110302441, 0.03631079, 0.007664194, 0.001037236, 9.00054E-05 } );
+  Parameters.SetSigmaCountAndSpacing( 10 , 1e-3 , 3e-2 );
+  Parameters.SetProbabilitySigma( { 0.0000 , 0.0050 , 0.010 , 0.015 , 0.020 , 0.025 , 0.030 , 0.035 , 0.040 , 0.045 } , 
+                                  { 0.03631079, 0.110302441, 0.214839819, 0.268302465, 0.214839819, 0.110302441, 0.03631079, 0.007664194, 0.001037236, 9.00054E-05 } );
   Parameters.SetMaxR( 0.02 );
   Parameters.SetBins( 40 , 40 );
 
@@ -131,7 +132,7 @@ int main(int argc, char **argv)
   //auto lData = LoadCSV( "1_un_red.csv" , 1./1000. , 87000. , 32000. ); // Very zoomed
 
 
-  auto lData = CreatePseudoData( 10000 , 500 , 500 , .01 );
+  auto lData = CreatePseudoData( 10000 , 500 , 500 , .015 );
   // auto lData = CreatePseudoData( 100 , 20 , 500 , .01 );
   //auto lData = CreatePseudoData( 70000 , 500 , 500 , .01 );
 

@@ -3,21 +3,24 @@
 /* ===== Local utilities ===== */
 #include "ListComprehension.hpp"
 
+/* ===== For Root ===== */
+#include "Math/Interpolator.h" 
+
 class GlobalVars
 {
 public:
-	void SetSigmaCountAndSpacing( const std::size_t& aSigmacount , const double& aSigmaspacing )
+	void SetSigmaCountAndSpacing( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax )
 	{
 		mSigmacount = aSigmacount;
-		mSigmaspacing = aSigmaspacing;
-  		mSigmabins = [ & ]( const int& i ){ return i * mSigmaspacing; } | range( mSigmacount );
+		mSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
+  		mSigmabins = [ & ]( const int& i ){ return ( i * mSigmaspacing ) + aSigmaMin; } | range( mSigmacount );
   		mSigmabins2= []( const double& i ){ return i * i; } | mSigmabins;
 	}
 
-	void SetProbabilitySigma( const std::vector< double >& aProbabilitySigma )
+	void SetProbabilitySigma( const std::vector< double >& aSigma , const std::vector< double >& aProbabilitySigma )
 	{
-		// Should be interpolated from a histogram!
-		mProbabilitySigma = aProbabilitySigma;
+		ROOT::Math::Interpolator lInt( aSigma , aProbabilitySigma ); // Default to cubic spline interpolation
+		mProbabilitySigma = [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } | mSigmabins;
 		mLogProbabilitySigma = []( const double& w){ return log(w); } | mProbabilitySigma;
 	}
 

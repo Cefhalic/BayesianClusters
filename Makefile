@@ -15,4 +15,4 @@ _all: test.exe
 
 
 test.exe : src/test.cxx
-	g++ -march=native -std=c++11 -Wall -O3 $^ -lm `root-config --glibs --cflags --libs` -o $@
+	g++ -march=native -std=c++11 -Wall -O3 $^ -lm `root-config --glibs --cflags --libs` -lMathMore -o $@
