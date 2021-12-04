@@ -21,39 +21,21 @@
 #include "Vectorize.hpp"
 
 
-// // Burmann approximation of the Gaussian cumulative-distribution function
-// double Phi( const double& x )
-// {
-//   auto y = exp( -1.0*x*x );
-
-//   constexpr double pi = atan(1)*4;
-//   constexpr double rt_pi = sqrt( pi );
-//   constexpr double inv_rt_pi = 1.0 / rt_pi;
-
-//   double lRet = ( rt_pi/2.0 ) + ( y * 31.0/200.0 ) - ( y*y * 341.0/8000.0 );
-//   lRet       *= inv_rt_pi * ( (x > 0) - (x < 0) ) * sqrt( 1-y );
-
-//   return 0.5 + lRet;
-// }
-
-
 #define PRINT( x ) std::cout << ( #x ) << " = " << ( x ) << std::endl;
-
-
 
 double __Cluster__( std::vector<Data>& aData , const double& R , const double& T )
 {
   const double twoR2 = 4.0 * R * R;
+
+  // For real multi-threading want to use blocks, not interleaved, to minimize collisions
+  // [ &twoR2 , &T ]( Data& i ){ i.Clusterize( twoR2 , T ); } && aData;
+
   for( auto& i : aData ) i.Clusterize( twoR2 , T ); 
-  for( auto& i : aData ) i.GetParent(); // Force update on all clusters;
+  // for( auto& i : aData ) i.GetParent(); // Force update on all clusters;
 
 
   double lScore ( 0.0 );
-  // for( auto& i : aData ) lScore += i.ClusterScore();
-
-  static const auto lFunc = [ &aData ]( const std::size_t& aOffset ){ for( auto i( aData.begin() + aOffset) ; i<aData.end() ; i+=Concurrency ) i->ClusterScore(); }; 
-  for( auto& Thread : ThreadPool ) Thread->submit( lFunc );
-  WrappedThread::wait();
+  []( Data& i ){ i.UpdateClusterScore(); } || aData; 
 
   //std::cout << lScore << std::endl;
 
@@ -70,12 +52,10 @@ void Cluster( std::vector<Data>& aData , const double& R , const double& T )
   // Reset ahead of UpdateLocalization and Clusterize
   for( auto& i : aData ){
     i.ResetClusters();  
-    i.neighbourit = i.neighbours.begin();
+    i.neighbourit = i.neighbours[0].begin();
   }
 
-  auto lFunc = [ &aData , &Nminus1 , &R2 ]( const std::size_t& aOffset ){ for( auto i( aData.begin() + aOffset) ; i<aData.end() ; i+=Concurrency ) i->UpdateLocalization( R2 , Nminus1 ); };
-  for( auto& Thread : ThreadPool ) Thread->submit( lFunc );
-  WrappedThread::wait();
+  [ &Nminus1 , &R2 ]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); } || aData; 
 
   __Cluster__( aData , R , T );
 }
@@ -98,12 +78,9 @@ void ScanRT( std::vector<Data>& aData )
     R2 = R * R;
     T = Parameters.maxScanT();
 
-    auto lFunc = [ &aData , &Nminus1 , &R2 ]( const std::size_t& aOffset ){ for( auto i( aData.begin() + aOffset) ; i<aData.end() ; i+=Concurrency ) i->UpdateLocalization( R2 , Nminus1 ); };
-    for( auto& Thread : ThreadPool ) Thread->submit( lFunc );
-    WrappedThread::wait();
+    [ &Nminus1 , &R2 ]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); } || aData; 
 
-    // Thought this would be quicker than resetting it in each call to __Cluster__, apparently not
-    for( auto& i : aData ) i.ResetClusters();
+    []( Data& i ){ i.ResetClusters(); } || aData;
 
     for( uint32_t j(0) ; j!=Parameters.Tbins() ; ++j , T-=Parameters.dT() , ++lProgressBar )
     {
@@ -131,9 +108,7 @@ void PrepData( std::vector<Data>& aData )
 
   // Populate neighbour lists
   // Interleave threading since processing time increases with radius from origin
-  auto lFunc = [ &aData ]( const std::size_t& aOffset ){ for( std::size_t i(aOffset) ; i<aData.size() ; i+=Concurrency ) aData.at( i ).PopulateNeighbours( aData.begin() + i + 1 , aData.end() , aData.rbegin() + aData.size() - i , aData.rend() ); };
-  for( auto& Thread : ThreadPool ) Thread->submit( lFunc );
-  WrappedThread::wait();
+  [ &aData ]( const std::size_t& i ){ aData.at( i ).PopulateNeighbours( aData.begin() + i + 1 , aData.end() , aData.rbegin() + aData.size() - i , aData.rend() ); } || range( aData.size() ); 
 
   // ... any other preparation ...
 }
@@ -146,14 +121,14 @@ int main(int argc, char **argv)
 {
 
 
-  Parameters.SetSigmaCountAndSpacing( 10 , 1e-3 );
+  Parameters.SetSigmaCountAndSpacing( 10 , 1e-3 , 1e-2 );
   Parameters.SetProbabilitySigma( { 0.03631079, 0.110302441, 0.214839819, 0.268302465, 0.214839819, 0.110302441, 0.03631079, 0.007664194, 0.001037236, 9.00054E-05 } );
   Parameters.SetMaxR( 0.02 );
   Parameters.SetBins( 40 , 40 );
 
 //  auto lData = LoadCSV( "1_un_red.csv" , 1./64000. , -1. , -1. ); // Full file
-  // auto lData = LoadCSV( "1_un_red.csv" , 1./10000. , 87000. , 32000. ); // One cluster
-//  auto lData = LoadCSV( "1_un_red.csv" , 1./1000. , 87000. , 32000. ); // Very zoomed
+   // auto lData = LoadCSV( "1_un_red.csv" , 1./10000. , 87000. , 32000. ); // One cluster
+  //auto lData = LoadCSV( "1_un_red.csv" , 1./1000. , 87000. , 32000. ); // Very zoomed
 
 
   auto lData = CreatePseudoData( 10000 , 500 , 500 , .01 );

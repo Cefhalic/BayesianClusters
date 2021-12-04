@@ -64,7 +64,7 @@ std::vector< Data > LoadCSV( const std::string& aFilename , const double& m , co
   {
     char ch[256];
     char* lPtr( ch );
-    ProgressBar lProgressBar( "Reading File" , lSize+9 ); // Not sure why the progress bar "overflows" by one without this tweak
+    ProgressBar lProgressBar( "Reading File" , lSize );
 
     auto ReadUntil = [ &ch , &f , &lPtr , &lProgressBar ]( const char& aChar ){
       lPtr = ch;
