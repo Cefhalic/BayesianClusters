@@ -1,8 +1,8 @@
 #pragma once
 
-/* ===== Local utilities ===== */
-#include "ListComprehension.hpp"
-
+/* ===== C++ ===== */
+#include <functional>
+#include <vector>
 
 constexpr double nanometer = 1e-9;
 
@@ -16,55 +16,15 @@ constexpr long double operator"" _nanometer( unsigned long long aVal )
 	return aVal * nanometer;
 }
 
-
 class GlobalVars
 {
 public:
-	void SetScale( const double& aScale )
-	{
-		mScale = aScale;
-	}
+	void SetScale( const double& aScale );
+	void SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator );
+	void SetMaxR( const double& aMaxR );
+	void SetBins( const std::size_t& aRbins , const std::size_t& aTbins , const double& aMinScanR = 0.0 , const double& aMaxScanR = -1  , const double& aMinScanT = 0.0 , const double& aMaxScanT = -1 );
 
-	void SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
-	{
-		mSigmacount = aSigmacount;
-		mSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
-		auto lSigmabins = [ & ]( const int& i ){ return ( i * mSigmaspacing ) + aSigmaMin;  } | range( mSigmacount );
-
-		mSigmabins = [ & ]( const double& i ){ return i * mScale; } | lSigmabins;
-  		mSigmabins2= []( const double& i ){ return i * i; } | mSigmabins;
-		mProbabilitySigma = aInterpolator | lSigmabins;
-		mLogProbabilitySigma = []( const double& w){ return log(w); } | mProbabilitySigma;
-
-		mSigmaspacing *= mScale;
-	}
-
-	void SetMaxR( const double& aMaxR )
-	{
-		mMaxR = aMaxR * mScale;
-		mMaxR2 = mMaxR * mMaxR;
-		mMax2R = 2.0 * mMaxR;
-		mMax2R2 = mMax2R * mMax2R;
-	}
-
-	void SetBins( const std::size_t& aRbins , const std::size_t& aTbins , const double& aMinScanR = 0.0 , const double& aMaxScanR = -1  , const double& aMinScanT = 0.0 , const double& aMaxScanT = -1 )
-	{
-		mRbins = aRbins;
-		mTbins = aTbins;
-
-		mMinScanR = aMinScanR;
-		if( aMaxScanR < 0 ) mMaxScanR = mMaxR;
-		else mMaxScanR = aMaxScanR;
-
-		mMinScanT = aMinScanT;
-		if( aMaxScanT < 0 ) mMaxScanT = 2.5 * mMaxR;
-		else mMaxScanT = aMaxScanT;
-
-		mDR = ( mMaxScanR - mMinScanR ) / mRbins;
-		mDT = ( mMaxScanT - mMinScanT ) / mTbins;
-
-	}
-
+public:
 	inline const double& scale() const { return mScale; }
 
 	inline const std::size_t& sigmacount() const { return mSigmacount; }
@@ -114,4 +74,4 @@ private:
 
 };
 
-GlobalVars Parameters;
+extern GlobalVars Parameters;

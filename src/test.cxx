@@ -12,7 +12,7 @@
 #include <map>
 
 /* ===== For Root ===== */
-// #include "TH2D.h"
+#include "TH2D.h"
 #include "Math/Interpolator.h" 
 
 /* ===== Local utilities ===== */

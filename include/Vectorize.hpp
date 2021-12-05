@@ -11,9 +11,7 @@
 class WrappedThread
 {
 public:
-  WrappedThread(): lMask( uint64_t(0x1) << lInstanceCtr++ ) , //lInstance( lInstanceCtr++ ) , 
-  lThread( &WrappedThread::Runner , this )
-  {}
+  WrappedThread();
 
   WrappedThread( const WrappedThread& ) = delete;
   WrappedThread& operator = (const WrappedThread&) = delete;
@@ -21,48 +19,20 @@ public:
   WrappedThread(WrappedThread&&) = default;
   WrappedThread& operator = (WrappedThread&&) = default;
 
-  virtual ~WrappedThread()
-  {
-    lTerminate = true;
-    lThread.join();
-  }
+  virtual ~WrappedThread();
 
-  inline void submit( const std::function< void() >& aFunc )
-  {
-    std::unique_lock<std::mutex> lLock(lMutex);
-    lFunc = aFunc;
-    lBusy |= lMask;
-  }
+  void submit( const std::function< void() >& aFunc );
 
-  // inline void submit( const std::function< void( const std::size_t& aIndex ) >& aFunc )
-  // {
-  //   std::unique_lock<std::mutex> lLock(lMutex);
-  //   lFunc = [ & , aFunc ](){ aFunc( lInstance ); };
-  //   lBusy |= lMask;    
-  // }
+  // void submit( const std::function< void( const std::size_t& aIndex ) >& aFunc );
 
-  static inline void wait()
-  {
-    while( WrappedThread::lBusy ){}
-  }
+  static void wait();
 
 private:
-  void Runner()
-  {
-    while (true)
-    {
-      std::unique_lock<std::mutex> lLock(lMutex);
-      if( lTerminate ) return;
-      if( !( lBusy & lMask ) ) continue;
-      (lFunc)();
-      lBusy &= ~lMask;
-    }
-  }
+  void Runner();
 
   static std::atomic< std::uint64_t > lBusy;
   static std::uint64_t lInstanceCtr;
   const std::uint64_t lMask;
-  // const std::uint64_t lInstance;
 
   std::function< void() > lFunc;
   std::atomic< bool > lTerminate;

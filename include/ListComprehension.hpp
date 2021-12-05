@@ -1,6 +1,8 @@
 #pragma once
 
+#include <functional>
 #include <algorithm>
+#include <vector>
 
 /* ===== Super nerd template magic emulating list comprehension ===== */
 template< typename tContainer , typename tExpr >

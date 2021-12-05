@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 /* ===== For Root ===== */
 #include "TCanvas.h"
 #include "TROOT.h"
@@ -8,7 +10,7 @@
 #include "TRootCanvas.h"
 
 
-void DisplayHelper( TCanvas* c , const int& i ){}
+void DisplayHelper( TCanvas* c , const int& i );
 
 template< typename First , typename... Rest >
 void DisplayHelper( TCanvas* c , const int& i , const First& aFirst , Rest&&... aRest )

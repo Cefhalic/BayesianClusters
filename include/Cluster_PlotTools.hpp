@@ -1,35 +1,15 @@
 #pragma once
 
-/* ===== Cluster sources ===== */
-#include "Cluster_Data.hpp"
-
 /* ===== C++ ===== */
 #include <vector>
+#include <map>
 
-/* ===== For Root ===== */
-#include "TCanvas.h"
-#include "TROOT.h"
-#include "TAxis.h"
-#include "TGraph.h"
-#include "TGraph2D.h"
-#include "TH2D.h"
-#include "TEllipse.h"
-
-/* ===== Local utilities ===== */
-#include "ListComprehension.hpp"
+class Data;
+class TH2D;
 
 
 /* ===== Function for plotting data ===== */
-void DrawPoints( const std::vector< Data >& aData )
-{
-  gPad -> SetMargin( 0.01 , 0.01 , 0.01 , 0.01 );
-  TGraph* lGraph = new TGraph( aData.size() , ( &Data::x | aData ).data() , ( &Data::y | aData ).data() );
-  auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
-  FormatAxis( lGraph->GetXaxis() );
-  FormatAxis( lGraph->GetYaxis() );
-  lGraph->Draw( "ap" );
-}
-
+void DrawPoints( const std::vector< Data >& aData );
 
 /* ===== Function for plotting weights ===== */
 // void DrawWeights()
@@ -47,61 +27,8 @@ void DrawPoints( const std::vector< Data >& aData )
 //   lGraph->Draw( "surf1" );  
 // }
 
-
 /* ===== Function for plotting output hist ===== */
-void DrawHisto( TH2D* aHist )
-{
-  gPad -> SetLeftMargin( 0.15 );
-  gPad -> SetRightMargin( 0.15 );
-  gPad->SetLogz();
-  aHist->SetContour(1e6);
-  aHist->Draw("colz");  
-}
-
+void DrawHisto( TH2D* aHist );
 
 /* ===== Function for plotting data ===== */
-void DrawPoints( const std::map< const Data* , std::vector< Data* > >& aData )
-{
-  gPad -> SetMargin( 0.01 , 0.01 , 0.01 , 0.01 );
-
-  auto GetX = []( const Data* i ){ return i->x; };
-  auto GetY = []( const Data* i ){ return i->y; };
-
-  auto i( aData.begin() );
-  TGraph* lGraph = new TGraph( i->second.size() , ( GetX | i->second ).data() , ( GetY | i->second ).data() );
-
-  auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
-  FormatAxis( lGraph->GetXaxis() );
-  FormatAxis( lGraph->GetYaxis() );
-  lGraph->SetMarkerColor( 1 );
-  lGraph->Draw( "ap" );
-
-  i++;
-  int cnt(0);
-  for( ; i != aData.end() ; ++i , ++cnt )
-  {
-    double x(0.0) , y(0.0) , x2(0.0) , y2(0.0);
-    for( auto& j: i->second )
-    {
-      x += (j->x);
-      x2 += (j->x)*(j->x);
-      y += (j->y);      
-      y2 += (j->y)*(j->y);
-    }
-
-    x /= i->second.size();
-    x2 /= i->second.size();
-    y /= i->second.size();
-    y2 /= i->second.size();
-
-    TEllipse *el1 = new TEllipse( x , y , 4 * sqrt( x2 - (x*x) ) , 4 * sqrt( y2 - (y*y) ) );
-    el1->SetFillStyle(0);
-    el1->SetLineColor( (cnt%8)+2 );    
-    el1->Draw();
-
-    TGraph* lGraph = new TGraph( i->second.size() , ( GetX | i->second ).data() , ( GetY | i->second ).data() );
-    lGraph->SetMarkerColor( (cnt%8)+2 );
-    lGraph->Draw( "samep" );
-
-  }
-}
+void DrawPoints( const std::map< const Data* , std::vector< Data* > >& aData );

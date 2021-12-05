@@ -1,7 +1,8 @@
-#pragma once
+
 
 /* ===== Cluster sources ===== */
 #include "Cluster_Data.hpp"
+#include "Cluster_PlotTools.hpp"
 
 /* ===== C++ ===== */
 #include <vector>
