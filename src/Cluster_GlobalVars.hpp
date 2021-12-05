@@ -3,30 +3,45 @@
 /* ===== Local utilities ===== */
 #include "ListComprehension.hpp"
 
-/* ===== For Root ===== */
-#include "Math/Interpolator.h" 
+
+constexpr double nanometer = 1e-9;
+
+constexpr long double operator"" _nanometer( long double aVal )
+{
+	return aVal * nanometer;
+}
+
+constexpr long double operator"" _nanometer( unsigned long long aVal )
+{
+	return aVal * nanometer;
+}
+
 
 class GlobalVars
 {
 public:
-	void SetSigmaCountAndSpacing( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax )
+	void SetScale( const double& aScale )
+	{
+		mScale = aScale;
+	}
+
+	void SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
 	{
 		mSigmacount = aSigmacount;
 		mSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
-  		mSigmabins = [ & ]( const int& i ){ return ( i * mSigmaspacing ) + aSigmaMin; } | range( mSigmacount );
-  		mSigmabins2= []( const double& i ){ return i * i; } | mSigmabins;
-	}
+		auto lSigmabins = [ & ]( const int& i ){ return ( i * mSigmaspacing ) + aSigmaMin;  } | range( mSigmacount );
 
-	void SetProbabilitySigma( const std::vector< double >& aSigma , const std::vector< double >& aProbabilitySigma )
-	{
-		ROOT::Math::Interpolator lInt( aSigma , aProbabilitySigma ); // Default to cubic spline interpolation
-		mProbabilitySigma = [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } | mSigmabins;
+		mSigmabins = [ & ]( const double& i ){ return i * mScale; } | lSigmabins;
+  		mSigmabins2= []( const double& i ){ return i * i; } | mSigmabins;
+		mProbabilitySigma = aInterpolator | lSigmabins;
 		mLogProbabilitySigma = []( const double& w){ return log(w); } | mProbabilitySigma;
+
+		mSigmaspacing *= mScale;
 	}
 
 	void SetMaxR( const double& aMaxR )
 	{
-		mMaxR = aMaxR;
+		mMaxR = aMaxR * mScale;
 		mMaxR2 = mMaxR * mMaxR;
 		mMax2R = 2.0 * mMaxR;
 		mMax2R2 = mMax2R * mMax2R;
@@ -49,6 +64,8 @@ public:
 		mDT = ( mMaxScanT - mMinScanT ) / mTbins;
 
 	}
+
+	inline const double& scale() const { return mScale; }
 
 	inline const std::size_t& sigmacount() const { return mSigmacount; }
 	inline const double& sigmaspacing() const { return mSigmaspacing; }
@@ -81,6 +98,8 @@ public:
 	inline const std::size_t& Tbins() const { return mTbins; }
 
 private:	
+	double mScale;
+
 	std::size_t mSigmacount;
 	double mSigmaspacing;
 

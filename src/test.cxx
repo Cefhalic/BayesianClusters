@@ -2,6 +2,7 @@
 #include "Cluster_Data.hpp"
 #include "Cluster_DataSources.hpp"
 #include "Cluster_PlotTools.hpp"
+#include "Cluster_GlobalVars.hpp"
 
 // /* ===== C++ ===== */
 #include <thread>
@@ -12,7 +13,7 @@
 
 /* ===== For Root ===== */
 // #include "TH2D.h"
-#include "Math/ProbFunc.h" 
+#include "Math/Interpolator.h" 
 
 /* ===== Local utilities ===== */
 #include "ListComprehension.hpp"
@@ -71,6 +72,8 @@ void ScanRT( std::vector<Data>& aData )
 
   double R( Parameters.minScanR() ) , R2( 0 ) , T( 0 );
 
+  //std::cout << R << " " << Parameters.dR() << std::endl;
+
   ProgressBar lProgressBar( "Scan over RT" , Parameters.Rbins() * Parameters.Tbins() );
 
   for( uint32_t i(0) ; i!=Parameters.Rbins() ; ++i , R+=Parameters.dR() )
@@ -80,7 +83,8 @@ void ScanRT( std::vector<Data>& aData )
 
     [ &Nminus1 , &R2 ]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); } || aData; 
 
-    []( Data& i ){ i.ResetClusters(); } || aData;
+    for( auto& i : aData ) i.ResetClusters();
+    // []( Data& i ){ i.ResetClusters(); } || aData;
 
     for( uint32_t j(0) ; j!=Parameters.Tbins() ; ++j , T-=Parameters.dT() , ++lProgressBar )
     {
@@ -120,26 +124,27 @@ void PrepData( std::vector<Data>& aData )
 int main(int argc, char **argv)
 {
 
-
-  Parameters.SetSigmaCountAndSpacing( 10 , 1e-3 , 3e-2 );
-  Parameters.SetProbabilitySigma( { 0.0000 , 0.0050 , 0.010 , 0.015 , 0.020 , 0.025 , 0.030 , 0.035 , 0.040 , 0.045 } , 
-                                  { 0.03631079, 0.110302441, 0.214839819, 0.268302465, 0.214839819, 0.110302441, 0.03631079, 0.007664194, 0.001037236, 9.00054E-05 } );
-  Parameters.SetMaxR( 0.02 );
-  Parameters.SetBins( 40 , 40 );
+  ROOT::Math::Interpolator lInt( { 5_nanometer , 15_nanometer , 25_nanometer , 35_nanometer , 45_nanometer , 55_nanometer , 65_nanometer , 75_nanometer , 85_nanometer , 95_nanometer } , 
+                                 { 0.03631079  , 0.110302441  , 0.214839819  , 0.268302465  , 0.214839819  , 0.110302441  , 0.03631079   , 0.007664194  , 0.001037236  , 9.00054E-05 } ); // Default to cubic spline interpolation
+  
+  Parameters.SetScale( 1e5 );
+  Parameters.SetSigmaParameters( 100 , 5_nanometer , 95_nanometer , [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } );
+  Parameters.SetMaxR( 95_nanometer );
+  Parameters.SetBins( 100 , 100 );
 
 //  auto lData = LoadCSV( "1_un_red.csv" , 1./64000. , -1. , -1. ); // Full file
-   // auto lData = LoadCSV( "1_un_red.csv" , 1./10000. , 87000. , 32000. ); // One cluster
+  auto lData = LoadCSV( "1_un_red.csv" , 87_nanometer , 32_nanometer ); // One cluster
   //auto lData = LoadCSV( "1_un_red.csv" , 1./1000. , 87000. , 32000. ); // Very zoomed
 
 
-  auto lData = CreatePseudoData( 10000 , 500 , 500 , .015 );
+  //auto lData = CreatePseudoData( 10000 , 500 , 500 , .015 );
   // auto lData = CreatePseudoData( 100 , 20 , 500 , .01 );
-  //auto lData = CreatePseudoData( 70000 , 500 , 500 , .01 );
+  //auto lData = CreatePseudoData( 70000 , 700 , 700 , .005 );
 
   //InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } );
 
 
-  PrepData( lData );
+  //PrepData( lData );
 
 
 

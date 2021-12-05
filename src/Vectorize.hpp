@@ -4,13 +4,15 @@
 #include <mutex>
 #include <vector>
 #include <thread>
+#include <atomic>
 
 #include "ListComprehension.hpp"
 
 class WrappedThread
 {
 public:
-  WrappedThread(): lMask( uint64_t(0x1) << lInstanceCtr ) , lInstance( lInstanceCtr++ ) , lThread( &WrappedThread::Runner , this )
+  WrappedThread(): lMask( uint64_t(0x1) << lInstanceCtr++ ) , //lInstance( lInstanceCtr++ ) , 
+  lThread( &WrappedThread::Runner , this )
   {}
 
   WrappedThread( const WrappedThread& ) = delete;
@@ -32,12 +34,12 @@ public:
     lBusy |= lMask;
   }
 
-  inline void submit( const std::function< void( const std::size_t& aIndex ) >& aFunc )
-  {
-    std::unique_lock<std::mutex> lLock(lMutex);
-    lFunc = [ & , aFunc ](){ aFunc( lInstance ); };
-    lBusy |= lMask;    
-  }
+  // inline void submit( const std::function< void( const std::size_t& aIndex ) >& aFunc )
+  // {
+  //   std::unique_lock<std::mutex> lLock(lMutex);
+  //   lFunc = [ & , aFunc ](){ aFunc( lInstance ); };
+  //   lBusy |= lMask;    
+  // }
 
   static inline void wait()
   {
@@ -60,7 +62,7 @@ private:
   static std::atomic< std::uint64_t > lBusy;
   static std::uint64_t lInstanceCtr;
   const std::uint64_t lMask;
-  const std::uint64_t lInstance;
+  // const std::uint64_t lInstance;
 
   std::function< void() > lFunc;
   std::atomic< bool > lTerminate;

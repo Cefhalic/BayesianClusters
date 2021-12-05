@@ -69,14 +69,13 @@ public:
 
 public:
   Data( const double& aX , const double& aY , const double& aS ) : 
-  mutex( new std::mutex() ),
+  // mutex( new std::mutex() ),
   x(aX) , y(aY) , s(aS) , r( sqrt( (aX*aX) + (aY*aY) ) ), phi( atan2( aY , aX ) ),
   eX( 1 - fabs( aX ) ) , eY( 1 - fabs( aY ) ) , 
-  //w( [ aS ]( const double& sig2 ){ return  } | Parameters.sigmabins2() ), log_w( []( const double& w){ return log(w); } | w ),
   localizationsum( 0.0 ) , localizationscore( 0.0 ),
   neighbourit( neighbours[0].end() ),
   parent( NULL ), children( { this } ),
-  ClusterSize( 0 )
+  ClusterSize( 0 ) , ClusterScore( 0.0 )
   {
     for( auto& sig2 : Parameters.sigmabins2() ) ClusterParams.emplace_back( 1 / ( (aS*aS) + sig2 ) );
   }
@@ -168,11 +167,12 @@ public:
     for( auto lIt( children.begin() ) ; lIt != children.end() ;  ){
       auto lIt_copy = lIt++;
       if( *lIt_copy == this ) continue;
-      std::unique_lock< std::mutex > lLock( *(**lIt_copy).mutex );
+      // std::unique_lock< std::mutex > lLock( *(**lIt_copy).mutex );
       (**lIt_copy).children.splice( (**lIt_copy).children.end() , children , lIt_copy );
     } 
 
     ClusterSize = 1;
+    ClusterScore = 0.0;
     for( auto& i : ClusterParams ) i.Reset( x , y );
   }
 
@@ -232,8 +232,10 @@ public:
 
   inline void UpdateClusterScore()
   {
-    if( ClusterSize >= children.size() ) return;
+    if( ! (children.size() > ClusterSize) ) return; // We were not bigger than the previous size when we were evaluated - score is still valid
+
     ClusterSize = children.size();
+    ClusterScore = 0.0;
 
     static constexpr double pi = atan(1)*4;
     static constexpr double logA( -1.0 * log( 4.0 ) );
@@ -280,12 +282,11 @@ public:
     // integral *= Parameters.sigmaspacing();  
     //return log( integral ) + Max; 
 
-    // return 0.0;
   }
 
 
 public:
-  std::unique_ptr< std::mutex > mutex;
+  // std::unique_ptr< std::mutex > mutex;
   double x, y, s , r, phi;
   double eX , eY;
   double localizationsum , localizationscore;
@@ -296,6 +297,7 @@ public:
   Data* parent;
   std::list< Data* > children;
   std::size_t ClusterSize;
+  double ClusterScore;
 
   std::vector< ClusterParameter > ClusterParams;
 
