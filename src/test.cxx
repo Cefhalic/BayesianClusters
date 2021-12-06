@@ -83,8 +83,8 @@ void ScanRT( std::vector<Data>& aData )
 
     [ &Nminus1 , &R2 ]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); } || aData; 
 
-    for( auto& i : aData ) i.ResetClusters();
-    // []( Data& i ){ i.ResetClusters(); } || aData;
+    // for( auto& i : aData ) i.ResetClusters();
+    []( Data& i ){ i.ResetClusters(); } || aData;
 
     for( uint32_t j(0) ; j!=Parameters.Tbins() ; ++j , T-=Parameters.dT() , ++lProgressBar )
     {
@@ -108,7 +108,7 @@ void PrepData( std::vector<Data>& aData )
   ProgressBar2 lProgressBar( "Preprocessing" , aData.size() );
 
   // Crucial step is to sort!
-  std::sort( aData.begin() , aData.end() );
+  // std::sort( aData.begin() , aData.end() );
 
   // Populate neighbour lists
   // Interleave threading since processing time increases with radius from origin
@@ -121,6 +121,7 @@ void PrepData( std::vector<Data>& aData )
 
 
 /* ===== Main function ===== */
+__attribute__((flatten))
 int main(int argc, char **argv)
 {
 
@@ -133,7 +134,7 @@ int main(int argc, char **argv)
   Parameters.SetBins( 100 , 100 );
 
 //  auto lData = LoadCSV( "1_un_red.csv" , 1./64000. , -1. , -1. ); // Full file
-  auto lData = LoadCSV( "1_un_red.csv" , 87_nanometer , 32_nanometer ); // One cluster
+  auto lData = LoadCSV( "1_un_red.csv" , 87000_nanometer , 32000_nanometer ); // One cluster
   //auto lData = LoadCSV( "1_un_red.csv" , 1./1000. , 87000. , 32000. ); // Very zoomed
 
 
@@ -141,21 +142,21 @@ int main(int argc, char **argv)
   // auto lData = CreatePseudoData( 100 , 20 , 500 , .01 );
   //auto lData = CreatePseudoData( 70000 , 700 , 700 , .005 );
 
-  //InteractiveDisplay( [ lData ](){ DrawPoints( lData ); } );
+  // InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } );
 
 
-  //PrepData( lData );
+  PrepData( lData );
 
 
 
-  auto Rlo = Parameters.minScanR() - ( 0.5 * Parameters.dR() );
-  auto Rhi = Parameters.maxScanR() - ( 0.5 * Parameters.dR() );
-  auto Tlo = Parameters.minScanT() - ( 0.5 * Parameters.dT() );
-  auto Thi = Parameters.maxScanT() - ( 0.5 * Parameters.dT() );
+  // auto Rlo = Parameters.minScanR() - ( 0.5 * Parameters.dR() );
+  // auto Rhi = Parameters.maxScanR() - ( 0.5 * Parameters.dR() );
+  // auto Tlo = Parameters.minScanT() - ( 0.5 * Parameters.dT() );
+  // auto Thi = Parameters.maxScanT() - ( 0.5 * Parameters.dT() );
 
-  Nclust     = new TH2D( "Nclust" , "N_{clusters};r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
-  ClustSize  = new TH2D( "ClustSize" , "<N_{points}>;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
-  ClustScore = new TH2D( "ClustScore" , "Score;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
+  // Nclust     = new TH2D( "Nclust" , "N_{clusters};r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
+  // ClustSize  = new TH2D( "ClustSize" , "<N_{points}>;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
+  // ClustScore = new TH2D( "ClustScore" , "Score;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
 
 
   ScanRT( lData );

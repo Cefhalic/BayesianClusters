@@ -45,3 +45,7 @@ void WrappedThread::Runner()
   }
 }
 
+std::uint64_t WrappedThread::lInstanceCtr( 0x0 );
+std::atomic< std::uint64_t > WrappedThread::lBusy( 0x0 );
+
+std::vector< std::unique_ptr< WrappedThread > > ThreadPool( []( const int& ){ return std::unique_ptr< WrappedThread >( new WrappedThread() ); } | range( Concurrency ) );

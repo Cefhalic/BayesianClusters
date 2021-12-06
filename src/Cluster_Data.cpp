@@ -55,13 +55,14 @@ Data::ClusterParameter& Data::ClusterParameter::operator+= ( const Data::Cluster
 }
 
 
-Data::Data( const double& aX , const double& aY , const double& aS ) : 
+Data::Data( const std::size_t& aI , const double& aX , const double& aY , const double& aS ) : 
 // mutex( new std::mutex() ),
+i(aI) ,
 x(aX) , y(aY) , s(aS) , r( sqrt( (aX*aX) + (aY*aY) ) ), phi( atan2( aY , aX ) ),
 eX( 1 - fabs( aX ) ) , eY( 1 - fabs( aY ) ) , 
 localizationsum( 0.0 ) , localizationscore( 0.0 ),
 neighbourit( neighbours[0].end() ),
-parent( NULL ), children( { this } ),
+parent( NULL ), children(),
 ClusterSize( 0 ) , ClusterScore( 0.0 )
 {
   for( auto& sig2 : Parameters.sigmabins2() ) ClusterParams.emplace_back( 1 / ( (aS*aS) + sig2 ) );
@@ -87,6 +88,7 @@ double Data::dR( const Data& aOther ) const
 
 void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd )
 {
+  children = { this };
 
   // Iterate over other hits and populate the neighbour list
   for( ; aPlusIt != aPlusEnd ; aPlusIt++ )

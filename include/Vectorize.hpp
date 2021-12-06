@@ -6,6 +6,7 @@
 #include <thread>
 #include <atomic>
 
+
 #include "ListComprehension.hpp"
 
 class WrappedThread
@@ -41,12 +42,9 @@ private:
    
 };
 
-std::uint64_t WrappedThread::lInstanceCtr( 0x0 );
-std::atomic< std::uint64_t > WrappedThread::lBusy( 0x0 );
-
 
 const std::size_t Concurrency( std::thread::hardware_concurrency() - 1 );
-std::vector< std::unique_ptr< WrappedThread > > ThreadPool( []( const int& ){ return std::unique_ptr< WrappedThread >( new WrappedThread() ); } | range( Concurrency ) );
+extern std::vector< std::unique_ptr< WrappedThread > > ThreadPool;
 
 
 // Syntactic sugar
@@ -54,6 +52,6 @@ template< typename tContainer , typename tExpr >
 inline void operator|| ( tExpr&& aExpr , tContainer&& aContainer )
 {
   auto Thread( ThreadPool.begin() );
-  for( std::size_t offset(0) ; offset!=Concurrency ; ++offset , ++Thread ) (**Thread).submit( [ &aExpr , &aContainer , offset ](){ for( auto i( aContainer.begin() + offset) ; i<aContainer.end() ; i+=Concurrency ) aExpr( *i ); } );
+  for( std::size_t offset(0) ; offset!=Concurrency ; ++offset , ++Thread ) (**Thread).submit( [ aExpr , &aContainer , offset ](){ for( auto i( aContainer.begin() + offset) ; i<aContainer.end() ; i+=Concurrency ) aExpr( *i ); } );
   WrappedThread::wait();
 }
