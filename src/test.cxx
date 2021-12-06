@@ -29,11 +29,9 @@ double __Cluster__( std::vector<Data>& aData , const double& R , const double& T
   const double twoR2 = 4.0 * R * R;
 
   // For real multi-threading want to use blocks, not interleaved, to minimize collisions
-  // [ &twoR2 , &T ]( Data& i ){ i.Clusterize( twoR2 , T ); } && aData;
+  [ &twoR2 , &T ]( Data& i ){ i.Clusterize( twoR2 , T ); } && aData;
 
-  for( auto& i : aData ) i.Clusterize( twoR2 , T ); 
-  // for( auto& i : aData ) i.GetParent(); // Force update on all clusters;
-
+  // for( auto& i : aData ) i.Clusterize( twoR2 , T ); 
 
   double lScore ( 0.0 );
   []( Data& i ){ i.UpdateClusterScore(); } || aData; 
@@ -124,6 +122,7 @@ void PrepData( std::vector<Data>& aData )
 __attribute__((flatten))
 int main(int argc, char **argv)
 {
+  if (argc < 2) throw std::runtime_error( "Expecting a filename" );
 
   ROOT::Math::Interpolator lInt( { 5_nanometer , 15_nanometer , 25_nanometer , 35_nanometer , 45_nanometer , 55_nanometer , 65_nanometer , 75_nanometer , 85_nanometer , 95_nanometer } , 
                                  { 0.03631079  , 0.110302441  , 0.214839819  , 0.268302465  , 0.214839819  , 0.110302441  , 0.03631079   , 0.007664194  , 0.001037236  , 9.00054E-05 } ); // Default to cubic spline interpolation
@@ -131,10 +130,10 @@ int main(int argc, char **argv)
   Parameters.SetScale( 1e5 );
   Parameters.SetSigmaParameters( 100 , 5_nanometer , 95_nanometer , [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } );
   Parameters.SetMaxR( 95_nanometer );
-  Parameters.SetBins( 100 , 100 );
+  Parameters.SetBins( 40 , 40 );
 
 //  auto lData = LoadCSV( "1_un_red.csv" , 1./64000. , -1. , -1. ); // Full file
-  auto lData = LoadCSV( "1_un_red.csv" , 87000_nanometer , 32000_nanometer ); // One cluster
+  auto lData = LoadCSV( argv[1] , 87000_nanometer , 32000_nanometer ); // One cluster
   //auto lData = LoadCSV( "1_un_red.csv" , 1./1000. , 87000. , 32000. ); // Very zoomed
 
 

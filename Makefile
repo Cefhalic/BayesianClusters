@@ -25,7 +25,7 @@ buildall: _all
 # _all: ${LIBRARY_FILE} ${EXECUTABLES}
 _all: ${EXECUTABLES}
 
-FLAGS = -g -std=c++11 -march=native -O3 -lm `root-config --glibs --cflags --libs` -lMathMore -flto
+FLAGS = -g -std=c++11 -march=native -O3 -lm `root-config --glibs --cflags --libs` -lMathMore -flto -MMD -MP
 
 ${DIRECTORIES}:
 	mkdir -p $@

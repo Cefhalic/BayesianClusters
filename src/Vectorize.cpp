@@ -11,6 +11,7 @@ lThread( &WrappedThread::Runner , this )
 WrappedThread::~WrappedThread()
 {
   lTerminate = true;
+  m_data_condition.notify_one();  
   lThread.join();
 }
 
@@ -19,6 +20,7 @@ void WrappedThread::submit( const std::function< void() >& aFunc )
   std::unique_lock<std::mutex> lLock(lMutex);
   lFunc = aFunc;
   lBusy |= lMask;
+  m_data_condition.notify_one();
 }
 
 // void WrappedThread::submit( const std::function< void( const std::size_t& aIndex ) >& aFunc )
@@ -38,8 +40,9 @@ void WrappedThread::Runner()
   while (true)
   {
     std::unique_lock<std::mutex> lLock(lMutex);
+    m_data_condition.wait( lLock, [this]() { return ( lBusy & lMask ) || lTerminate; });
     if( lTerminate ) return;
-    if( !( lBusy & lMask ) ) continue;
+    // if( !( lBusy & lMask ) ) continue;
     (lFunc)();
     lBusy &= ~lMask;
   }

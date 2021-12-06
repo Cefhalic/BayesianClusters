@@ -56,7 +56,7 @@ Data::ClusterParameter& Data::ClusterParameter::operator+= ( const Data::Cluster
 
 
 Data::Data( const std::size_t& aI , const double& aX , const double& aY , const double& aS ) : 
-// mutex( new std::mutex() ),
+mutex( new std::mutex() ),
 i(aI) ,
 x(aX) , y(aY) , s(aS) , r( sqrt( (aX*aX) + (aY*aY) ) ), phi( atan2( aY , aX ) ),
 eX( 1 - fabs( aX ) ) , eY( 1 - fabs( aY ) ) , 
@@ -198,8 +198,8 @@ void Data::ClusterInto( Data* aParent )
   // If the existing parent is smaller than us, merge it into us
   if( aParent->children.size() < children.size() ) return aParent->ClusterInto( this );
 
-  // std::unique_lock< std::mutex > lLock1( *mutex );
-  // std::unique_lock< std::mutex > lLock2( *(aParent->mutex) );
+  std::unique_lock< std::mutex > lLock1( *mutex );
+  std::unique_lock< std::mutex > lLock2( *(aParent->mutex) );
 
   // Set the claiming cluster as parent
   parent = aParent;

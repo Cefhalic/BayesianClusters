@@ -4,8 +4,8 @@
 #include <vector>
 #include <list>
 #include <array>
-// #include <memory>
-// #include <mutex>
+#include <memory>
+#include <mutex>
 
 
 // // Burmann approximation of the Gaussian cumulative-distribution function
@@ -33,11 +33,11 @@ public:
   {
     ClusterParameter( const double& aW );
 
-    // ClusterParameter( const ClusterParameter& ) = delete;
-    // ClusterParameter& operator = (const ClusterParameter&) = delete;
+    ClusterParameter( const ClusterParameter& ) = delete;
+    ClusterParameter& operator = (const ClusterParameter&) = delete;
 
-    // ClusterParameter(ClusterParameter&&) = default;
-    // ClusterParameter& operator = (ClusterParameter&&) = default;
+    ClusterParameter(ClusterParameter&&) = default;
+    ClusterParameter& operator = (ClusterParameter&&) = default;
 
     void Reset( const double& aX , const double& aY);
 
@@ -74,7 +74,7 @@ public:
 
 
 public:
-  // std::unique_ptr< std::mutex > mutex;
+  std::unique_ptr< std::mutex > mutex;
   std::size_t i;
   double x, y, s , r, phi;
   double eX , eY;
