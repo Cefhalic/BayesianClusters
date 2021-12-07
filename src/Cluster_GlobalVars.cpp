@@ -5,11 +5,17 @@
 #include "Cluster_GlobalVars.hpp"
 
 
-
-void GlobalVars::SetScale( const double& aScale )
+void GlobalVars::SetZoom( const double& aScale )
 {
-	mScale = aScale;
+	mScale = 2.0 / aScale;
+	mScale2 = mScale * mScale;
 }
+
+// void GlobalVars::SetScale( const double& aScale )
+// {
+// 	mScale = aScale;
+// 	mScale2 = mScale * mScale;
+// }
 
 void GlobalVars::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
 {

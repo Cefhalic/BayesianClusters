@@ -5,6 +5,7 @@
 #include <vector>
 
 constexpr double nanometer = 1e-9;
+constexpr double micrometer = 1e-6;
 
 constexpr long double operator"" _nanometer( long double aVal )
 {
@@ -16,16 +17,30 @@ constexpr long double operator"" _nanometer( unsigned long long aVal )
 	return aVal * nanometer;
 }
 
+constexpr long double operator"" _micrometer( long double aVal )
+{
+	return aVal * micrometer;
+}
+
+constexpr long double operator"" _micrometer( unsigned long long aVal )
+{
+	return aVal * micrometer;
+}
+
+
+
 class GlobalVars
 {
 public:
-	void SetScale( const double& aScale );
+	void SetZoom( const double& aScale );
+	// void SetScale( const double& aScale );
 	void SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator );
 	void SetMaxR( const double& aMaxR );
 	void SetBins( const std::size_t& aRbins , const std::size_t& aTbins , const double& aMinScanR = 0.0 , const double& aMaxScanR = -1  , const double& aMinScanT = 0.0 , const double& aMaxScanT = -1 );
 
 public:
 	inline const double& scale() const { return mScale; }
+	inline const double& scale2() const { return mScale2; }
 
 	inline const std::size_t& sigmacount() const { return mSigmacount; }
 	inline const double& sigmaspacing() const { return mSigmaspacing; }
@@ -58,7 +73,7 @@ public:
 	inline const std::size_t& Tbins() const { return mTbins; }
 
 private:	
-	double mScale;
+	double mScale , mScale2;
 
 	std::size_t mSigmacount;
 	double mSigmaspacing;

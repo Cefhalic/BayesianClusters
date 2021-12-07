@@ -19,26 +19,28 @@ std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& a
 {
   std::cout << "Generating Pseudodata" << std::endl;
 
+  const auto lClusterScale( aClusterScale * Parameters.scale() );
+
   std::vector< Data > lData;
   lData.reserve( aBackgroundCount + ( aClusterCount * aClusterSize ) );
 
-  TRandom3 lRand( 23423 );
+  TRandom3 lRand( 2345234534 );
 
   std::size_t index(0);
 
   for( int i(0); i!= aBackgroundCount; ++i )
   {
-    double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) ) , s( lRand.Gaus( aClusterScale/10 , aClusterScale/30 ) );
+    double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) ) , s( lRand.Gaus( lClusterScale/10 , lClusterScale/30 ) );
     lData.emplace_back( index++ , x , y , s );
   }
 
   for( int i(0); i!= aClusterCount; ++i )
   {
     double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) );
-    double sigma( fabs( lRand.Gaus( aClusterScale , aClusterScale/3 ) ) );
+    double sigma( fabs( lRand.Gaus( lClusterScale , lClusterScale/3 ) ) );
     for( int j(0) ; j!= aClusterSize ; /* */ )
     {
-      double x2( lRand.Gaus( x , sigma ) ) , y2( lRand.Gaus( y , sigma ) ) , s( lRand.Gaus( aClusterScale/10 , aClusterScale/30 ) );  
+      double x2( lRand.Gaus( x , sigma ) ) , y2( lRand.Gaus( y , sigma ) ) , s( lRand.Gaus( lClusterScale/10 , lClusterScale/30 ) );  
       if( x2 > 1 or x2 < -1 or y2 > 1 or y2 < -1 ) continue;    
       lData.emplace_back( index++ , x2 , y2 , s );
       ++j;

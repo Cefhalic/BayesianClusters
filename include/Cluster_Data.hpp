@@ -24,7 +24,6 @@
 // }
 
 
-
 /* ===== Struct for storing data ===== */
 class Data
 {
@@ -43,8 +42,10 @@ public:
 
     ClusterParameter& operator+= ( const ClusterParameter& aOther );
 
-    /* const */ double w , logw;
-    double n_tilde , sum_logw , nu_bar_x , nu_bar_y;
+    const double w , logw;
+    double A , Bx, Cx, By, Cy, sum_logw;
+
+    // double n_tilde , sum_logw , nu_bar_x , nu_bar_y;
   };  
 
 public:
@@ -68,7 +69,7 @@ public:
   void Clusterize( const double& a2R2 , const double& aT );
   void ClusterInto( Data* aParent );
 
-  double S2( const std::size_t& index , const double& nu_bar_x , const double& nu_bar_y ) const;
+  // double S2( const std::size_t& index , const double& nu_bar_x , const double& nu_bar_y ) const;
 
   void UpdateClusterScore();
 

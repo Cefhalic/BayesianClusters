@@ -7,6 +7,7 @@
 
 /* ===== For Root ===== */
 #include "Math/ProbFunc.h" 
+#include "Math/Interpolator.h" 
 
 /* ===== Cluster sources ===== */
 #include "Cluster_GlobalVars.hpp"
@@ -39,18 +40,28 @@ Data::ClusterParameter::ClusterParameter( const double& aW ) : w(aW) , logw( log
     
 void Data::ClusterParameter::Reset( const double& aX , const double& aY)
 {
-  n_tilde = w;
+  A = w;
+  Bx = w * aX;
+  By = w * aY;
+  Cx = Bx * aX;
+  Cy = By * aY;
+  // n_tilde = w;
   sum_logw = logw;
-  nu_bar_x = w * aX;
-  nu_bar_y = w * aY;
+  // nu_bar_x = w * aX;
+  // nu_bar_y = w * aY;
 }
 
 Data::ClusterParameter& Data::ClusterParameter::operator+= ( const Data::ClusterParameter& aOther )
 {
-  n_tilde += aOther.n_tilde;
+  A += aOther.A;
+  Bx += aOther.Bx;
+  By += aOther.By;
+  Cx += aOther.Cx;
+  Cy += aOther.Cy;
+  // n_tilde += aOther.n_tilde;
   sum_logw += aOther.sum_logw;
-  nu_bar_x += aOther.nu_bar_x;
-  nu_bar_y += aOther.nu_bar_y;
+  // nu_bar_x += aOther.nu_bar_x;
+  // nu_bar_y += aOther.nu_bar_y;
   return *this;
 }
 
@@ -65,7 +76,10 @@ neighbourit( neighbours[0].end() ),
 parent( NULL ), children(),
 ClusterSize( 0 ) , ClusterScore( 0.0 )
 {
-  for( auto& sig2 : Parameters.sigmabins2() ) ClusterParams.emplace_back( 1 / ( (aS*aS) + sig2 ) );
+  for( auto& sig2 : Parameters.sigmabins2() ) ClusterParams.emplace_back( 1.0 / ( (aS*aS) + sig2 ) );
+
+  neighbours[0].reserve( 1024 );
+  neighbours[1].reserve( 1024 );    
 }
 
 
@@ -86,44 +100,48 @@ double Data::dR( const Data& aOther ) const
 }
 
 
+__attribute__((flatten))
 void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd )
 {
   children = { this };
+
+  auto& neighbours0 = neighbours[0];
+  auto& neighbours1 = neighbours[1];
 
   // Iterate over other hits and populate the neighbour list
   for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
   {
     if( ( aPlusIt->r - r ) > Parameters.maxR() ) break; // aPlusIt is always further out than curent 
     double ldR2 = dR2( *aPlusIt );
-    if( ldR2 < Parameters.maxR2() ) neighbours[0].push_back( std::make_pair( ldR2 , &*aPlusIt ) );
+    if( ldR2 < Parameters.maxR2() ) neighbours0.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
   }
 
   for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
   {
     if( ( r - aMinusIt->r ) > Parameters.maxR() ) break; // curent is always further out than aMinusIn
     double ldR2 = dR2( *aMinusIt );    
-    if( ldR2 < Parameters.maxR2() ) neighbours[0].push_back( std::make_pair( ldR2 , &*aMinusIt ) );
+    if( ldR2 < Parameters.maxR2() ) neighbours0.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
   }
 
-  std::sort( neighbours[0].begin() , neighbours[0].end() );
-  neighbourit = neighbours[0].begin();
+  std::sort( neighbours0.begin() , neighbours0.end() );
+  neighbourit = neighbours0.begin();
 
   // Iterate over other hits and populate the neighbour2 list
   for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
   {
     if( ( aPlusIt->r - r ) > Parameters.max2R() ) break; // aPlusIt is always further out than curent  
     double ldR2 = dR2( *aPlusIt );
-    if( ldR2 < Parameters.max2R2() ) neighbours[1].push_back( std::make_pair( ldR2 , &*aPlusIt ) );
+    if( ldR2 < Parameters.max2R2() ) neighbours1.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
   }
 
   for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
   {
     if( ( r - aMinusIt->r ) > Parameters.max2R() ) break; // curent is always further out than aMinusIn
     double ldR2 = dR2( *aMinusIt );    
-    if( ldR2 < Parameters.max2R2() ) neighbours[1].push_back( std::make_pair( ldR2 , &*aMinusIt ) );
+    if( ldR2 < Parameters.max2R2() ) neighbours1.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
   }
 
-  std::sort( neighbours[1].begin() , neighbours[1].end() );
+  std::sort( neighbours1.begin() , neighbours1.end() );
 }
 
 
@@ -169,9 +187,13 @@ void Data::ResetClusters()
   for( auto& i : ClusterParams ) i.Reset( x , y );
 }
 
+// #include <iostream>
 
+__attribute__((flatten))
 void Data::Clusterize( const double& a2R2 , const double& aT )
 {
+  // std::cout << "---------------- " << r << " ----------------" << std::endl;
+
   if( parent ) return;
   if( localizationscore < aT ) return;
 
@@ -190,16 +212,17 @@ void Data::Clusterize( const double& a2R2 , const double& aT )
 
 void Data::ClusterInto( Data* aParent )
 {
-  if ( parent == this ) return;
+  if ( parent == aParent ) return;
+
+  // std::cout << std::string( recursion , ' ' ) << r << " " << this << " " << parent << " " << aParent << std::endl;
 
   // We already belong to another - they already have all our children and clusterparams - Hand them over to claiming cluster and return
-  if ( parent ) return parent-> ClusterInto( aParent );
+  if ( parent and parent != this ) return parent-> ClusterInto( aParent );
 
   // If the existing parent is smaller than us, merge it into us
   if( aParent->children.size() < children.size() ) return aParent->ClusterInto( this );
 
-  std::unique_lock< std::mutex > lLock1( *mutex );
-  std::unique_lock< std::mutex > lLock2( *(aParent->mutex) );
+  std::lock( *mutex , *(aParent->mutex) );
 
   // Set the claiming cluster as parent
   parent = aParent;
@@ -213,67 +236,75 @@ void Data::ClusterInto( Data* aParent )
 
   // Add our cluster params into the parent's
   for( auto lIt( ClusterParams.begin() ) , lIt2( parent->ClusterParams.begin() ) ; lIt != ClusterParams.end() ; ++lIt , ++lIt2 ) *lIt2 += *lIt;
+
+  mutex->unlock();
+  aParent->mutex->unlock();
 }
 
-double Data::S2( const std::size_t& index , const double& nu_bar_x , const double& nu_bar_y ) const
+// double Data::S2( const std::size_t& index , const double& nu_bar_x , const double& nu_bar_y ) const
+// {
+//   auto lX( x - nu_bar_x ) , lY( y - nu_bar_y );
+//   auto d2( (lX*lX) + (lY*lY) );
+//   return ClusterParams[index].w * d2;
+// }
+
+// #include <sstream>
+// #include <iostream>
+
+inline double CDF( const double& aArg )
 {
-  auto lX( x - nu_bar_x ) , lY( y - nu_bar_y );
-  auto d2( (lX*lX) + (lY*lY) );
-  return ClusterParams[index].w * d2;
+  // Above or below ~8 are indistinguishable from 0 and 1 respectively
+  if( aArg > 8.0 ) return 1.0;
+  if( aArg < 8.0 ) return 0.0;
+  return  ROOT::Math::normal_cdf( aArg );
 }
 
 
+__attribute__((flatten))
 void Data::UpdateClusterScore()
 {
   if( ! (children.size() > ClusterSize) ) return; // We were not bigger than the previous size when we were evaluated - score is still valid
 
   ClusterSize = children.size();
-  ClusterScore = 0.0;
 
   static constexpr double pi = atan(1)*4;
-  static constexpr double logA( -1.0 * log( 4.0 ) );
-  static constexpr double log2pi( log( 2*pi ) );
+  static constexpr double log2pi = log( 2*pi );
 
-  const double n( children.size() );
-  const double pi_term( log2pi * (1.0-n) ); // IF THE 1-n is integers, this gives the wrong answer!!!! WHY????????
+  thread_local static std::vector< double > integral( Parameters.sigmacount() );
 
+  double constant;
 
   for( std::size_t i(0) ; i!=Parameters.sigmacount() ; ++i )
   {
-    auto sqrt_n_tilde( sqrt( ClusterParams[i].n_tilde ) ) , inv_n_tilde( 1.0 / ClusterParams[i].n_tilde );
-    auto nu_bar_x ( ClusterParams[i].nu_bar_x * inv_n_tilde ) , nu_bar_y ( ClusterParams[i].nu_bar_y * inv_n_tilde );
+    double log_sum = 0.0;
+    log_sum += double( -log( 4.0 ) ); // Area term
+    log_sum += (log2pi * (1.0-children.size()));
+    log_sum += ClusterParams[i].sum_logw;
+    log_sum -= double( log( ClusterParams[i].A ) ); // A is equivalent to n_tilde
 
-    double S2( 0.0 );
-    for( auto& j : children ) S2 += j->S2( i , nu_bar_x , nu_bar_y );
+    double sqrt_A( sqrt( ClusterParams[i].A ) ) , inv_A( 1.0 / ClusterParams[i].A );
+    double Dx( ClusterParams[i].Bx * inv_A ) , Dy( ClusterParams[i].By * inv_A );
+    double Ex( ClusterParams[i].Cx - (ClusterParams[i].Bx * Dx ) ) , Ey( ClusterParams[i].Cy - (ClusterParams[i].By * Dy ) );
 
-    double phi_x( ROOT::Math::normal_cdf( sqrt_n_tilde * (1.0-nu_bar_x) ) - ROOT::Math::normal_cdf( sqrt_n_tilde * (-1.0-nu_bar_x) ) ) , phi_y( ROOT::Math::normal_cdf( sqrt_n_tilde * (1.0-nu_bar_y) ) - ROOT::Math::normal_cdf( sqrt_n_tilde * (-1.0-nu_bar_y) ) );
-    auto sum = logA + pi_term - log( ClusterParams[i].n_tilde ) + ClusterParams[i].sum_logw - ( 0.5 * S2 ) + log( phi_x ) + log( phi_y ) + Parameters.log_probability_sigma( i );
+    log_sum += 0.5 * (Ex + Ey);
+
+    // We place explicit bounds checks to prevent calls to expensive functions
+    double arg1 = CDF( sqrt_A * (1.0-Dx) ) - CDF( sqrt_A * (-1.0-Dx) );
+    if( arg1 != 1.0 ) log_sum += log( arg1 );
+    double arg2 = CDF( sqrt_A * (1.0-Dy) ) - CDF( sqrt_A * (-1.0-Dy) );
+    if( arg2 != 1.0 ) log_sum += log( arg2 );
+
+    log_sum += Parameters.log_probability_sigma( i );
+
+    if( i == 0 ) constant = log_sum;
+    integral[i] = exp( log_sum - constant );
   }
 
-    // double sum( 0 );
+  thread_local static ROOT::Math::Interpolator lInt( Parameters.sigmacount() );
+  lInt.SetData( Parameters.sigmabins() , integral );
 
-  //   // std::cout << "==================================" << std::endl;
-  //   // PRINT( logA );
-  //   // PRINT( pi_term );
-  //   // PRINT( - log( n_tilde ) );
-  //   // PRINT( sum_log_w );
-  //   // PRINT( - ( 0.5 * S2 ) );
-  //   // PRINT( log( phi_x ) );
-  //   // PRINT( log( phi_y ) );
-  //   // PRINT( log_p_sigma[ i ] );
-  //   // std::cout << "---------------" << std::endl;
-  //   // PRINT( sum );
-
-  //   return sum;
-  // };    
-
-  // auto Integrands = IntegrandExpr | range( Parameters.sigmacount() );
-  // auto& Max = *std::max_element( Integrands.begin() , Integrands.end() );
-
-  // double integral( 0.0 );
-  // for( auto& i : Integrands ) integral += exp( i - Max );
-  // integral *= Parameters.sigmaspacing();  
-  //return log( integral ) + Max; 
+  static const double Lower( Parameters.sigmabins(0) ) , Upper( Parameters.sigmabins(Parameters.sigmacount()-1) );
+  ClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant;  
 
 }
 

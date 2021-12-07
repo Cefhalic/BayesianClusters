@@ -23,12 +23,15 @@
 /* ===== Function for plotting data ===== */
 void DrawPoints( const std::vector< Data >& aData )
 {
-  gPad -> SetMargin( 0.01 , 0.01 , 0.01 , 0.01 );
-  TGraph* lGraph = new TGraph( aData.size() , ( &Data::x | aData ).data() , ( &Data::y | aData ).data() );
-  auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
-  FormatAxis( lGraph->GetXaxis() );
-  FormatAxis( lGraph->GetYaxis() );
-  lGraph->Draw( "ap" );
+  auto x( &Data::x | aData ) , y( &Data::y | aData ) , z( &Data::localizationscore | aData );
+  gPad -> SetMargin( 0.01 , 0.15 , 0.01 , 0.01 );
+  TGraph* lGraph0 = new TGraph( aData.size() , x.data() , y.data() );
+  // TGraph2D* lGraph1 = new TGraph2D( aData.size() , x.data() , y.data() , z.data() );
+  auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetLimits(-1,1); aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
+  FormatAxis( lGraph0->GetXaxis() );
+  FormatAxis( lGraph0->GetYaxis() );
+  lGraph0->Draw( "a p" );
+  // lGraph1->Draw( "cont1z same" );
 }
 
 
@@ -54,7 +57,7 @@ void DrawHisto( TH2D* aHist )
 {
   gPad -> SetLeftMargin( 0.15 );
   gPad -> SetRightMargin( 0.15 );
-  gPad->SetLogz();
+  // gPad->SetLogz();
   aHist->SetContour(1e6);
   aHist->Draw("colz");  
 }
@@ -63,7 +66,7 @@ void DrawHisto( TH2D* aHist )
 /* ===== Function for plotting data ===== */
 void DrawPoints( const std::map< const Data* , std::vector< Data* > >& aData )
 {
-  gPad -> SetMargin( 0.01 , 0.01 , 0.01 , 0.01 );
+  gPad -> SetMargin( 0.01 , 0.15 , 0.01 , 0.01 );
 
   auto GetX = []( const Data* i ){ return i->x; };
   auto GetY = []( const Data* i ){ return i->y; };
@@ -71,7 +74,7 @@ void DrawPoints( const std::map< const Data* , std::vector< Data* > >& aData )
   auto i( aData.begin() );
   TGraph* lGraph = new TGraph( i->second.size() , ( GetX | i->second ).data() , ( GetY | i->second ).data() );
 
-  auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
+  auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetLimits(-1,1); aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
   FormatAxis( lGraph->GetXaxis() );
   FormatAxis( lGraph->GetYaxis() );
   lGraph->SetMarkerColor( 1 );

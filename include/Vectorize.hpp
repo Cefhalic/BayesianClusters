@@ -63,9 +63,7 @@ inline void operator&& ( tExpr&& aExpr , tContainer&& aContainer )
 {
   const std::size_t lChunksize( ceil( double(aContainer.size()) / Concurrency ) );
   auto Thread( ThreadPool.begin() );
-  auto A( aContainer.begin() ) , B( aContainer.begin() + lChunksize );
-
-  for( ; A != aContainer.end() ; ++Thread , A = B , B+=lChunksize ){
+  for( auto A( aContainer.begin() ) , B( aContainer.begin() + lChunksize ) ; A != aContainer.end() ; ++Thread , A = B , B+=lChunksize ){
     if ( B > aContainer.end() ) B = aContainer.end();
     (**Thread).submit( [ aExpr , A , B ](){ for( auto i( A ) ; i != B ; ++i ) aExpr( *i ); } );
   } 
