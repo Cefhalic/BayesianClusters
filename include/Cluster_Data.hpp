@@ -2,26 +2,9 @@
 
 /* ===== C++ ===== */
 #include <vector>
-#include <list>
 #include <array>
-#include <memory>
-#include <mutex>
 
-
-// // Burmann approximation of the Gaussian cumulative-distribution function
-// double Phi( const double& x )
-// {
-//   auto y = exp( -1.0*x*x );
-
-//   constexpr double pi = atan(1)*4;
-//   constexpr double rt_pi = sqrt( pi );
-//   constexpr double inv_rt_pi = 1.0 / rt_pi;
-
-//   double lRet = ( rt_pi/2.0 ) + ( y * 31.0/200.0 ) - ( y*y * 341.0/8000.0 );
-//   lRet       *= inv_rt_pi * ( (x > 0) - (x < 0) ) * sqrt( 1-y );
-
-//   return 0.5 + lRet;
-// }
+#define PRECISION float
 
 
 /* ===== Struct for storing data ===== */
@@ -30,7 +13,7 @@ class Data
 public:
   struct ClusterParameter
   {
-    ClusterParameter( const double& aW );
+    ClusterParameter( const PRECISION& aW );
 
     ClusterParameter( const ClusterParameter& ) = delete;
     ClusterParameter& operator = (const ClusterParameter&) = delete;
@@ -38,56 +21,56 @@ public:
     ClusterParameter(ClusterParameter&&) = default;
     ClusterParameter& operator = (ClusterParameter&&) = default;
 
-    void Reset( const double& aX , const double& aY);
+    void Reset( const PRECISION& aX , const PRECISION& aY);
 
     ClusterParameter& operator+= ( const ClusterParameter& aOther );
 
-    const double w , logw;
-    double A , Bx, Cx, By, Cy, sum_logw;
+    const PRECISION w , logw;
+    PRECISION A , Bx, Cx, By, Cy, sum_logw;
 
-    // double n_tilde , sum_logw , nu_bar_x , nu_bar_y;
+    // PRECISION n_tilde , sum_logw , nu_bar_x , nu_bar_y;
   };  
 
 public:
-  Data( const std::size_t& aI , const double& aX , const double& aY , const double& aS );
+  Data( const std::size_t& aI , const PRECISION& aX , const PRECISION& aY , const PRECISION& aS );
 
   Data( const Data& ) = delete;
   Data& operator = (const Data&) = delete;
 
-  Data(Data&&) = default;
-  Data& operator = (Data&&) = default;
+  Data( Data&& ) = default;
+  Data& operator = ( Data&& ) = default;
 
   bool operator< ( const Data& aOther ) const;
 
-  double dR2( const Data& aOther ) const;
-  double dR( const Data& aOther ) const;
+  PRECISION dR2( const Data& aOther ) const;
+  PRECISION dR( const Data& aOther ) const;
 
   void PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd );
-  void UpdateLocalization( const double& aR2 , const size_t& Nminus1  );
+  void UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  );
   void ResetClusters();
 
-  void Clusterize( const double& a2R2 , const double& aT );
-  void ClusterInto( Data* aParent );
+  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , const Data* aLower , const Data* aUpper );
+  void Clusterize2( const PRECISION& a2R2 , const PRECISION& aT );
 
-  // double S2( const std::size_t& index , const double& nu_bar_x , const double& nu_bar_y ) const;
+  Data* GetParent();
+
+  void ClusterInto( Data* aParent );
 
   void UpdateClusterScore();
 
 
 public:
-  std::unique_ptr< std::mutex > mutex;
   std::size_t i;
-  double x, y, s , r, phi;
-  double eX , eY;
-  double localizationsum , localizationscore;
+  PRECISION x, y, s , r, phi;
+  PRECISION eX , eY;
+  PRECISION localizationsum , localizationscore;
 
-  std::array< std::vector< std::pair< double , Data* > > , 2 > neighbours;
-  std::vector< std::pair< double , Data* > >::iterator neighbourit;
+  std::array< std::vector< std::pair< PRECISION , Data* > > , 2 > neighbours;
+  std::vector< std::pair< PRECISION , Data* > >::iterator neighbourit;
 
   Data* parent;
-  std::list< Data* > children;
-  std::size_t ClusterSize;
-  double ClusterScore;
+  std::size_t ClusterSize , LastClusterSize;
+  PRECISION ClusterScore;
 
   std::vector< ClusterParameter > ClusterParams;
 

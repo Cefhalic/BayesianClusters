@@ -15,7 +15,7 @@
 /* ===== For Root ===== */
 #include "TH2D.h"
 #include "Math/Interpolator.h" 
-
+  
 /* ===== Local utilities ===== */
 #include "ListComprehension.hpp"
 #include "ProgressBar.hpp"
@@ -26,6 +26,44 @@
 #define PRINT( x ) std::cout << ( #x ) << " = " << ( x ) << std::endl;
 
 
+inline void Clusterize( std::vector<Data>& aData , const double& twoR2 , const double& T )
+{
+
+  // for( auto& i : aData ) i.Clusterize( twoR2 , T , &(*aData.begin()) , &(*aData.end()) );
+  // return;
+
+  static const std::size_t lChunksize( ceil( double(aData.size()) / Concurrency ) );
+  using tIt = std::vector< Data >::iterator;
+  static std::vector< std::pair< tIt , tIt > > lBounds;
+
+  if( lBounds.empty() )
+  {
+    auto A( aData.begin() ) , B( aData.begin() + lChunksize );
+    for( ; B < aData.end() ; A = B , B+=lChunksize ) lBounds.push_back( std::make_pair( A , B ) );
+    lBounds.push_back( std::make_pair( A , aData.end() ) );
+  }
+
+  // Multithreaded clustering within self-contained chunks
+  auto Thread( ThreadPool.begin() );
+  for( auto lChunk( lBounds.begin() ) ; lChunk != lBounds.end() ; ++Thread , ++lChunk ) (**Thread).submit( [ &twoR2 , &T , lChunk ](){ for( auto i( lChunk->first ) ; i != lChunk->second ; ++i ) i->Clusterize( twoR2 , T , &*lChunk->first , &*lChunk->second ); } );
+  WrappedThread::wait();
+
+  // // Handle boundaries between self-contained chunks
+  // for( auto lChunk( lBounds.begin() + 1 ) ; lChunk != lBounds.end() ; ++Thread , ++lChunk )
+  // {
+  //   auto r_limit = lChunk->first->r + twoR2;
+  //   for( auto i( lChunk->first ) ; i != lChunk->second ; ++i )
+  //   {
+  //     if( i->r > r_limit ) break;
+  //     i->Clusterize2( twoR2 , T );
+  //   }
+  // }
+
+}
+
+
+
+
 void Cluster( std::vector<Data>& aData , const double& R , const double& T )
 {
   // Reset ahead of UpdateLocalization and Clusterize
@@ -33,8 +71,8 @@ void Cluster( std::vector<Data>& aData , const double& R , const double& T )
   []( Data& i ){ i.ResetClusters(); i.localizationsum = i.localizationscore = 0.0; i.neighbourit = i.neighbours[0].begin(); } || aData;
   [ &R , &N ]( Data& i ){ i.UpdateLocalization( R * R , N ); } || aData; // Use interleaving threading to average over systematic radial scaling
 
-  //for( auto& i: aData ) i.Clusterize( 4.0 * R * R , T );
-  [ &R , &T ]( Data& i ){ i.Clusterize( 4.0 * R * R , T ); } && aData; // Use block threading to minimize mutex collisions
+  // And clusterize
+  Clusterize( aData , 4.0*R*R , T );
 }
 
 
@@ -44,8 +82,9 @@ TH2D *Nclust, *ClustSize, *ClustScore;
 
 void ScanRT( std::vector<Data>& aData )
 {
-  const std::size_t Nminus1( aData.size() - 1 );
+  if( !ClustScore or !Nclust or !ClustSize ) throw std::runtime_error( "Histograms not initialised" );
 
+  const std::size_t Nminus1( aData.size() - 1 );
   double R( Parameters.minScanR() ) , R2( 0 ) , twoR2( 0 ) , T( 0 );
 
   ProgressBar lProgressBar( "Scan over RT" , Parameters.Rbins() * Parameters.Tbins() );
@@ -58,31 +97,31 @@ void ScanRT( std::vector<Data>& aData )
 
     [ &Nminus1 , &R2 ]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); } || aData; // Use interleaving threading to average over systematic radial scaling
 
-    // for( auto& i : aData ) i.ResetClusters();
     []( Data& i ){ i.ResetClusters(); } || aData;
 
     for( uint32_t j(0) ; j!=Parameters.Tbins() ; ++j , T-=Parameters.dT() , ++lProgressBar )
     {
-
-      [ &twoR2 , &T ]( Data& i ){ i.Clusterize( twoR2 , T ); } && aData; // Use block threading to minimize mutex collisions
+      Clusterize( aData , twoR2 , T );   
       []( Data& i ){ i.UpdateClusterScore(); } || aData; // Use interleaving threading to average over systematic radial scaling
 
-      double lScore( 0.0 ) , lMean( 0.0 );
-      std::size_t lCount( 0 );
+    //   double lScore( 0.0 ) , lMean( 0.0 );
+    //   std::size_t lCount( 0 );
 
-      for( auto& i : aData )
-      {
-        if( i.children.size() > 1 )
-        {
-          lScore += i.ClusterScore;
-          lCount += 1;
-          lMean += i.children.size();
-        }
-      }
+    //   for( auto& i : aData )
+    //   {
+    //     if( i.ClusterSize > 1 )
+    //     {
+    //       lScore += i.ClusterScore;
+    //       lCount += 1;
+    //       lMean += i.ClusterSize;
+    //     }
+    //   }
 
-      ClustScore -> Fill( R , T , lScore );
-      Nclust -> Fill( R , T , lCount );
-      ClustSize -> Fill( R , T , lMean / lCount );
+    //   // std::cout << std::setw(10) << R << std::setw(10) << T << std::setw(10) << lCount << std::setw(10) << lMean / lCount << std::endl;
+
+    //   ClustScore -> Fill( R , T , lScore );
+    //   Nclust -> Fill( R , T , lCount );
+    //   ClustSize -> Fill( R , T , lMean / lCount );
     }
 
   }
@@ -125,9 +164,9 @@ int main(int argc, char **argv)
   
   Parameters.SetZoom( 20_micrometer );
   Parameters.SetSigmaParameters( 100 , 5_nanometer , 50_nanometer , [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } );
-  Parameters.SetMaxR( 200_nanometer );
+  Parameters.SetMaxR( 50_nanometer );
   //Parameters.SetMaxR( 30_micrometer );  
-  Parameters.SetBins( 20 , 20 );
+  Parameters.SetBins( 100 , 100 );
 
 //  auto lData = LoadCSV( "1_un_red.csv" , 1./64000. , -1. , -1. ); // Full file
   auto lData = LoadCSV( argv[1] , 87_micrometer , 32_micrometer ); // One cluster
@@ -160,7 +199,7 @@ int main(int argc, char **argv)
   // ClustScore->GetMaximumBin( x , y , z );
   // std::cout << x*dR << " " << y*dT << " " << z << std::endl;
 
-  // InteractiveDisplay( [ &Nclust ](){ DrawHisto( Nclust ); } , [ &ClustSize ](){ DrawHisto( ClustSize ); } , [ &ClustScore ](){ DrawHisto( ClustScore ); } );
+  // InteractiveDisplay( [ ](){ DrawHisto( Nclust ); } , [ ](){ DrawHisto( ClustSize ); } , [ ](){ DrawHisto( ClustScore ); } );
 
 
   // const double R( 15_micrometer*Parameters.scale() );
@@ -186,10 +225,9 @@ int main(int argc, char **argv)
 
   // std::cout << "Brute force "<< std::dec<< lClusterable.size() << std::endl;
 
-  // std::map< const Data* , std::vector< Data* > > lClusters , lClusters2;
+  // std::map< const Data* , std::vector< Data* > > lClusters;
   // for( auto& i : lData )
-  //   for( auto& j : i.children )
-  //     lClusters[ ( i.children.size() > 1)?(&i):(NULL) ].push_back( j );
+  //   lClusters[ i.GetParent() ].push_back( &i );
 
   // // for( auto& i : lData ) lClusters2[ ( lClusterable.find( &i ) != lClusterable.end() )? (Data*)(1) :(NULL) ].push_back( &i );
 

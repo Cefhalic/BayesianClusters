@@ -148,61 +148,61 @@ std::vector< Data > LoadCSV( const std::string& aFilename , const double& c_x , 
 
 
 
-/* ===== Function for loading data from CSV file ===== */
-std::vector< Data > xxx_LoadCSV( const std::string& aFilename , const double& c_x , const double& c_y )
-{
-  auto f = fopen( aFilename.c_str() , "r");
-  if ( f == NULL ) throw std::runtime_error( "File is not available" );
+// /* ===== Function for loading data from CSV file ===== */
+// std::vector< Data > LoadCSV( const std::string& aFilename , const double& c_x , const double& c_y )
+// {
+//   auto f = fopen( aFilename.c_str() , "r");
+//   if ( f == NULL ) throw std::runtime_error( "File is not available" );
 
-  fseek(f, 0, SEEK_END); // seek to end of file
-  auto lSize = ftell(f); // get current file pointer
-  fseek(f, 0, SEEK_SET); // seek back to beginning of file
+//   fseek(f, 0, SEEK_END); // seek to end of file
+//   auto lSize = ftell(f); // get current file pointer
+//   fseek(f, 0, SEEK_SET); // seek back to beginning of file
 
-  std::vector< Data > lData;
-  lData.reserve( 3e6 );
+//   std::vector< Data > lData;
+//   lData.reserve( 3e6 );
 
-  {
-    char ch[256];
-    char* lPtr( ch );
-    ProgressBar lProgressBar( "Reading File" , lSize );
+//   {
+//     char ch[256];
+//     char* lPtr( ch );
+//     ProgressBar lProgressBar( "Reading File" , lSize );
 
-    auto ReadUntil = [ &ch , &f , &lPtr , &lProgressBar ]( const char& aChar ){
-      lPtr = ch;
-      while ( ( *lPtr = fgetc(f)) != EOF )
-      {
-        lProgressBar++;
-        if( *lPtr == aChar ) return;
-        lPtr++;
-      }
-    };
+//     auto ReadUntil = [ &ch , &f , &lPtr , &lProgressBar ]( const char& aChar ){
+//       lPtr = ch;
+//       while ( ( *lPtr = fgetc(f)) != EOF )
+//       {
+//         lProgressBar++;
+//         if( *lPtr == aChar ) return;
+//         lPtr++;
+//       }
+//     };
 
-    ReadUntil( '\n' ); // Throw away first line
-    while( true )
-    {
-      ReadUntil( ',' ); //"id"
-      if( *lPtr == EOF ) break;
-      std::size_t i = strtoul( ch , &lPtr , 10 );
-      ReadUntil( ',' ); //"frame"
-      ReadUntil( ',' ); //"x [nm]"
-      double x = Parameters.scale() * ( (strtod( ch , &lPtr ) * nanometer ) - c_x);
-      ReadUntil( ',' ); //"y [nm]"
-      double y = Parameters.scale() * ( (strtod( ch , &lPtr ) * nanometer ) - c_y);      
-      ReadUntil( ',' ); //"sigma [nm]"      
-      ReadUntil( ',' ); //"intensity [photon]"
-      ReadUntil( ',' ); //"offset [photon]"
-      ReadUntil( ',' ); //"bkgstd [photon]"
-      ReadUntil( ',' ); //"chi2"
-      ReadUntil( '\n' ); //"uncertainty_xy [nm]"
-      double s = Parameters.scale() * ( strtod( ch , &lPtr ) * nanometer );      
+//     ReadUntil( '\n' ); // Throw away first line
+//     while( true )
+//     {
+//       ReadUntil( ',' ); //"id"
+//       if( *lPtr == EOF ) break;
+//       std::size_t i = strtoul( ch , &lPtr , 10 );
+//       ReadUntil( ',' ); //"frame"
+//       ReadUntil( ',' ); //"x [nm]"
+//       double x = Parameters.scale() * ( (strtod( ch , &lPtr ) * nanometer ) - c_x);
+//       ReadUntil( ',' ); //"y [nm]"
+//       double y = Parameters.scale() * ( (strtod( ch , &lPtr ) * nanometer ) - c_y);      
+//       ReadUntil( ',' ); //"sigma [nm]"      
+//       ReadUntil( ',' ); //"intensity [photon]"
+//       ReadUntil( ',' ); //"offset [photon]"
+//       ReadUntil( ',' ); //"bkgstd [photon]"
+//       ReadUntil( ',' ); //"chi2"
+//       ReadUntil( '\n' ); //"uncertainty_xy [nm]"
+//       double s = Parameters.scale() * ( strtod( ch , &lPtr ) * nanometer );      
 
-      if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( i , x , y , s );
-    }
-  }
-  fclose(f);
+//       if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( i , x , y , s );
+//     }
+//   }
+//   fclose(f);
 
-  std::sort( lData.begin() , lData.end() );
+//   std::sort( lData.begin() , lData.end() );
   
-  std::cout << "Read " << lData.size() << " points" << std::endl;
+//   std::cout << "Read " << lData.size() << " points" << std::endl;
 
-  return lData;
-}
+//   return lData;
+// }
