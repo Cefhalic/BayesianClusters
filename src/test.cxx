@@ -62,13 +62,13 @@ inline void Clusterize( std::vector<Data>& aData , const double& twoR2 , const d
 }
 
 
-
-
 void Cluster( std::vector<Data>& aData , const double& R , const double& T )
 {
-  // Reset ahead of UpdateLocalization and Clusterize
   const std::size_t N( aData.size()-1 );
+  // Reset ahead of UpdateLocalization and Clusterize
   []( Data& i ){ i.ResetClusters(); i.localizationsum = i.localizationscore = 0.0; i.neighbourit = i.neighbours.begin(); } || aData;
+
+  // Update the localization score
   [ &R , &N ]( Data& i ){ i.UpdateLocalization( R * R , N ); } || aData; // Use interleaving threading to average over systematic radial scaling
 
   // And clusterize
@@ -76,14 +76,8 @@ void Cluster( std::vector<Data>& aData , const double& R , const double& T )
 }
 
 
-
-TH2D *Nclust, *ClustSize, *ClustScore;
-
-
-void ScanRT( std::vector<Data>& aData )
+void ScanRT( std::vector<Data>& aData , const std::function< void( const double& , const double& ) >& aCallback )
 {
-  if( !ClustScore or !Nclust or !ClustSize ) throw std::runtime_error( "Histograms not initialised" );
-
   const std::size_t Nminus1( aData.size() - 1 );
   double R( Parameters.minScanR() ) , R2( 0 ) , twoR2( 0 ) , T( 0 );
 
@@ -103,32 +97,12 @@ void ScanRT( std::vector<Data>& aData )
     {
       Clusterize( aData , twoR2 , T );   
       []( Data& i ){ i.UpdateClusterScore(); } || aData; // Use interleaving threading to average over systematic radial scaling
-
-      double lScore( 0.0 ) , lMean( 0.0 );
-      std::size_t lCount( 0 );
-
-      for( auto& i : aData )
-      {
-        if( i.ClusterSize > 1 )
-        {
-          lScore += i.ClusterScore;
-          lCount += 1;
-          lMean += i.ClusterSize;
-        }
-      }
-
-      // std::cout << std::setw(10) << R << std::setw(10) << T << std::setw(10) << lCount << std::setw(10) << lMean / lCount << std::endl;
-
-    //   ClustScore -> Fill( R , T , lScore );
-    //   Nclust -> Fill( R , T , lCount );
-    //   ClustSize -> Fill( R , T , lMean / lCount );
+      aCallback( R , T );
     }
 
   }
 
 }
-
-
 
 
 void PrepData( std::vector<Data>& aData )
@@ -150,6 +124,35 @@ void PrepData( std::vector<Data>& aData )
 
 
 
+
+
+
+void RTscanCallback( std::vector<Data>& aData , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
+{
+  
+  double lScore( 0.0 ) , lMean( 0.0 );
+  std::size_t lCount( 0 );
+
+  for( auto& i : aData )
+  {
+    if( i.ClusterSize > 1 )
+    {
+      lScore += i.ClusterScore;
+      lCount += 1;
+      lMean += i.ClusterSize;
+    }
+  }
+
+  // std::cout << std::setw(10) << aR << std::setw(10) << aT << std::setw(10) << lCount << std::setw(10) << lMean / lCount << std::endl;
+
+  // ClustScore -> Fill( aR , aT , lScore );
+  // Nclust -> Fill( aR , aT , lCount );
+  // ClustSize -> Fill( aR , aT , lMean / lCount );
+}
+
+
+
+
 /* ===== Main function ===== */
 int main(int argc, char **argv)
 {
@@ -158,13 +161,13 @@ int main(int argc, char **argv)
   // ROOT::Math::Interpolator lInt( { 5_nanometer , 15_nanometer , 25_nanometer , 50_nanometer , 75_nanometer , 100_nanometer , 125_nanometer , 150_nanometer , 175_nanometer , 200_nanometer } , 
   //                                { 0.03631079  , 0.110302441  , 0.214839819  , 0.268302465  , 0.214839819  , 0.110302441  , 0.03631079   , 0.007664194  , 0.001037236  , 9.00054E-05 } ); // Default to cubic spline interpolation
 
-  ROOT::Math::Interpolator lInt( { 0_nanometer , 200_nanometer , 300_nanometer , 400_nanometer , 500_nanometer , 600_nanometer , 700_nanometer , 800_nanometer , 900_nanometer , 1000_nanometer } , 
+  ROOT::Math::Interpolator lInt( { 0_nanometer , 20_nanometer , 30_nanometer , 40_nanometer , 50_nanometer , 60_nanometer , 70_nanometer , 80_nanometer , 90_nanometer , 100_nanometer } , 
                                  { 0.03631079  , 0.110302441  , 0.214839819  , 0.268302465  , 0.214839819  , 0.110302441  , 0.03631079   , 0.007664194  , 0.001037236  , 9.00054E-05 } ); // Default to cubic spline interpolation
   
   
   Parameters.SetZoom( 20_micrometer );
-  Parameters.SetSigmaParameters( 100 , 5_nanometer , 50_nanometer , [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } );
-  Parameters.SetMaxR( 50_nanometer );
+  Parameters.SetSigmaParameters( 100 , 5_nanometer , 100_nanometer , [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } );
+  Parameters.SetMaxR( 200_nanometer );
   //Parameters.SetMaxR( 30_micrometer );  
   Parameters.SetBins( 100 , 100 );
 
@@ -183,18 +186,17 @@ int main(int argc, char **argv)
 
   // for( auto& i : lData ) std::cout << (i.neighbours[0].size()?sqrt(i.neighbours[0].begin()->first)*20_micrometer:0.0) << " " << (i.neighbours[1].size()?sqrt(i.neighbours[1].begin()->first)*20_micrometer:0.0) << std::endl;
 
-
   auto Rlo = Parameters.minScanR() - ( 0.5 * Parameters.dR() );
   auto Rhi = Parameters.maxScanR() - ( 0.5 * Parameters.dR() );
   auto Tlo = Parameters.minScanT() - ( 0.5 * Parameters.dT() );
   auto Thi = Parameters.maxScanT() - ( 0.5 * Parameters.dT() );
 
-  Nclust     = new TH2D( "Nclust" , "N_{clusters};r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
-  ClustSize  = new TH2D( "ClustSize" , "<N_{points}>;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
-  ClustScore = new TH2D( "ClustScore" , "Score;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
+  auto Nclust     = new TH2D( "Nclust" , "N_{clusters};r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
+  auto ClustSize  = new TH2D( "ClustSize" , "<N_{points}>;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
+  auto ClustScore = new TH2D( "ClustScore" , "Score;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
 
+  ScanRT( lData , [&]( const double& aR , const double& aT ){ RTscanCallback( lData , aR , aT , ClustScore , Nclust , ClustSize ); } );
 
-  ScanRT( lData );
   // int x , y , z;
   // ClustScore->GetMaximumBin( x , y , z );
   // std::cout << x*dR << " " << y*dT << " " << z << std::endl;

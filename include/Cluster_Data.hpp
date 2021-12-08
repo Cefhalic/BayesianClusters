@@ -15,22 +15,18 @@ public:
   {
     ClusterParameter( const PRECISION& aW );
 
-    ClusterParameter( const ClusterParameter& ) = delete;
-    ClusterParameter& operator = (const ClusterParameter&) = delete;
-
-    ClusterParameter(ClusterParameter&&) = default;
-    ClusterParameter& operator = (ClusterParameter&&) = default;
-
     void Reset( const PRECISION& aX , const PRECISION& aY);
 
     ClusterParameter& operator+= ( const ClusterParameter& aOther );
+
+    double log_score( const std::size_t& n ) const;
 
     const PRECISION w , logw;
     PRECISION A , Bx, Cx, By, Cy, sum_logw;
   };  
 
 public:
-  Data( const std::size_t& aI , const PRECISION& aX , const PRECISION& aY , const PRECISION& aS );
+  Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS );
 
   Data( const Data& ) = delete;
   Data& operator = (const Data&) = delete;
@@ -58,8 +54,7 @@ public:
 
 
 public:
-  std::size_t i;
-  PRECISION x, y, s , r, phi;
+  PRECISION x, y, r, phi;
   PRECISION eX , eY;
   PRECISION localizationsum , localizationscore;
 

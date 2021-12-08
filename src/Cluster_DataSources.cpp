@@ -14,6 +14,57 @@
 #include "Vectorize.hpp"
 
 
+
+
+// enum sort_direction { up, down };
+
+// template < sort_direction aDir , typename T >
+// void BitonicSort( const typename std::vector<T>::iterator& aDataStart, const typename std::vector<T>::iterator& aDataEnd );
+
+// template < sort_direction aDir , typename T >
+// void BitonicMerge( const typename std::vector<T>::iterator& aDataStart, const typename std::vector<T>::iterator& aDataEnd);
+
+
+// template < sort_direction aDir , typename T >
+// void BitonicSort( const typename std::vector<T>::iterator& aDataStart, const typename std::vector<T>::iterator& aDataEnd) {
+//   uint32_t lSize(aDataEnd - aDataStart);
+//   if (lSize > 1) {
+//     typename std::vector<T>::iterator lMidpoint(aDataStart + (lSize >> 1));
+//     if (aDir == down) {
+//       BitonicSort<up,T>(aDataStart, lMidpoint);
+//       BitonicSort<down,T>( lMidpoint, aDataEnd);
+//     } else {
+//       BitonicSort<down,T>(aDataStart, lMidpoint);
+//       BitonicSort<up,T>( lMidpoint, aDataEnd);
+//     }
+//     BitonicMerge<aDir,T>(aDataStart, aDataEnd);
+//   }
+// }
+
+// template < sort_direction aDir , typename T >
+// void BitonicMerge( const typename std::vector<T>::iterator& aDataStart, const typename std::vector<T>::iterator& aDataEnd) {
+//   uint32_t lSize(aDataEnd - aDataStart);
+//   if (lSize > 1) {
+//     uint32_t lPower2(1);
+//     while (lPower2 < lSize) lPower2 <<= 1;
+
+//     typename std::vector<T>::iterator lMidpoint(aDataStart + (lPower2 >> 1)) , lFirst(aDataStart) , lSecond(lMidpoint);
+
+//     for (; lSecond != aDataEnd; ++lFirst, ++lSecond) {
+//       if (((*lSecond) < (*lFirst)) == (aDir == up)) {
+//         std::swap(*lFirst, *lSecond);
+//       }
+//     }
+
+//     BitonicMerge<aDir,T>( aDataStart, lMidpoint);
+//     BitonicMerge<aDir,T>( lMidpoint, aDataEnd);
+//   }
+// }
+
+
+
+
+
 /* ===== Utility function for creating a vector of data ===== */
 std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& aClusterCount , const int& aClusterSize , const double& aClusterScale )
 {
@@ -26,12 +77,10 @@ std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& a
 
   TRandom3 lRand( 2345234534 );
 
-  std::size_t index(0);
-
   for( int i(0); i!= aBackgroundCount; ++i )
   {
     double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) ) , s( lRand.Gaus( lClusterScale/10 , lClusterScale/30 ) );
-    lData.emplace_back( index++ , x , y , s );
+    lData.emplace_back( x , y , s );
   }
 
   for( int i(0); i!= aClusterCount; ++i )
@@ -42,7 +91,7 @@ std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& a
     {
       double x2( lRand.Gaus( x , sigma ) ) , y2( lRand.Gaus( y , sigma ) ) , s( lRand.Gaus( lClusterScale/10 , lClusterScale/30 ) );  
       if( x2 > 1 or x2 < -1 or y2 > 1 or y2 < -1 ) continue;    
-      lData.emplace_back( index++ , x2 , y2 , s );
+      lData.emplace_back( x2 , y2 , s );
       ++j;
     }
   }
@@ -85,7 +134,6 @@ void __LoadCSV__( const std::string& aFilename , const double& c_x , const doubl
     // lStr << "Body : ";
     ReadUntil( ',' ); //"id"
     if( *lPtr == EOF ) break;
-    std::size_t i = strtoul( ch , &lPtr , 10 );
     ReadUntil( ',' ); //"frame"
     ReadUntil( ',' ); //"x [nm]"
     double x = Parameters.scale() * ( (strtod( ch , &lPtr ) * nanometer ) - c_x);
@@ -99,13 +147,14 @@ void __LoadCSV__( const std::string& aFilename , const double& c_x , const doubl
     ReadUntil( '\n' ); //"uncertainty_xy [nm]"
     double s = Parameters.scale() * ( strtod( ch , &lPtr ) * nanometer );      
 
-    if( fabs(x) < 1 and fabs(y) < 1 ) aData.emplace_back( i , x , y , s );
+    if( fabs(x) < 1 and fabs(y) < 1 ) aData.emplace_back( x , y , s );
   }
   
   // lStr << " \n\n";
   // std ::cout << lStr.str() << std::flush;
   fclose(f);
 
+  // BitonicSort< up , Data >( aData.begin() , aData.end() );
   std::sort( aData.begin() , aData.end() );
 }
 
