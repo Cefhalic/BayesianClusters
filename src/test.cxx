@@ -125,7 +125,7 @@ int main(int argc, char **argv)
   
   Parameters.SetZoom( 20_micrometer );
   Parameters.SetSigmaParameters( 100 , 5_nanometer , 50_nanometer , [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } );
-  Parameters.SetMaxR( 20_nanometer );
+  Parameters.SetMaxR( 200_nanometer );
   //Parameters.SetMaxR( 30_micrometer );  
   Parameters.SetBins( 20 , 20 );
 

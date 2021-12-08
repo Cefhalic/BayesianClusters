@@ -108,10 +108,15 @@ void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::
   auto& neighbours0 = neighbours[0];
   auto& neighbours1 = neighbours[1];
 
+  auto dphi = Parameters.maxR() / ( r - Parameters.maxR() );
+  auto dphi2 = Parameters.max2R() / ( r - Parameters.max2R() );
+
+
   // Iterate over other hits and populate the neighbour list
   for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
   {
     if( ( aPlusIt->r - r ) > Parameters.maxR() ) break; // aPlusIt is always further out than curent 
+    if( fabs( aPlusIt->phi - phi ) > dphi ) continue;
     double ldR2 = dR2( *aPlusIt );
     if( ldR2 < Parameters.maxR2() ) neighbours0.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
   }
@@ -119,6 +124,7 @@ void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::
   for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
   {
     if( ( r - aMinusIt->r ) > Parameters.maxR() ) break; // curent is always further out than aMinusIn
+    if( fabs( aPlusIt->phi - phi ) > dphi ) continue;
     double ldR2 = dR2( *aMinusIt );    
     if( ldR2 < Parameters.maxR2() ) neighbours0.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
   }
@@ -130,6 +136,7 @@ void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::
   for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
   {
     if( ( aPlusIt->r - r ) > Parameters.max2R() ) break; // aPlusIt is always further out than curent  
+    if( fabs( aPlusIt->phi - phi ) > dphi2 ) continue;
     double ldR2 = dR2( *aPlusIt );
     if( ldR2 < Parameters.max2R2() ) neighbours1.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
   }
@@ -137,6 +144,7 @@ void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::
   for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
   {
     if( ( r - aMinusIt->r ) > Parameters.max2R() ) break; // curent is always further out than aMinusIn
+    if( fabs( aPlusIt->phi - phi ) > dphi2 ) continue;
     double ldR2 = dR2( *aMinusIt );    
     if( ldR2 < Parameters.max2R2() ) neighbours1.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
   }
