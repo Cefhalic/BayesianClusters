@@ -68,7 +68,7 @@ void Cluster( std::vector<Data>& aData , const double& R , const double& T )
 {
   // Reset ahead of UpdateLocalization and Clusterize
   const std::size_t N( aData.size()-1 );
-  []( Data& i ){ i.ResetClusters(); i.localizationsum = i.localizationscore = 0.0; i.neighbourit = i.neighbours[0].begin(); } || aData;
+  []( Data& i ){ i.ResetClusters(); i.localizationsum = i.localizationscore = 0.0; i.neighbourit = i.neighbours.begin(); } || aData;
   [ &R , &N ]( Data& i ){ i.UpdateLocalization( R * R , N ); } || aData; // Use interleaving threading to average over systematic radial scaling
 
   // And clusterize
@@ -104,20 +104,20 @@ void ScanRT( std::vector<Data>& aData )
       Clusterize( aData , twoR2 , T );   
       []( Data& i ){ i.UpdateClusterScore(); } || aData; // Use interleaving threading to average over systematic radial scaling
 
-    //   double lScore( 0.0 ) , lMean( 0.0 );
-    //   std::size_t lCount( 0 );
+      double lScore( 0.0 ) , lMean( 0.0 );
+      std::size_t lCount( 0 );
 
-    //   for( auto& i : aData )
-    //   {
-    //     if( i.ClusterSize > 1 )
-    //     {
-    //       lScore += i.ClusterScore;
-    //       lCount += 1;
-    //       lMean += i.ClusterSize;
-    //     }
-    //   }
+      for( auto& i : aData )
+      {
+        if( i.ClusterSize > 1 )
+        {
+          lScore += i.ClusterScore;
+          lCount += 1;
+          lMean += i.ClusterSize;
+        }
+      }
 
-    //   // std::cout << std::setw(10) << R << std::setw(10) << T << std::setw(10) << lCount << std::setw(10) << lMean / lCount << std::endl;
+      // std::cout << std::setw(10) << R << std::setw(10) << T << std::setw(10) << lCount << std::setw(10) << lMean / lCount << std::endl;
 
     //   ClustScore -> Fill( R , T , lScore );
     //   Nclust -> Fill( R , T , lCount );

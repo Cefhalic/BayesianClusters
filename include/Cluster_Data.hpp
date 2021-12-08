@@ -27,8 +27,6 @@ public:
 
     const PRECISION w , logw;
     PRECISION A , Bx, Cx, By, Cy, sum_logw;
-
-    // PRECISION n_tilde , sum_logw , nu_bar_x , nu_bar_y;
   };  
 
 public:
@@ -65,7 +63,7 @@ public:
   PRECISION eX , eY;
   PRECISION localizationsum , localizationscore;
 
-  std::array< std::vector< std::pair< PRECISION , Data* > > , 2 > neighbours;
+  std::vector< std::pair< PRECISION , Data* > > neighbours;
   std::vector< std::pair< PRECISION , Data* > >::iterator neighbourit;
 
   Data* parent;

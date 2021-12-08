@@ -45,10 +45,7 @@ void Data::ClusterParameter::Reset( const PRECISION& aX , const PRECISION& aY)
   By = w * aY;
   Cx = Bx * aX;
   Cy = By * aY;
-  // n_tilde = w;
   sum_logw = logw;
-  // nu_bar_x = w * aX;
-  // nu_bar_y = w * aY;
 }
 
 Data::ClusterParameter& Data::ClusterParameter::operator+= ( const Data::ClusterParameter& aOther )
@@ -58,28 +55,23 @@ Data::ClusterParameter& Data::ClusterParameter::operator+= ( const Data::Cluster
   By += aOther.By;
   Cx += aOther.Cx;
   Cy += aOther.Cy;
-  // n_tilde += aOther.n_tilde;
   sum_logw += aOther.sum_logw;
-  // nu_bar_x += aOther.nu_bar_x;
-  // nu_bar_y += aOther.nu_bar_y;
   return *this;
 }
 
 
 Data::Data( const std::size_t& aI , const PRECISION& aX , const PRECISION& aY , const PRECISION& aS ) : 
-// mutex( new std::mutex() ),
 i(aI) ,
 x(aX) , y(aY) , s(aS) , r( sqrt( (aX*aX) + (aY*aY) ) ), phi( atan2( aY , aX ) ),
 eX( 1 - fabs( aX ) ) , eY( 1 - fabs( aY ) ) , 
 localizationsum( 0.0 ) , localizationscore( 0.0 ),
-neighbourit( neighbours[0].end() ),
+neighbourit( neighbours.end() ),
 parent( NULL ),
 ClusterSize( 0 ) , ClusterScore( 0.0 )
 {
   for( auto& sig2 : Parameters.sigmabins2() ) ClusterParams.emplace_back( 1.0 / ( (aS*aS) + sig2 ) );
 
-  neighbours[0].reserve( 1024 );
-  neighbours[1].reserve( 1024 );    
+  neighbours.reserve( 1024 );    
 }
 
 
@@ -103,50 +95,28 @@ PRECISION Data::dR( const Data& aOther ) const
 __attribute__((flatten))
 void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd )
 {
-  auto& neighbours0 = neighbours[0];
-  auto& neighbours1 = neighbours[1];
-
   const auto dphi = Parameters.maxR() / ( r - Parameters.maxR() );
   const auto dphi2 = Parameters.max2R() / ( r - Parameters.max2R() );
 
   // Iterate over other hits and populate the neighbour list
   for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
   {
-    if( ( aPlusIt->r - r ) > Parameters.maxR() ) break; // aPlusIt is always further out than curent 
+    if( ( aPlusIt->r - r ) > Parameters.max2R() ) break; // aPlusIt is always further out than curent 
     if( fabs( aPlusIt->phi - phi ) > dphi ) continue;
     PRECISION ldR2 = dR2( *aPlusIt );
-    if( ldR2 < Parameters.maxR2() ) neighbours0.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
-  }
-
-  for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
-  {
-    if( ( r - aMinusIt->r ) > Parameters.maxR() ) break; // curent is always further out than aMinusIn
-    if( fabs( aPlusIt->phi - phi ) > dphi ) continue;
-    PRECISION ldR2 = dR2( *aMinusIt );    
-    if( ldR2 < Parameters.maxR2() ) neighbours0.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
-  }
-
-  std::sort( neighbours0.begin() , neighbours0.end() );
-  neighbourit = neighbours0.begin();
-
-  // Iterate over other hits and populate the neighbour2 list
-  for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
-  {
-    if( ( aPlusIt->r - r ) > Parameters.max2R() ) break; // aPlusIt is always further out than curent  
-    if( fabs( aPlusIt->phi - phi ) > dphi2 ) continue;
-    PRECISION ldR2 = dR2( *aPlusIt );
-    if( ldR2 < Parameters.max2R2() ) neighbours1.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
+    if( ldR2 < Parameters.max2R2() ) neighbours.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
   }
 
   for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
   {
     if( ( r - aMinusIt->r ) > Parameters.max2R() ) break; // curent is always further out than aMinusIn
-    if( fabs( aPlusIt->phi - phi ) > dphi2 ) continue;
+    if( fabs( aPlusIt->phi - phi ) > dphi ) continue;
     PRECISION ldR2 = dR2( *aMinusIt );    
-    if( ldR2 < Parameters.max2R2() ) neighbours1.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
+    if( ldR2 < Parameters.max2R2() ) neighbours.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
   }
 
-  std::sort( neighbours1.begin() , neighbours1.end() );
+  std::sort( neighbours.begin() , neighbours.end() );
+  neighbourit = neighbours.begin();
 }
 
 
@@ -156,7 +126,7 @@ void Data::UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  )
 
   const PRECISION last_localizationsum( localizationsum );
 
-  for( ; neighbourit != neighbours[0].end() ; ++neighbourit )
+  for( ; neighbourit != neighbours.end() ; ++neighbourit )
   { 
     if( neighbourit->first > aR2 ) break;
     PRECISION lDist = sqrt( neighbourit->first );
@@ -180,7 +150,7 @@ void Data::ResetClusters()
 {
   parent = NULL;
   LastClusterSize = 0;
-  ClusterSize = 0;
+  ClusterSize = 1;
   ClusterScore = 0.0;
   for( auto& i : ClusterParams ) i.Reset( x , y );
 }
@@ -192,8 +162,6 @@ void Data::ResetClusters()
 // {
 //   if( parent ) return;
 //   if( localizationscore < aT ) return;
-  
-//   ClusterSize = 1;
 
 //   for( auto& i : neighbours )
 //   {
@@ -213,17 +181,12 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , const Data*
 {
   if( parent ) return;
   if( localizationscore < aT ) return;
-  
-  ClusterSize = 1;
 
-  for( auto& i : neighbours )
+  for( auto& j : neighbours )
   {
-    for( auto& j : i )
-    {
-      if( j.first > a2R2 ) break;
-      if( j.second < aLower or j.second >= aUpper ) continue; // Save us from having to mutex the parent
-      if( j.second->localizationscore > aT ) j.second->ClusterInto( this );
-    }
+    if( j.first > a2R2 ) break;
+    if( j.second < aLower or j.second >= aUpper ) continue; // Save us from having to mutex the parent
+    if( j.second->localizationscore > aT ) j.second->ClusterInto( this );
   }
 }
 
@@ -235,13 +198,10 @@ void Data::Clusterize2( const PRECISION& a2R2 , const PRECISION& aT )
 
   Data* lParent = GetParent();
 
-  for( auto& i : neighbours )
+  for( auto& j : neighbours )
   {
-    for( auto& j : i )
-    {
-      if( j.first > a2R2 ) break;
-      if( j.second->localizationscore > aT ) j.second->ClusterInto( lParent );
-    }
+    if( j.first > a2R2 ) break;
+    if( j.second->localizationscore > aT ) j.second->ClusterInto( lParent );
   }
 }
 
