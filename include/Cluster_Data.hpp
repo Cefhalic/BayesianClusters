@@ -3,9 +3,9 @@
 /* ===== C++ ===== */
 #include <vector>
 #include <array>
+#include <functional>
 
 #define PRECISION float
-
 
 /* ===== Struct for storing data ===== */
 class Data
@@ -15,14 +15,14 @@ public:
   {
     ClusterParameter( const PRECISION& aW );
 
-    void Reset( const PRECISION& aX , const PRECISION& aY);
+    void Reset( const PRECISION& aX , const PRECISION& aY , const PRECISION& aR2 );
 
     ClusterParameter& operator+= ( const ClusterParameter& aOther );
 
     double log_score( const std::size_t& n ) const;
 
-    const PRECISION w , logw;
-    PRECISION A , Bx, Cx, By, Cy, sum_logw;
+    const PRECISION w;
+    PRECISION A , Bx, By, C, sum_logw;
   };  
 
 public:
@@ -44,7 +44,7 @@ public:
   void ResetClusters();
 
   void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , const Data* aLower , const Data* aUpper );
-  void Clusterize2( const PRECISION& a2R2 , const PRECISION& aT );
+  // void Clusterize2( const PRECISION& a2R2 , const PRECISION& aT );
 
   Data* GetParent();
 
@@ -54,8 +54,7 @@ public:
 
 
 public:
-  PRECISION x, y, r, phi;
-  PRECISION eX , eY;
+  PRECISION x, y, r2 , r, phi;
   PRECISION localizationsum , localizationscore;
 
   std::vector< std::pair< PRECISION , Data* > > neighbours;
@@ -71,3 +70,8 @@ public:
 
 
 
+
+void Clusterize( std::vector<Data>& aData , const double& twoR2 , const double& T );
+void Cluster( std::vector<Data>& aData , const double& R , const double& T );
+void ScanRT( std::vector<Data>& aData , const std::function< void( const double& , const double& ) >& aCallback );
+void PrepData( std::vector<Data>& aData );

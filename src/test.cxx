@@ -5,131 +5,18 @@
 #include "Cluster_GlobalVars.hpp"
 
 // /* ===== C++ ===== */
-#include <thread>
-#include <iostream>
-#include <math.h>
 #include <vector>
-#include <map>
-#include <set>
 
 /* ===== For Root ===== */
 #include "TH2D.h"
 #include "Math/Interpolator.h" 
   
 /* ===== Local utilities ===== */
-#include "ListComprehension.hpp"
-#include "ProgressBar.hpp"
 #include "RootWindow.hpp"
-#include "Vectorize.hpp"
-
-
-#define PRINT( x ) std::cout << ( #x ) << " = " << ( x ) << std::endl;
-
-
-inline void Clusterize( std::vector<Data>& aData , const double& twoR2 , const double& T )
-{
-
-  // for( auto& i : aData ) i.Clusterize( twoR2 , T , &(*aData.begin()) , &(*aData.end()) );
-  // return;
-
-  static const std::size_t lChunksize( ceil( double(aData.size()) / Concurrency ) );
-  using tIt = std::vector< Data >::iterator;
-  static std::vector< std::pair< tIt , tIt > > lBounds;
-
-  if( lBounds.empty() )
-  {
-    auto A( aData.begin() ) , B( aData.begin() + lChunksize );
-    for( ; B < aData.end() ; A = B , B+=lChunksize ) lBounds.push_back( std::make_pair( A , B ) );
-    lBounds.push_back( std::make_pair( A , aData.end() ) );
-  }
-
-  // Multithreaded clustering within self-contained chunks
-  auto Thread( ThreadPool.begin() );
-  for( auto lChunk( lBounds.begin() ) ; lChunk != lBounds.end() ; ++Thread , ++lChunk ) (**Thread).submit( [ &twoR2 , &T , lChunk ](){ for( auto i( lChunk->first ) ; i != lChunk->second ; ++i ) i->Clusterize( twoR2 , T , &*lChunk->first , &*lChunk->second ); } );
-  WrappedThread::wait();
-
-  // // Handle boundaries between self-contained chunks
-  // for( auto lChunk( lBounds.begin() + 1 ) ; lChunk != lBounds.end() ; ++Thread , ++lChunk )
-  // {
-  //   auto r_limit = lChunk->first->r + twoR2;
-  //   for( auto i( lChunk->first ) ; i != lChunk->second ; ++i )
-  //   {
-  //     if( i->r > r_limit ) break;
-  //     i->Clusterize2( twoR2 , T );
-  //   }
-  // }
-
-}
-
-
-void Cluster( std::vector<Data>& aData , const double& R , const double& T )
-{
-  const std::size_t N( aData.size()-1 );
-  // Reset ahead of UpdateLocalization and Clusterize
-  []( Data& i ){ i.ResetClusters(); i.localizationsum = i.localizationscore = 0.0; i.neighbourit = i.neighbours.begin(); } || aData;
-
-  // Update the localization score
-  [ &R , &N ]( Data& i ){ i.UpdateLocalization( R * R , N ); } || aData; // Use interleaving threading to average over systematic radial scaling
-
-  // And clusterize
-  Clusterize( aData , 4.0*R*R , T );
-}
-
-
-void ScanRT( std::vector<Data>& aData , const std::function< void( const double& , const double& ) >& aCallback )
-{
-  const std::size_t Nminus1( aData.size() - 1 );
-  double R( Parameters.minScanR() ) , R2( 0 ) , twoR2( 0 ) , T( 0 );
-
-  ProgressBar lProgressBar( "Scan over RT" , Parameters.Rbins() * Parameters.Tbins() );
-
-  for( uint32_t i(0) ; i!=Parameters.Rbins() ; ++i , R+=Parameters.dR() )
-  {
-    R2 = R * R;
-    twoR2 = 4.0 * R2;
-    T = Parameters.maxScanT();
-
-    [ &Nminus1 , &R2 ]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); } || aData; // Use interleaving threading to average over systematic radial scaling
-
-    []( Data& i ){ i.ResetClusters(); } || aData;
-
-    for( uint32_t j(0) ; j!=Parameters.Tbins() ; ++j , T-=Parameters.dT() , ++lProgressBar )
-    {
-      Clusterize( aData , twoR2 , T );   
-      []( Data& i ){ i.UpdateClusterScore(); } || aData; // Use interleaving threading to average over systematic radial scaling
-      aCallback( R , T );
-    }
-
-  }
-
-}
-
-
-void PrepData( std::vector<Data>& aData )
-{
-
-  // Should already be sorted, but...
-  // std::sort( aData.begin() , aData.end() );
-
-  {
-    ProgressBar2 lProgressBar( "Preprocessing" , aData.size() );
-
-    // Populate neighbour lists  
-    [ &aData ]( const std::size_t& i ){ aData.at( i ).PopulateNeighbours( aData.begin() + i + 1 , aData.end() , aData.rbegin() + aData.size() - i , aData.rend() ); } || range( aData.size() );  // Interleave threading since processing time increases with radius from origin
-  }
-
-  // ... any other preparation ...
-}
-
-
-
-
-
 
 
 void RTscanCallback( std::vector<Data>& aData , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
 {
-  
   double lScore( 0.0 ) , lMean( 0.0 );
   std::size_t lCount( 0 );
 
@@ -145,9 +32,9 @@ void RTscanCallback( std::vector<Data>& aData , const double& aR , const double&
 
   // std::cout << std::setw(10) << aR << std::setw(10) << aT << std::setw(10) << lCount << std::setw(10) << lMean / lCount << std::endl;
 
-  // ClustScore -> Fill( aR , aT , lScore );
-  // Nclust -> Fill( aR , aT , lCount );
-  // ClustSize -> Fill( aR , aT , lMean / lCount );
+  ClustScore -> Fill( aR , aT , lScore );
+  Nclust -> Fill( aR , aT , lCount );
+  ClustSize -> Fill( aR , aT , lMean / lCount );
 }
 
 
@@ -201,7 +88,7 @@ int main(int argc, char **argv)
   // ClustScore->GetMaximumBin( x , y , z );
   // std::cout << x*dR << " " << y*dT << " " << z << std::endl;
 
-  // InteractiveDisplay( [ ](){ DrawHisto( Nclust ); } , [ ](){ DrawHisto( ClustSize ); } , [ ](){ DrawHisto( ClustScore ); } );
+  InteractiveDisplay( [&](){ DrawHisto( Nclust ); } , [&](){ DrawHisto( ClustSize ); } , [&](){ DrawHisto( ClustScore ); } );
 
 
   // const double R( 15_micrometer*Parameters.scale() );

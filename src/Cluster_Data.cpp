@@ -15,7 +15,8 @@
 
 /* ===== Local utilities ===== */
 #include "ListComprehension.hpp"
-
+#include "ProgressBar.hpp"
+#include "Vectorize.hpp"
 
 
 // // Burmann approximation of the Gaussian cumulative-distribution function
@@ -35,17 +36,17 @@
 
 
 
-Data::ClusterParameter::ClusterParameter( const PRECISION& aW ) : w(aW) , logw( log(aW) )
+Data::ClusterParameter::ClusterParameter( const PRECISION& aW ) : 
+w( aW )
 {}
     
-void Data::ClusterParameter::Reset( const PRECISION& aX , const PRECISION& aY)
+void Data::ClusterParameter::Reset( const PRECISION& aX , const PRECISION& aY , const PRECISION& aR2 )
 {
   A = w;
   Bx = w * aX;
   By = w * aY;
-  Cx = Bx * aX;
-  Cy = By * aY;
-  sum_logw = logw;
+  C = w * aR2;
+  sum_logw = log( w );
 }
 
 Data::ClusterParameter& Data::ClusterParameter::operator+= ( const Data::ClusterParameter& aOther )
@@ -53,8 +54,7 @@ Data::ClusterParameter& Data::ClusterParameter::operator+= ( const Data::Cluster
   A += aOther.A;
   Bx += aOther.Bx;
   By += aOther.By;
-  Cx += aOther.Cx;
-  Cy += aOther.Cy;
+  C += aOther.C;
   sum_logw += aOther.sum_logw;
   return *this;
 }
@@ -68,7 +68,7 @@ inline double CDF( const double& aArg )
   return  ROOT::Math::normal_cdf( aArg );
 }
 
-
+__attribute__((flatten))
 double Data::ClusterParameter::log_score( const std::size_t& n ) const
 {
   static constexpr double pi = atan(1)*4;
@@ -76,13 +76,13 @@ double Data::ClusterParameter::log_score( const std::size_t& n ) const
 
   auto sqrt_A( sqrt( A ) ) , inv_A( 1.0 / A );
   auto Dx( Bx * inv_A ) , Dy( By * inv_A );
-  auto Ex( Cx - ( Bx * Dx ) ) , Ey( Cy - ( By * Dy ) );
+  auto E( C - ( Bx * Dx ) - ( By * Dy ) );
 
   double log_sum = double( -log( 4.0 ) ) // Area term
                    + (log2pi * (1.0-n))
                    + sum_logw
                    - double( log( A ) ) // A is equivalent to n_tilde
-                   + (0.5 * (Ex + Ey));
+                   + (0.5 * E);
 
   // We place explicit bounds checks to prevent calls to expensive functions
   auto arg1 = CDF( sqrt_A * (1.0-Dx) ) - CDF( sqrt_A * (-1.0-Dx) );
@@ -95,8 +95,7 @@ double Data::ClusterParameter::log_score( const std::size_t& n ) const
 
 
 Data::Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS ) : 
-x(aX) , y(aY) , r( sqrt( (aX*aX) + (aY*aY) ) ), phi( atan2( aY , aX ) ),
-eX( 1 - fabs( aX ) ) , eY( 1 - fabs( aY ) ) , 
+x(aX) , y(aY) , r2( (aX*aX) + (aY*aY) ), r( sqrt( r2 ) ), phi( atan2( aY , aX ) ),
 localizationsum( 0.0 ) , localizationscore( 0.0 ),
 neighbourit( neighbours.end() ),
 parent( NULL ),
@@ -166,6 +165,7 @@ void Data::UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  )
 
     // Approximation of the edge-correction
     PRECISION Weight( 1.0 );
+    PRECISION eX( 1 - fabs( x ) ) , eY( 1 - fabs( y ) );
     if( eX < lDist )  Weight *= ( 1 + pow( acos( eX/lDist ) * (2/pi) , 4) );
     if( eY < lDist )  Weight *= ( 1 + pow( acos( eY/lDist ) * (2/pi) , 4) );
 
@@ -185,7 +185,7 @@ void Data::ResetClusters()
   LastClusterSize = 0;
   ClusterSize = 1;
   ClusterScore = 0.0;
-  for( auto& i : ClusterParams ) i.Reset( x , y );
+  for( auto& i : ClusterParams ) i.Reset( x , y , r2 );
 }
 
 
@@ -204,19 +204,19 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , const Data*
 }
 
 
-__attribute__((flatten))
-void Data::Clusterize2( const PRECISION& a2R2 , const PRECISION& aT )
-{
-  if( localizationscore < aT ) return;
+// __attribute__((flatten))
+// void Data::Clusterize2( const PRECISION& a2R2 , const PRECISION& aT )
+// {
+//   if( localizationscore < aT ) return;
 
-  Data* lParent = GetParent();
+//   for( auto& j : neighbours )
+//   {
+//     if( j.first > a2R2 ) break;
+//     if( j.second->localizationscore > aT ) j.second->ClusterInto( this , false );
+//   }
+// }
 
-  for( auto& j : neighbours )
-  {
-    if( j.first > a2R2 ) break;
-    if( j.second->localizationscore > aT ) j.second->ClusterInto( lParent );
-  }
-}
+#include <iostream>
 
 void Data::ClusterInto( Data* aParent )
 {
@@ -243,7 +243,6 @@ Data* Data::GetParent()
 
 
 
-__attribute__((flatten))
 void Data::UpdateClusterScore()
 {
   if( ClusterSize <= LastClusterSize ) return; // We were not bigger than the previous size when we were evaluated - score is still valid
@@ -268,3 +267,102 @@ void Data::UpdateClusterScore()
 }
 
 
+
+
+
+
+void Clusterize( std::vector<Data>& aData , const double& twoR2 , const double& T )
+{
+
+  // for( auto& i : aData ) i.Clusterize( twoR2 , T , &(*aData.begin()) , &(*aData.end()) );
+  // return;
+
+  static const std::size_t lChunksize( ceil( double(aData.size()) / Concurrency ) );
+  using tIt = std::vector< Data >::iterator;
+  static std::vector< std::pair< tIt , tIt > > lBounds;
+
+  if( lBounds.empty() )
+  {
+    auto A( aData.begin() ) , B( aData.begin() + lChunksize );
+    for( ; B < aData.end() ; A = B , B+=lChunksize ) lBounds.push_back( std::make_pair( A , B ) );
+    lBounds.push_back( std::make_pair( A , aData.end() ) );
+  }
+
+  // Multithreaded clustering within self-contained chunks
+  auto Thread( ThreadPool.begin() );
+  for( auto lChunk( lBounds.begin() ) ; lChunk != lBounds.end() ; ++Thread , ++lChunk ) (**Thread).submit( [ &twoR2 , &T , lChunk ](){ for( auto i( lChunk->first ) ; i != lChunk->second ; ++i ) i->Clusterize( twoR2 , T , &*lChunk->first , &*lChunk->second ); } );
+  WrappedThread::wait();
+
+  // // Handle boundaries between self-contained chunks
+  // for( auto lChunk( lBounds.begin() + 1 ) ; lChunk != lBounds.end() ; ++Thread , ++lChunk )
+  // {
+  //   auto r_limit = lChunk->first->r + twoR2;
+  //   for( auto i( lChunk->first ) ; i != lChunk->second ; ++i )
+  //   {
+  //     if( i->r > r_limit ) break;
+  //     i->Clusterize2( twoR2 , T );
+  //   }
+  // }
+
+}
+
+__attribute__((flatten))
+void Cluster( std::vector<Data>& aData , const double& R , const double& T )
+{
+  const std::size_t N( aData.size()-1 );
+  // Reset ahead of UpdateLocalization and Clusterize
+  []( Data& i ){ i.ResetClusters(); i.localizationsum = i.localizationscore = 0.0; i.neighbourit = i.neighbours.begin(); } || aData;
+
+  // Update the localization score
+  [ &R , &N ]( Data& i ){ i.UpdateLocalization( R * R , N ); } || aData; // Use interleaving threading to average over systematic radial scaling
+
+  // And clusterize
+  Clusterize( aData , 4.0*R*R , T );
+}
+
+
+__attribute__((flatten))
+void ScanRT( std::vector<Data>& aData , const std::function< void( const double& , const double& ) >& aCallback )
+{
+  const std::size_t Nminus1( aData.size() - 1 );
+  double R( Parameters.minScanR() ) , R2( 0 ) , twoR2( 0 ) , T( 0 );
+
+  ProgressBar lProgressBar( "Scan over RT" , Parameters.Rbins() * Parameters.Tbins() );
+
+  for( uint32_t i(0) ; i!=Parameters.Rbins() ; ++i , R+=Parameters.dR() )
+  {
+    R2 = R * R;
+    twoR2 = 4.0 * R2;
+    T = Parameters.maxScanT();
+
+    [ &Nminus1 , &R2 ]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); } || aData; // Use interleaving threading to average over systematic radial scaling
+
+    []( Data& i ){ i.ResetClusters(); } || aData;
+
+    for( uint32_t j(0) ; j!=Parameters.Tbins() ; ++j , T-=Parameters.dT() , ++lProgressBar )
+    {
+      Clusterize( aData , twoR2 , T );   
+      []( Data& i ){ i.UpdateClusterScore(); } || aData; // Use interleaving threading to average over systematic radial scaling
+      aCallback( R , T );
+    }
+
+  }
+}
+
+
+
+void PrepData( std::vector<Data>& aData )
+{
+
+  // Should already be sorted, but...
+  // std::sort( aData.begin() , aData.end() );
+
+  {
+    ProgressBar2 lProgressBar( "Preprocessing" , aData.size() );
+
+    // Populate neighbour lists  
+    [ &aData ]( const std::size_t& i ){ aData.at( i ).PopulateNeighbours( aData.begin() + i + 1 , aData.end() , aData.rbegin() + aData.size() - i , aData.rend() ); } || range( aData.size() );  // Interleave threading since processing time increases with radius from origin
+  }
+
+  // ... any other preparation ...
+}
