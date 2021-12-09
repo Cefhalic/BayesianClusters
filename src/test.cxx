@@ -57,6 +57,7 @@ int main(int argc, char **argv)
   Parameters.SetMaxR( 200_nanometer );
   //Parameters.SetMaxR( 30_micrometer );  
   Parameters.SetBins( 100 , 100 );
+  Parameters.SetPbAlpha( 0.2 , 20 );
 
 //  auto lData = LoadCSV( "1_un_red.csv" , 1./64000. , -1. , -1. ); // Full file
   auto lData = LoadCSV( argv[1] , 87_micrometer , 32_micrometer ); // One cluster

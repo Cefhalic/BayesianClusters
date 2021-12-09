@@ -56,4 +56,10 @@ void GlobalVars::SetBins( const std::size_t& aRbins , const std::size_t& aTbins 
 	mDT = ( mMaxScanT - mMinScanT ) / mTbins;
 }
 
+void GlobalVars::SetPbAlpha( const double& aPB , const double& aAlpha )
+{
+	mPB = aPB;
+	mAlpha = aAlpha;
+}
+
 GlobalVars Parameters;

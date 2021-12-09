@@ -69,20 +69,13 @@ inline double CDF( const double& aArg )
 }
 
 __attribute__((flatten))
-double Data::ClusterParameter::log_score( const std::size_t& n ) const
+double Data::ClusterParameter::log_score() const
 {
-  static constexpr double pi = atan(1)*4;
-  static constexpr double log2pi = log( 2*pi );
-
   auto sqrt_A( sqrt( A ) ) , inv_A( 1.0 / A );
   auto Dx( Bx * inv_A ) , Dy( By * inv_A );
   auto E( C - ( Bx * Dx ) - ( By * Dy ) );
 
-  double log_sum = double( -log( 4.0 ) ) // Area term
-                   + (log2pi * (1.0-n))
-                   + sum_logw
-                   - double( log( A ) ) // A is equivalent to n_tilde
-                   + (0.5 * E);
+  double log_sum = sum_logw - double( log( A ) ) + ( 0.5 * E );
 
   // We place explicit bounds checks to prevent calls to expensive functions
   auto arg1 = CDF( sqrt_A * (1.0-Dx) ) - CDF( sqrt_A * (-1.0-Dx) );
@@ -216,7 +209,7 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , const Data*
 //   }
 // }
 
-#include <iostream>
+// #include <iostream>
 
 void Data::ClusterInto( Data* aParent )
 {
@@ -245,25 +238,28 @@ Data* Data::GetParent()
 
 void Data::UpdateClusterScore()
 {
+  static constexpr double pi = atan(1)*4;
+  static constexpr double log2pi = log( 2*pi );
+
   if( ClusterSize <= LastClusterSize ) return; // We were not bigger than the previous size when we were evaluated - score is still valid
   LastClusterSize = ClusterSize;
 
-  thread_local static std::vector< double > integral( Parameters.sigmacount() , 1.0 );
+  thread_local static std::vector< double > MuIntegral( Parameters.sigmacount() , 1.0 );
 
   double constant;
 
   for( std::size_t i(0) ; i!=Parameters.sigmacount() ; ++i )
   {
-    double log_sum = ClusterParams[i].log_score( ClusterSize ) + Parameters.log_probability_sigma( i );
+    double log_sum = ClusterParams[i].log_score() + Parameters.log_probability_sigma( i );
     if( i == 0 ) constant = log_sum;
-    else         integral[i] = exp( log_sum - constant );
+    else         MuIntegral[i] = exp( log_sum - constant );
   }
 
   thread_local static ROOT::Math::Interpolator lInt( Parameters.sigmacount() , ROOT::Math::Interpolation::kLINEAR );
-  lInt.SetData( Parameters.sigmabins() , integral );
+  lInt.SetData( Parameters.sigmabins() , MuIntegral );
 
   static const double Lower( Parameters.sigmabins(0) ) , Upper( Parameters.sigmabins(Parameters.sigmacount()-1) );
-  ClusterScore = PRECISION( log( lInt.Integ( Lower , Upper ) ) ) + constant;  
+  ClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-ClusterSize));  
 }
 
 

@@ -37,6 +37,7 @@ public:
 	void SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator );
 	void SetMaxR( const double& aMaxR );
 	void SetBins( const std::size_t& aRbins , const std::size_t& aTbins , const double& aMinScanR = 0.0 , const double& aMaxScanR = -1  , const double& aMinScanT = 0.0 , const double& aMaxScanT = -1 );
+	void SetPbAlpha( const double& aPB , const double& aAlpha );
 
 public:
 	inline const double& scale() const { return mScale; }
@@ -72,6 +73,9 @@ public:
 	inline const double& dT() const { return mDT; }
 	inline const std::size_t& Tbins() const { return mTbins; }
 
+	inline const double& pB() const { return mPB; }
+	inline const double& alpha() const { return mAlpha; }
+
 private:	
 	double mScale , mScale2;
 
@@ -86,6 +90,8 @@ private:
 	double mMinScanR , mMaxScanR , mMinScanT , mMaxScanT;
 	double mDR , mDT;
 	std::size_t mRbins ,  mTbins;
+
+	double mPB , mAlpha;
 
 };
 

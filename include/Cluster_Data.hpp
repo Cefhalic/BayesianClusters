@@ -19,7 +19,7 @@ public:
 
     ClusterParameter& operator+= ( const ClusterParameter& aOther );
 
-    double log_score( const std::size_t& n ) const;
+    double log_score() const;
 
     const PRECISION w;
     PRECISION A , Bx, By, C, sum_logw;
