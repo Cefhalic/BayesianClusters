@@ -64,7 +64,7 @@ void DrawHisto( TH2D* aHist )
 
 
 /* ===== Function for plotting data ===== */
-void DrawPoints( const std::map< const Data* , std::vector< Data* > >& aData )
+void DrawPoints( const std::map< const Data::Cluster* , std::vector< Data* > >& aData )
 {
   gPad -> SetMargin( 0.01 , 0.15 , 0.01 , 0.01 );
 
