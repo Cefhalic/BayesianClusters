@@ -20,24 +20,14 @@ void RTscanCallback( std::vector<Data>& aData , const double& aR , const double&
   double lScore( 0.0 ) , lMean( 0.0 );
   std::size_t lCnt( 0 );
 
-  // for( auto& i : aData )
-  // {
-  //   if( i.ClusterSize > 1 )
-  //   {
-  //     lScore += i.ClusterScore;
-  //     lCount += 1;
-  //     lMean += i.ClusterSize;
-  //   }
-  // }
-
   for( auto& i : Data::Clusters )
   {
-    if( i.ClusterSize )
-    { 
-      lCnt++;
+    if( i.ClusterSize > 1 )
+    {
       lScore += i.ClusterScore;
+      lCnt += 1;
       lMean += i.ClusterSize;
-    }  
+    }
   }
 
   // std::cout << std::setw(10) << aR << std::setw(10) << aT << std::setw(10) << lCount << std::setw(10) << lMean / lCount << std::endl;

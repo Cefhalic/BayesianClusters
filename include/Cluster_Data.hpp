@@ -3,8 +3,6 @@
 /* ===== C++ ===== */
 #include <math.h>
 #include <vector>
-#include <set>
-#include <mutex>
 #include <functional>
 
 #define PRECISION float
@@ -16,7 +14,6 @@ public:
   struct ClusterParameter
   {
     ClusterParameter();
-    // ClusterParameter( const PRECISION& aW , const PRECISION& aX , const PRECISION& aY , const PRECISION& aR2 );
 
     ClusterParameter& operator+= ( const ClusterParameter& aOther );
 
@@ -32,14 +29,12 @@ public:
     std::vector< ClusterParameter > Params;
     std::size_t ClusterSize , LastClusterSize;
     PRECISION ClusterScore;
-
     Cluster* mParent;
-    std::set< Cluster* > mBoundaries;
+
+    void operator+= ( const Data& aData );
+    void operator+= ( Cluster& aData );
 
     Cluster* GetParent();
-
-    Cluster& operator+= ( const Data& aData );
-    Cluster& operator+= ( Cluster& aData );
 
     double log_score();
   };
@@ -73,14 +68,10 @@ public:
 
   void PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd );
   void UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  );
-  void ResetClusters();
 
-  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , const Data* aLower , const Data* aUpper , Cluster* aCluster = NULL );
-  // void Finalize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster = NULL );
-
-  Cluster* GetCluster();
-
-
+  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT );
+  void ClusterInto( const PRECISION& aT , Cluster* aCluster );
+  
 public:
   PRECISION x, y, r2 , r, phi;
   std::vector< PRECISION > w_i;
@@ -92,7 +83,6 @@ public:
   Cluster* mCluster;
 
   static std::vector< Cluster > Clusters;
-  static std::mutex ClusterMutex;
 };
 
 
