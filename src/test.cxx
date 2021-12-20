@@ -82,23 +82,23 @@ int main(int argc, char **argv)
   auto ClustSize  = new TH2D( "ClustSize" , "<N_{points}>;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
   auto ClustScore = new TH2D( "ClustScore" , "Score;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
 
-  ScanRT( lData , [&]( const double& aR , const double& aT ){ RTscanCallback( lData , aR , aT , ClustScore , Nclust , ClustSize ); } );
+  // ScanRT( lData , [&]( const double& aR , const double& aT ){ RTscanCallback( lData , aR , aT , ClustScore , Nclust , ClustSize ); } );
 
-  // // int x , y , z;
-  // // ClustScore->GetMaximumBin( x , y , z );
-  // // std::cout << x*dR << " " << y*dT << " " << z << std::endl;
+  // // // int x , y , z;
+  // // // ClustScore->GetMaximumBin( x , y , z );
+  // // // std::cout << x*dR << " " << y*dT << " " << z << std::endl;
 
-  InteractiveDisplay( [&](){ DrawHisto( Nclust ); } , [&](){ DrawHisto( ClustSize ); } , [&](){ DrawHisto( ClustScore ); } );
+  // InteractiveDisplay( [&](){ DrawHisto( Nclust ); } , [&](){ DrawHisto( ClustSize ); } , [&](){ DrawHisto( ClustScore ); } );
 
 
   // // const double R( 15_micrometer*Parameters.scale() );
   // // const double T( 20_micrometer*Parameters.scale() );
 
-  // const double R( 50_nanometer*Parameters.scale() );
-  // const double T( 70_nanometer*Parameters.scale() );
-  // std::cout << std::dec << "R=" << R << " | T=" << T << std::endl;
+  const double R( 50_nanometer*Parameters.scale() );
+  const double T( 70_nanometer*Parameters.scale() );
+  std::cout << std::dec << "R=" << R << " | T=" << T << std::endl;
 
-  // Cluster( lData , R , T );
+  Cluster( lData , R , T );
 
 
   // // // std::set< Data* > lClusterable;
@@ -114,10 +114,10 @@ int main(int argc, char **argv)
 
   // // // std::cout << "Brute force "<< std::dec<< lClusterable.size() << std::endl;
 
-  // std::map< const Data::Cluster* , std::vector< Data* > > lClusters;
-  // // for( auto& i : Data::Cluster::Clusters ) std::cout << i.ClusterSize << std::endl;
-  // for( auto& i : lData )
-  //   lClusters[ i.mCluster ].push_back( &i );
+  std::map< const Data::Cluster* , std::vector< Data* > > lClusters;
+  // for( auto& i : Data::Cluster::Clusters ) std::cout << i.ClusterSize << std::endl;
+  for( auto& i : lData )
+    lClusters[ i.mCluster ].push_back( &i );
 
   // // // for( auto& i : lData ) lClusters2[ ( lClusterable.find( &i ) != lClusterable.end() )? (Data*)(1) :(NULL) ].push_back( &i );
 
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
 
 
 
-  // InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } , [ &lClusters ](){ DrawPoints( lClusters ); } );
+  InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } , [ &lClusters ](){ DrawPoints( lClusters ); } );
 
   // //InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } , [ &lClusters2 ](){ DrawPoints( lClusters2 ); } );
 
