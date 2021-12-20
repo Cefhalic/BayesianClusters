@@ -24,22 +24,20 @@ public:
 
   void submit( const std::function< void() >& aFunc );
 
-  // void submit( const std::function< void( const std::size_t& aIndex ) >& aFunc );
-
   static void wait();
 
 private:
   void Runner();
 
-  static std::atomic< std::uint64_t > lBusy;
-  static std::uint64_t lInstanceCtr;
-  const std::uint64_t lMask;
+  static std::atomic< std::uint64_t > sBusy;
+  static std::uint64_t sInstanceCounter;
+  const std::uint64_t mMask;
 
-  std::condition_variable m_data_condition;
-  std::function< void() > lFunc;
-  std::atomic< bool > lTerminate;
-  std::mutex lMutex;
-  std::thread lThread; // MUST BE LAST!
+  std::condition_variable mConditionVariable;
+  std::function< void() > mFunc;
+  std::atomic< bool > mTerminate;
+  std::mutex mMutex;
+  std::thread mThread; // MUST BE LAST!
    
 };
 

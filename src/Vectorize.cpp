@@ -4,51 +4,44 @@
 #include "Vectorize.hpp"
 
 
-WrappedThread::WrappedThread(): lMask( uint64_t(0x1) << lInstanceCtr++ ) , //lInstance( lInstanceCtr++ ) , 
-lThread( &WrappedThread::Runner , this )
+WrappedThread::WrappedThread(): mMask( uint64_t(0x1) << sInstanceCounter++ ) ,
+mThread( &WrappedThread::Runner , this )
 {}
 
 WrappedThread::~WrappedThread()
 {
-  lTerminate = true;
-  m_data_condition.notify_one();  
-  lThread.join();
+  mTerminate = true;
+  mConditionVariable.notify_one();  
+  mThread.join();
 }
 
 void WrappedThread::submit( const std::function< void() >& aFunc )
 {
-  std::unique_lock<std::mutex> lLock(lMutex);
-  lFunc = aFunc;
-  lBusy |= lMask;
-  m_data_condition.notify_one();
+  std::unique_lock<std::mutex> lLock(mMutex);
+  mFunc = aFunc;
+  sBusy |= mMask;
+  mConditionVariable.notify_one();
 }
-
-// void WrappedThread::submit( const std::function< void( const std::size_t& aIndex ) >& aFunc )
-// {
-//   std::unique_lock<std::mutex> lLock(lMutex);
-//   lFunc = [ & , aFunc ](){ aFunc( lInstance ); };
-//   lBusy |= lMask;    
-// }
 
 void WrappedThread::wait()
 {
-  while( WrappedThread::lBusy ){}
+  while( WrappedThread::sBusy ){}
 }
 
 void WrappedThread::Runner()
 {
   while (true)
   {
-    std::unique_lock<std::mutex> lLock(lMutex);
-    m_data_condition.wait( lLock, [this]() { return ( lBusy & lMask ) || lTerminate; });
-    if( lTerminate ) return;
-    // if( !( lBusy & lMask ) ) continue;
-    (lFunc)();
-    lBusy &= ~lMask;
+    std::unique_lock<std::mutex> lLock(mMutex);
+    mConditionVariable.wait( lLock, [this]() { return ( sBusy & mMask ) || mTerminate; });
+    if( mTerminate ) return;
+    // if( !( sBusy & mMask ) ) continue;
+    (mFunc)();
+    sBusy &= ~mMask;
   }
 }
 
-std::uint64_t WrappedThread::lInstanceCtr( 0x0 );
-std::atomic< std::uint64_t > WrappedThread::lBusy( 0x0 );
+std::uint64_t WrappedThread::sInstanceCounter( 0x0 );
+std::atomic< std::uint64_t > WrappedThread::sBusy( 0x0 );
 
 std::vector< std::unique_ptr< WrappedThread > > ThreadPool( []( const int& ){ return std::unique_ptr< WrappedThread >( new WrappedThread() ); } | range( Concurrency ) );

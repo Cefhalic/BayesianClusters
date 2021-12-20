@@ -26,9 +26,9 @@ public:
   struct Cluster
   {
     Cluster();
-    std::vector< ClusterParameter > Params;
-    std::size_t ClusterSize , LastClusterSize;
-    PRECISION ClusterScore;
+    std::vector< ClusterParameter > mParams;
+    std::size_t mClusterSize , mLastClusterSize;
+    PRECISION mClusterScore;
     Cluster* mParent;
 
     void operator+= ( const Data& aData );
@@ -45,7 +45,7 @@ public:
   Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS );
 
   Data( const Data& ) = delete;
-  Data& operator = (const Data&) = delete;
+  Data& operator = (const Data& ) = delete;
 
   Data( Data&& ) = default;
   Data& operator = ( Data&& ) = default;
@@ -70,16 +70,16 @@ public:
   void UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  );
 
   void Clusterize( const PRECISION& a2R2 , const PRECISION& aT );
-  void ClusterInto( const PRECISION& aT , Cluster* aCluster );
+  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster );
   
 public:
   PRECISION x, y, r2 , r, phi;
-  std::vector< PRECISION > w_i;
+  std::vector< PRECISION > mWeights;
 
-  PRECISION localizationsum , localizationscore;
+  PRECISION mLocalizationSum , mLocalizationScore;
 
-  std::vector< std::pair< PRECISION , Data* > > neighbours;
-  std::vector< std::pair< PRECISION , Data* > >::iterator neighbourit;
+  std::vector< std::pair< PRECISION , Data* > > mNeighbours;
+  std::vector< std::pair< PRECISION , Data* > >::iterator mNeighbourit;
   Cluster* mCluster;
 
   static std::vector< Cluster > Clusters;

@@ -23,7 +23,7 @@
 /* ===== Function for plotting data ===== */
 void DrawPoints( const std::vector< Data >& aData )
 {
-  auto x( &Data::x | aData ) , y( &Data::y | aData ) , z( &Data::localizationscore | aData );
+  auto x( &Data::x | aData ) , y( &Data::y | aData ) , z( &Data::mLocalizationScore | aData );
   gPad -> SetMargin( 0.01 , 0.15 , 0.01 , 0.01 );
   TGraph* lGraph0 = new TGraph( aData.size() , x.data() , y.data() );
   // TGraph2D* lGraph1 = new TGraph2D( aData.size() , x.data() , y.data() , z.data() );

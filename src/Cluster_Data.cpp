@@ -64,8 +64,8 @@ double Data::ClusterParameter::log_score() const
 
 
 
-Data::Cluster::Cluster(): Params( Parameters.sigmacount() ),
-ClusterSize( 0 ) , LastClusterSize( 0 ) , ClusterScore( 0.0 ) , 
+Data::Cluster::Cluster(): mParams( Parameters.sigmacount() ),
+mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
 mParent( NULL )
 {}
 
@@ -75,28 +75,28 @@ double Data::Cluster::log_score()
   static constexpr double pi = atan(1)*4;
   static constexpr double log2pi = log( 2*pi );
 
-  if( ClusterSize <= LastClusterSize ) return ClusterScore; // We were not bigger than the previous size when we were evaluated - score is still valid
-  LastClusterSize = ClusterSize;
+  if( mClusterSize <= mLastClusterSize ) return mClusterScore; // We were not bigger than the previous size when we were evaluated - score is still valid
+  mLastClusterSize = mClusterSize;
 
   thread_local static std::vector< double > MuIntegral( Parameters.sigmacount() , 1.0 );
 
-  // double constant( Params[0].log_score() + Parameters.log_probability_sigma( 0 ) );
-  // for( std::size_t i(1) ; i!=Parameters.sigmacount() ; ++i ) MuIntegral[i] = exp( Params[i].log_score() + Parameters.log_probability_sigma( i ) - constant );
-  for( std::size_t i(0) ; i!=Parameters.sigmacount() ; ++i ) MuIntegral[i] = exp( Params[i].log_score() + Parameters.log_probability_sigma( i ) );
+  // double constant( mParams[0].log_score() + Parameters.log_probability_sigma( 0 ) );
+  // for( std::size_t i(1) ; i!=Parameters.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Parameters.log_probability_sigma( i ) - constant );
+  for( std::size_t i(0) ; i!=Parameters.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Parameters.log_probability_sigma( i ) );
 
   thread_local static ROOT::Math::Interpolator lInt( Parameters.sigmacount() , ROOT::Math::Interpolation::kLINEAR );
   lInt.SetData( Parameters.sigmabins() , MuIntegral );
 
   static const double Lower( Parameters.sigmabins(0) ) , Upper( Parameters.sigmabins(Parameters.sigmacount()-1) );
-  // return ClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-ClusterSize));  
-  return ClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) - double( log( 4.0 ) ) + (log2pi * (1.0-ClusterSize));  
+  //return mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
+  return mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
 }
 
 
 void Data::Cluster::operator+= ( const Data& aData )
 {
-  auto w( aData.w_i.begin() );
-  for( auto lIt( Params.begin() ) ; lIt != Params.end() ; ++lIt , ++w )
+  auto w( aData.mWeights.begin() );
+  for( auto lIt( mParams.begin() ) ; lIt != mParams.end() ; ++lIt , ++w )
   {
     lIt->A += *w;
     lIt->Bx += (*w * aData.x);
@@ -104,17 +104,17 @@ void Data::Cluster::operator+= ( const Data& aData )
     lIt->C += (*w * aData.r2);
     lIt->logF += PRECISION( log( *w ) );
   }
-  ClusterSize += 1;
+  mClusterSize += 1;
 }
 
 void Data::Cluster::operator+= ( Data::Cluster& aOther )
 {
   if( &aOther == this ) return;
-  if( aOther.ClusterSize == 0 ) return;
+  if( aOther.mClusterSize == 0 ) return;
 
-  for( auto lIt( Params.begin() ) , lIt2( aOther.Params.begin() ) ; lIt != Params.end() ; ++lIt , ++lIt2 ) *lIt += *lIt2;
-  ClusterSize += aOther.ClusterSize;
-  aOther.ClusterSize = 0;
+  for( auto lIt( mParams.begin() ) , lIt2( aOther.mParams.begin() ) ; lIt != mParams.end() ; ++lIt , ++lIt2 ) *lIt += *lIt2;
+  mClusterSize += aOther.mClusterSize;
+  aOther.mClusterSize = 0;
   aOther.mParent = this;
 }
 
@@ -129,9 +129,9 @@ Data::Cluster* Data::Cluster::GetParent()
 
 Data::Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS ) : 
 x(aX) , y(aY) , r2( (aX*aX) + (aY*aY) ), r( sqrt( r2 ) ), phi( atan2( aY , aX ) ),
-w_i( [ &aS ]( const double& sig2 ){ return PRECISION( 1.0 / ( (aS*aS) + sig2 ) ); } | Parameters.sigmabins2() ),
-localizationsum( 0.0 ) , localizationscore( 0.0 ),
-neighbourit( neighbours.end() ),
+mWeights( [ &aS ]( const double& sig2 ){ return PRECISION( 1.0 / ( (aS*aS) + sig2 ) ); } | Parameters.sigmabins2() ),
+mLocalizationSum( 0.0 ) , mLocalizationScore( 0.0 ),
+mNeighbourit( mNeighbours.end() ),
 mCluster( NULL )
 {}
 
@@ -145,13 +145,13 @@ void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::
   const auto dphi = Parameters.maxR() / ( r - Parameters.maxR() );
   const auto dphi2 = Parameters.max2R() / ( r - Parameters.max2R() );
 
-  // Iterate over other hits and populate the neighbour list
+  // Iterate over other hits and populate the mNeighbour list
   for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
   {
     if( ( aPlusIt->r - r ) > Parameters.max2R() ) break; // aPlusIt is always further out than curent 
     if( fabs( aPlusIt->phi - phi ) > dphi ) continue;
     PRECISION ldR2 = dR2( *aPlusIt );
-    if( ldR2 < Parameters.max2R2() ) neighbours.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
+    if( ldR2 < Parameters.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
   }
 
   for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
@@ -159,11 +159,11 @@ void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::
     if( ( r - aMinusIt->r ) > Parameters.max2R() ) break; // curent is always further out than aMinusIn
     if( fabs( aPlusIt->phi - phi ) > dphi ) continue;
     PRECISION ldR2 = dR2( *aMinusIt );    
-    if( ldR2 < Parameters.max2R2() ) neighbours.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
+    if( ldR2 < Parameters.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
   }
 
-  std::sort( neighbours.begin() , neighbours.end() );
-  neighbourit = neighbours.begin();
+  std::sort( mNeighbours.begin() , mNeighbours.end() );
+  mNeighbourit = mNeighbours.begin();
 }
 
 
@@ -171,12 +171,12 @@ void Data::UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  )
 {
   constexpr PRECISION pi = atan(1)*4;
 
-  const PRECISION last_localizationsum( localizationsum );
+  const PRECISION lLastLocalizationSum( mLocalizationSum );
 
-  for( ; neighbourit != neighbours.end() ; ++neighbourit )
+  for( ; mNeighbourit != mNeighbours.end() ; ++mNeighbourit )
   { 
-    if( neighbourit->first > aR2 ) break;
-    PRECISION lDist = sqrt( neighbourit->first );
+    if( mNeighbourit->first > aR2 ) break;
+    PRECISION lDist = sqrt( mNeighbourit->first );
 
     // Approximation of the edge-correction
     PRECISION Weight( 1.0 );
@@ -184,13 +184,13 @@ void Data::UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  )
     if( eX < lDist )  Weight *= ( 1 + pow( acos( eX/lDist ) * (2/pi) , 4) );
     if( eY < lDist )  Weight *= ( 1 + pow( acos( eY/lDist ) * (2/pi) , 4) );
 
-    localizationsum += Weight;
+    mLocalizationSum += Weight;
   }
 
-  if( last_localizationsum == localizationsum ) return;
+  if( lLastLocalizationSum == mLocalizationSum ) return;
 
   const PRECISION LocalizationConstant( 4.0 / ( pi * Nminus1 ) ); 
-  localizationscore = sqrt( LocalizationConstant * localizationsum );
+  mLocalizationScore = sqrt( LocalizationConstant * mLocalizationSum );
 }
 
 
@@ -200,10 +200,10 @@ __attribute__((flatten))
 void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT )
 {
   if( mCluster ) return;
-  if( localizationscore < aT ) return;
+  if( mLocalizationScore < aT ) return;
 
-  // if one of our neighbours is already a cluster, join that
-  for( auto& j : neighbours )
+  // if one of our mNeighbours is already a cluster, join that
+  for( auto& j : mNeighbours )
   {
     if( j.first > a2R2 ) break;
     if( ! j.second->mCluster ) continue;  
@@ -218,16 +218,16 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT )
   breakpoint:
   *mCluster += *this;
 
-  for( auto& i : neighbours )
+  for( auto& i : mNeighbours )
   {
     if( i.first > a2R2 ) break;
-    i.second->ClusterInto( aT , mCluster );
+    i.second->Clusterize( a2R2 , aT , mCluster );
   }
 }
 
 
 
-void Data::ClusterInto( const PRECISION& aT , Cluster* aCluster )
+void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster )
 {
   if( mCluster )
   {
@@ -235,7 +235,7 @@ void Data::ClusterInto( const PRECISION& aT , Cluster* aCluster )
   }
   else
   {
-    if( localizationscore < aT ) return;
+    if( mLocalizationScore < aT ) return;
     *aCluster += *this;
     mCluster = aCluster;
   }
@@ -254,7 +254,7 @@ void Cluster( std::vector<Data>& aData , const double& R , const double& T )
 
   const std::size_t N( aData.size()-1 );
   // Reset ahead of UpdateLocalization and Clusterize
-  []( Data& i ){ i.mCluster = NULL; i.localizationsum = i.localizationscore = 0.0; i.neighbourit = i.neighbours.begin(); } || aData;
+  []( Data& i ){ i.mCluster = NULL; i.mLocalizationSum = i.mLocalizationScore = 0.0; i.mNeighbourit = i.mNeighbours.begin(); } || aData;
 
   // Update the localization score
   [ &R , &N ]( Data& i ){ i.UpdateLocalization( R * R , N ); } || aData; // Use interleaving threading to average over systematic radial scaling
@@ -273,6 +273,7 @@ void ScanRT( std::vector<Data>& aData , const std::function< void( const double&
 
   auto UpdateLocalizationExpr = [ &Nminus1 , &R2 ]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); };
   auto ResetClustersExpr = []( Data& i ){ i.mCluster = NULL; };
+  auto UpdateScoreExpr = []( Data::Cluster& i ){ if( i.mClusterSize ) i.log_score(); };
 
   ProgressBar lProgressBar( "Scan over RT" , Parameters.Rbins() * Parameters.Tbins() );
 
@@ -291,7 +292,7 @@ void ScanRT( std::vector<Data>& aData , const std::function< void( const double&
     {
       // std::cout << "-----" << R << " " << T << "-----" << std::endl;
       for( auto& i : aData ) i.Clusterize( twoR2 , T );
-      // []( Data& i ){ i.UpdateClusterScore(); } || aData; // Use interleaving threading to average over systematic radial scaling
+      UpdateScoreExpr || Data::Clusters; 
       aCallback( R , T );
     }
 
@@ -308,7 +309,7 @@ void PrepData( std::vector<Data>& aData )
   {
     ProgressBar2 lProgressBar( "Preprocessing" , aData.size() );
 
-    // Populate neighbour lists  
+    // Populate mNeighbour lists  
     [ &aData ]( const std::size_t& i ){ aData.at( i ).PopulateNeighbours( aData.begin() + i + 1 , aData.end() , aData.rbegin() + aData.size() - i , aData.rend() ); } || range( aData.size() );  // Interleave threading since processing time increases with radius from origin
   }
 

@@ -5,12 +5,24 @@
 #include <vector>
 
 /* ===== Super nerd template magic emulating list comprehension ===== */
-template< typename tContainer , typename tExpr >
-inline auto operator| ( tExpr&& aExpr , tContainer&& aContainer ) -> std::vector< decltype( aExpr( *aContainer.begin() ) ) >
+template< typename tContainer , typename tExpr , typename T = typename std::remove_reference<tContainer>::type::value_type , typename U = decltype( std::declval<tExpr>().operator()( std::declval<T>() ) ) >
+inline 
+typename std::enable_if< not std::is_same<U, void>::value, std::vector< U > >::type
+operator| ( tExpr&& aExpr , tContainer&& aContainer )
 {
-  std::vector< decltype( aExpr( *aContainer.begin() ) ) > lRet;
+  std::vector< U > lRet;
   std::transform( aContainer.begin() , aContainer.end() , std::back_inserter(lRet) , aExpr );
   return lRet;
+}
+
+
+/* ===== Super nerd template magic emulating list comprehension ===== */
+template< typename tContainer , typename tExpr , typename T = typename std::remove_reference<tContainer>::type::value_type , typename U = decltype( std::declval<tExpr>().operator()( std::declval<T>() ) ) >
+inline 
+typename std::enable_if< std::is_same<U, void>::value, void >::type
+operator| ( tExpr&& aExpr , tContainer&& aContainer )
+{
+  std::transform( aContainer.begin() , aContainer.end() , aExpr );
 }
 
 // Handle pointer to member variable
