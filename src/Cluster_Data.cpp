@@ -121,7 +121,7 @@ void Data::Cluster::operator+= ( Data::Cluster& aOther )
 
 Data::Cluster* Data::Cluster::GetParent()
 {
-  if( mParent ) return mParent->GetParent();
+  if( mParent ) return mParent = mParent->GetParent();
   return this;
 }
 
@@ -207,7 +207,7 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT )
   {
     if( j.first > a2R2 ) break;
     if( ! j.second->mCluster ) continue;  
-    mCluster = j.second->mCluster->GetParent();
+    mCluster = j.second->mCluster = j.second->mCluster->GetParent();
     goto breakpoint;
   }
 
@@ -232,6 +232,7 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aC
   if( mCluster )
   {
     *aCluster += *(mCluster->GetParent());
+    mCluster = aCluster;
   }
   else
   {

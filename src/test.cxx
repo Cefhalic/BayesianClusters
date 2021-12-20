@@ -22,7 +22,7 @@ void RTscanCallback( std::vector<Data>& aData , const double& aR , const double&
 
   for( auto& i : Data::Clusters )
   {
-    if( i.mClusterSize > 1 )
+    if( i.mClusterSize )
     {
       lScore += i.mClusterScore;
       lCnt += 1;
