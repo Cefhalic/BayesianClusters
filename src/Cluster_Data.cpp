@@ -3,6 +3,7 @@
 /* ===== C++ ===== */
 #include <stdlib.h>
 #include <iostream>
+#include <iomanip>
 
 /* ===== For Root ===== */
 #include "Math/ProbFunc.h" 
@@ -18,14 +19,12 @@
 #include "Vectorize.hpp"
 
 
-std::vector< Data::Cluster > Data::Clusters;
-
-Data::ClusterParameter::ClusterParameter() : 
+Cluster::Parameter::Parameter() : 
 A(0.0) , Bx(0.0) , By(0.0) , C(0.0) , logF(0.0)
 {}
 
     
-Data::ClusterParameter& Data::ClusterParameter::operator+= ( const Data::ClusterParameter& aOther )
+Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& aOther )
 {
   A += aOther.A;
   Bx += aOther.Bx;
@@ -45,7 +44,7 @@ inline double CDF( const double& aArg )
 }
 
 __attribute__((flatten))
-double Data::ClusterParameter::log_score() const
+double Cluster::Parameter::log_score() const
 {
   auto sqrt_A( sqrt( A ) ) , inv_A( 1.0 / A );
   auto Dx( Bx * inv_A ) , Dy( By * inv_A );
@@ -64,13 +63,13 @@ double Data::ClusterParameter::log_score() const
 
 
 
-Data::Cluster::Cluster(): mParams( Parameters.sigmacount() ),
+Cluster::Cluster(): mParams( Parameters.sigmacount() ),
 mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
 mParent( NULL )
 {}
 
 
-double Data::Cluster::log_score()
+double Cluster::log_score()
 {
   static constexpr double pi = atan(1)*4;
   static constexpr double log2pi = log( 2*pi );
@@ -93,7 +92,7 @@ double Data::Cluster::log_score()
 }
 
 
-void Data::Cluster::operator+= ( const Data& aData )
+void Cluster::operator+= ( const Data& aData )
 {
   auto w( aData.mWeights.begin() );
   for( auto lIt( mParams.begin() ) ; lIt != mParams.end() ; ++lIt , ++w )
@@ -107,10 +106,11 @@ void Data::Cluster::operator+= ( const Data& aData )
   mClusterSize += 1;
 }
 
-void Data::Cluster::operator+= ( Data::Cluster& aOther )
+void Cluster::operator+= ( Cluster& aOther )
 {
-  if( &aOther == this ) return;
-  if( aOther.mClusterSize == 0 ) return;
+  // if( &aOther == this ) throw std::runtime_error( "Error #1" );
+  // if( aOther.mClusterSize == 0 ) throw std::runtime_error( "Error #2" );
+  // if( aOther.mParent ) throw std::runtime_error( "Error #3" );
 
   for( auto lIt( mParams.begin() ) , lIt2( aOther.mParams.begin() ) ; lIt != mParams.end() ; ++lIt , ++lIt2 ) *lIt += *lIt2;
   mClusterSize += aOther.mClusterSize;
@@ -119,7 +119,7 @@ void Data::Cluster::operator+= ( Data::Cluster& aOther )
 }
 
 
-Data::Cluster* Data::Cluster::GetParent()
+Cluster* Cluster::GetParent()
 {
   if( mParent ) return mParent = mParent->GetParent();
   return this;
@@ -197,7 +197,7 @@ void Data::UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  )
 
 // We are at the top-level
 __attribute__((flatten))
-void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT )
+void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , std::vector< Cluster >& aClusters )
 {
   if( mCluster ) return;
   if( mLocalizationScore < aT ) return;
@@ -207,22 +207,12 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT )
   {
     if( j.first > a2R2 ) break;
     if( ! j.second->mCluster ) continue;  
-    mCluster = j.second->mCluster = j.second->mCluster->GetParent();
-    goto breakpoint;
+    return Clusterize( a2R2 , aT , j.second->mCluster->GetParent() );
   }
 
   // else create a new cluster
-  Clusters.emplace_back();
-  mCluster = &Clusters.back();
-
-  breakpoint:
-  *mCluster += *this;
-
-  for( auto& i : mNeighbours )
-  {
-    if( i.first > a2R2 ) break;
-    i.second->Clusterize( a2R2 , aT , mCluster );
-  }
+  aClusters.emplace_back();
+  Clusterize( a2R2 , aT , &aClusters.back() );
 }
 
 
@@ -231,7 +221,8 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aC
 {
   if( mCluster )
   {
-    *aCluster += *(mCluster->GetParent());
+    if( ( mCluster = mCluster->GetParent() ) == aCluster ) return;
+    *aCluster += *mCluster;
     mCluster = aCluster;
   }
   else
@@ -239,17 +230,57 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aC
     if( mLocalizationScore < aT ) return;
     *aCluster += *this;
     mCluster = aCluster;
+
+    for( auto& i : mNeighbours )
+    {
+      if( i.first > a2R2 ) break;
+      i.second->Clusterize( a2R2 , aT , aCluster );
+    }  
   }
+
+}
+
+
+
+bool CheckClusterization( std::vector<Data>& aData , const double& R , const double& T )
+{
+  const auto lRlimit = 4.0 * R * R;
+
+  uint32_t lNotClustered( 0 );
+  uint32_t lNeighbourNotClustered( 0 );
+  uint32_t lWrongNeighbour( 0 );
+
+  for( auto& i : aData )
+  {
+    if( i.mLocalizationScore > T )
+    {
+      if( ! i.mCluster ){ lNotClustered++ ; continue; }
+      i.mCluster = i.mCluster->GetParent(); // Update cache
+      for( auto& j : i.mNeighbours )
+      {
+        if( j.first > lRlimit ) break;
+        if( j.second->mLocalizationScore < T ) continue;
+
+        if( ! j.second->mCluster ){ lNeighbourNotClustered++; continue; }
+        if ( j.second->mCluster->GetParent() != i.mCluster ){ lWrongNeighbour++; continue; }
+      }
+    }
+  }
+
+  if( lNotClustered or lNeighbourNotClustered or lWrongNeighbour )
+  {
+    std::cout << "Not Clustered = " << std::setw(8) << lNotClustered << " | Neighbour Not Clustered = " << std::setw(8) << lNeighbourNotClustered << " | Wrong Neighbour = " << std::setw(8) << lWrongNeighbour << std::endl;
+    return false;
+  }
+
+  return true;
 }
 
 
 
 
-
-
-
 __attribute__((flatten))
-void Cluster( std::vector<Data>& aData , const double& R , const double& T )
+void Clusterize( std::vector<Data>& aData , std::vector< Cluster >& aClusters , const double& R , const double& T )
 {
   ProgressBar2 lProgressBar( "Clustering" , 0 );
 
@@ -262,19 +293,22 @@ void Cluster( std::vector<Data>& aData , const double& R , const double& T )
 
   // And clusterize
   auto twoR2 = 4.0*R*R;
-  for( auto& i : aData ) i.Clusterize( twoR2 , T );
+  for( auto& i : aData ) i.Clusterize( twoR2 , T , aClusters );
 }
 
 
 __attribute__((flatten))
-void ScanRT( std::vector<Data>& aData , const std::function< void( const double& , const double& ) >& aCallback )
+void ScanRT( std::vector<Data>& aData , const std::function< void( const std::vector< Cluster >& , const double& , const double& ) >& aCallback )
 {
   const std::size_t Nminus1( aData.size() - 1 );
   double R( Parameters.minScanR() ) , R2( 0 ) , twoR2( 0 ) , T( 0 );
 
+  std::vector< Cluster > lClusters;
+  lClusters.reserve( aData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
+
   auto UpdateLocalizationExpr = [ &Nminus1 , &R2 ]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); };
   auto ResetClustersExpr = []( Data& i ){ i.mCluster = NULL; };
-  auto UpdateScoreExpr = []( Data::Cluster& i ){ if( i.mClusterSize ) i.log_score(); };
+  auto UpdateScoreExpr = []( Cluster& i ){ if( i.mClusterSize ) i.log_score(); };
 
   ProgressBar lProgressBar( "Scan over RT" , Parameters.Rbins() * Parameters.Tbins() );
 
@@ -286,34 +320,29 @@ void ScanRT( std::vector<Data>& aData , const std::function< void( const double&
 
     UpdateLocalizationExpr || aData; // Use interleaving threading to average over systematic radial scaling
 
-    Data::Clusters.clear();
+    lClusters.clear();
     ResetClustersExpr || aData;
 
     for( uint32_t j(0) ; j!=Parameters.Tbins() ; ++j , T-=Parameters.dT() , ++lProgressBar )
     {
-      // std::cout << "-----" << R << " " << T << "-----" << std::endl;
-      for( auto& i : aData ) i.Clusterize( twoR2 , T );
-      UpdateScoreExpr || Data::Clusters; 
-      aCallback( R , T );
+      for( auto& i : aData ) i.Clusterize( twoR2 , T , lClusters );
+      UpdateScoreExpr || lClusters; 
+      aCallback( lClusters , R , T );
     }
-
   }
+
+  lClusters.clear();
+  ResetClustersExpr || aData; // Delete cluster pointers which will be invalidated when we leave the function
+
 }
 
 
 
 void PrepData( std::vector<Data>& aData )
 {
-  // Should already be sorted, but...
-  // std::sort( aData.begin() , aData.end() );
-
   {
-    ProgressBar2 lProgressBar( "Preprocessing" , aData.size() );
-
     // Populate mNeighbour lists  
+    ProgressBar2 lProgressBar( "Populating neighbourhood" , aData.size() );
     [ &aData ]( const std::size_t& i ){ aData.at( i ).PopulateNeighbours( aData.begin() + i + 1 , aData.end() , aData.rbegin() + aData.size() - i , aData.rend() ); } || range( aData.size() );  // Interleave threading since processing time increases with radius from origin
   }
-
-  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
-  Data::Clusters.reserve( aData.size() );
 }

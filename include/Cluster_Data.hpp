@@ -7,40 +7,38 @@
 
 #define PRECISION float
 
+class Data;
+
+class Cluster
+{
+public:
+  struct Parameter
+  {
+    Parameter();
+    Parameter& operator+= ( const Parameter& aOther );
+    double log_score() const;
+    PRECISION A , Bx, By, C, logF;
+  }; 
+
+  Cluster();
+  std::vector< Parameter > mParams;
+  std::size_t mClusterSize , mLastClusterSize;
+  PRECISION mClusterScore;
+  Cluster* mParent;
+
+  void operator+= ( const Data& aData );
+  void operator+= ( Cluster& aData );
+
+  Cluster* GetParent();
+
+  double log_score();
+};
+
+
+
 /* ===== Struct for storing data ===== */
 class Data
 {
-public:
-  struct ClusterParameter
-  {
-    ClusterParameter();
-
-    ClusterParameter& operator+= ( const ClusterParameter& aOther );
-
-    double log_score() const;
-
-    PRECISION A , Bx, By, C, logF;
-  };  
-
-
-  struct Cluster
-  {
-    Cluster();
-    std::vector< ClusterParameter > mParams;
-    std::size_t mClusterSize , mLastClusterSize;
-    PRECISION mClusterScore;
-    Cluster* mParent;
-
-    void operator+= ( const Data& aData );
-    void operator+= ( Cluster& aData );
-
-    Cluster* GetParent();
-
-    double log_score();
-  };
-
-
-
 public:
   Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS );
 
@@ -69,8 +67,9 @@ public:
   void PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd );
   void UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  );
 
-  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT );
+  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , std::vector< Cluster >& aClusters );
   void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster );
+  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster , Cluster& aSum );
   
 public:
   PRECISION x, y, r2 , r, phi;
@@ -81,14 +80,14 @@ public:
   std::vector< std::pair< PRECISION , Data* > > mNeighbours;
   std::vector< std::pair< PRECISION , Data* > >::iterator mNeighbourit;
   Cluster* mCluster;
-
-  static std::vector< Cluster > Clusters;
 };
 
 
 
 
-void Clusterize( std::vector<Data>& aData , const double& twoR2 , const double& T );
-void Cluster( std::vector<Data>& aData , const double& R , const double& T );
-void ScanRT( std::vector<Data>& aData , const std::function< void( const double& , const double& ) >& aCallback );
+bool CheckClusterization( std::vector<Data>& aData , const double& R , const double& T );
+void Clusterize( std::vector<Data>& aData , std::vector< Cluster >& aClusters , const double& R , const double& T );
+void ScanRT( std::vector<Data>& aData , const std::function< void( const std::vector< Cluster >& , const double& , const double& ) >& aCallback );
 void PrepData( std::vector<Data>& aData );
+
+

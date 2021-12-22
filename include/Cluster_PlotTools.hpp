@@ -31,4 +31,4 @@ void DrawPoints( const std::vector< Data >& aData );
 void DrawHisto( TH2D* aHist );
 
 /* ===== Function for plotting data ===== */
-void DrawPoints( const std::map< const Data::Cluster* , std::vector< Data* > >& aData );
+void DrawClusters( const std::vector< Data >& aData );

@@ -15,12 +15,12 @@
 #include "RootWindow.hpp"
 
 
-void RTscanCallback( std::vector<Data>& aData , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
+void RTscanCallback( const std::vector< Cluster >& aClusters , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
 {
   double lScore( 0.0 ) , lMean( 0.0 );
   std::size_t lCnt( 0 );
 
-  for( auto& i : Data::Clusters )
+  for( auto& i : aClusters )
   {
     if( i.mClusterSize )
     {
@@ -71,8 +71,6 @@ int main(int argc, char **argv)
 
   PrepData( lData );
 
-  // // for( auto& i : lData ) std::cout << (i.neighbours[0].size()?sqrt(i.neighbours[0].begin()->first)*20_micrometer:0.0) << " " << (i.neighbours[1].size()?sqrt(i.neighbours[1].begin()->first)*20_micrometer:0.0) << std::endl;
-
   auto Rlo = Parameters.minScanR() - ( 0.5 * Parameters.dR() );
   auto Rhi = Parameters.maxScanR() - ( 0.5 * Parameters.dR() );
   auto Tlo = Parameters.minScanT() - ( 0.5 * Parameters.dT() );
@@ -82,59 +80,17 @@ int main(int argc, char **argv)
   auto ClustSize  = new TH2D( "ClustSize" , "<N_{points}>;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
   auto ClustScore = new TH2D( "ClustScore" , "Score;r;T" , Parameters.Rbins() , Rlo , Rhi , Parameters.Tbins() , Tlo , Thi );
 
-  // ScanRT( lData , [&]( const double& aR , const double& aT ){ RTscanCallback( lData , aR , aT , ClustScore , Nclust , ClustSize ); } );
-
-  // // // int x , y , z;
-  // // // ClustScore->GetMaximumBin( x , y , z );
-  // // // std::cout << x*dR << " " << y*dT << " " << z << std::endl;
-
-  // InteractiveDisplay( [&](){ DrawHisto( Nclust ); } , [&](){ DrawHisto( ClustSize ); } , [&](){ DrawHisto( ClustScore ); } );
+  ScanRT( lData , [&]( const std::vector< Cluster >& aClusters , const double& aR , const double& aT ){ RTscanCallback( aClusters , aR , aT , ClustScore , Nclust , ClustSize ); } );
 
 
-  // // const double R( 15_micrometer*Parameters.scale() );
-  // // const double T( 20_micrometer*Parameters.scale() );
+  // const double R( 50_nanometer*Parameters.scale() );
+  // const double T( 70_nanometer*Parameters.scale() );
+  // std::cout << std::dec << "R=" << R << " | T=" << T << std::endl;
+  // std::vector< Cluster > lClusters;
+  // lClusters.reserve( lData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
+  // Clusterize( lData , lClusters , R , T );
+  // CheckClusterization( lData , R , T );
+  // InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } , [ &lData ](){ DrawClusters( lData ); } );
 
-  const double R( 50_nanometer*Parameters.scale() );
-  const double T( 70_nanometer*Parameters.scale() );
-  std::cout << std::dec << "R=" << R << " | T=" << T << std::endl;
-
-  Cluster( lData , R , T );
-
-
-  // // // std::set< Data* > lClusterable;
-  // // // for( auto& i : lData ) 
-  // // //   if( i.localizationscore > T )
-  // // //     for( auto& j : i.neighbours )
-  // // //       for( auto& k : j )
-  // // //         if( k.first < 4.0*R*R and k.second->localizationscore > T)
-  // // //         { 
-  // // //           lClusterable.insert( k.second );
-  // // //           lClusterable.insert( &i );
-  // // //         }
-
-  // // // std::cout << "Brute force "<< std::dec<< lClusterable.size() << std::endl;
-
-  std::map< const Data::Cluster* , std::vector< Data* > > lClusters;
-  // for( auto& i : Data::Cluster::Clusters ) std::cout << i.ClusterSize << std::endl;
-  for( auto& i : lData )
-    lClusters[ i.mCluster ].push_back( &i );
-
-  // // // for( auto& i : lData ) lClusters2[ ( lClusterable.find( &i ) != lClusterable.end() )? (Data*)(1) :(NULL) ].push_back( &i );
-
-  // // double sum(0);
-  // // for( auto& i : lClusters ) if( i.first ) sum += i.second.size();
-  // // std::cout << "Recursive " << std::dec << lClusters.size()-1 << " : " << sum/(lClusters.size()-1) << std::endl;
-
-
-  // // InteractiveDisplay( [ &lClusters2 ](){ DrawPoints( lClusters2 ); } , [ &lClusters ](){ DrawPoints( lClusters ); } );
-
-
-
-  InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } , [ &lClusters ](){ DrawPoints( lClusters ); } );
-
-  // //InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } , [ &lClusters2 ](){ DrawPoints( lClusters2 ); } );
-
-  // // InteractiveDisplay( [ &Nclust ](){ DrawHisto( Nclust ); } , [ &ClustSize ](){ DrawHisto( ClustSize ); } , [ &ClustScore ](){ DrawHisto( ClustScore ); } , [ lClusters ](){ DrawPoints( lClusters ); } );
-  // // InteractiveDisplay( [](){ DrawWeights(); } );
-  return 0;
+   return 0;
 }

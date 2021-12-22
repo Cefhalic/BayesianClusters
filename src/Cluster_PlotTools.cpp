@@ -26,12 +26,12 @@ void DrawPoints( const std::vector< Data >& aData )
   auto x( &Data::x | aData ) , y( &Data::y | aData ) , z( &Data::mLocalizationScore | aData );
   gPad -> SetMargin( 0.01 , 0.15 , 0.01 , 0.01 );
   TGraph* lGraph0 = new TGraph( aData.size() , x.data() , y.data() );
-  // TGraph2D* lGraph1 = new TGraph2D( aData.size() , x.data() , y.data() , z.data() );
+  TGraph2D* lGraph1 = new TGraph2D( aData.size() , x.data() , y.data() , z.data() );
   auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetLimits(-1,1); aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
   FormatAxis( lGraph0->GetXaxis() );
   FormatAxis( lGraph0->GetYaxis() );
   lGraph0->Draw( "a p" );
-  // lGraph1->Draw( "cont1z same" );
+  lGraph1->Draw( "cont1z same" );
 }
 
 
@@ -64,14 +64,17 @@ void DrawHisto( TH2D* aHist )
 
 
 /* ===== Function for plotting data ===== */
-void DrawPoints( const std::map< const Data::Cluster* , std::vector< Data* > >& aData )
+void DrawClusters( const std::vector< Data >& aData )
 {
+  std::map< const Cluster* , std::vector< const Data* > > lClusters;
+  for( auto& i : aData ) lClusters[ i.mCluster ? i.mCluster->GetParent() : NULL ].push_back( &i );
+
   gPad -> SetMargin( 0.01 , 0.15 , 0.01 , 0.01 );
 
   auto GetX = []( const Data* i ){ return i->x; };
   auto GetY = []( const Data* i ){ return i->y; };
 
-  auto i( aData.begin() );
+  auto i( lClusters.begin() );
   TGraph* lGraph = new TGraph( i->second.size() , ( GetX | i->second ).data() , ( GetY | i->second ).data() );
 
   auto FormatAxis = []( TAxis* aAxis ){ aAxis->SetLimits(-1,1); aAxis->SetRangeUser(-1,1); aAxis->SetLabelSize(0); aAxis->SetTickLength(0); };
@@ -82,7 +85,7 @@ void DrawPoints( const std::map< const Data::Cluster* , std::vector< Data* > >& 
 
   i++;
   int cnt(0);
-  for( ; i != aData.end() ; ++i , ++cnt )
+  for( ; i != lClusters.end() ; ++i , ++cnt )
   {
     double x(0.0) , y(0.0) , x2(0.0) , y2(0.0);
     for( auto& j: i->second )
