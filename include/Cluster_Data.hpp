@@ -21,13 +21,15 @@ public:
   }; 
 
   Cluster();
+  Cluster( const Data& aData );
+
   std::vector< Parameter > mParams;
   std::size_t mClusterSize , mLastClusterSize;
   PRECISION mClusterScore;
   Cluster* mParent;
 
-  void operator+= ( const Data& aData );
-  void operator+= ( Cluster& aData );
+  Cluster& operator+= ( const Data& aData );
+  Cluster& operator+= ( Cluster& aData );
 
   Cluster* GetParent();
 
@@ -64,12 +66,19 @@ public:
     return sqrt( dR2( aOther ) );
   }
 
+  inline PRECISION dPhi( const Data& aOther ) const
+  {
+    static constexpr double pi = atan(1)*4;
+    auto lPhi = fabs( phi - aOther.phi );
+    if( lPhi > pi ) lPhi = (2.0*pi) - lPhi;
+    return lPhi;
+  }
+
   void PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd );
   void UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  );
 
   void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , std::vector< Cluster >& aClusters );
   void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster );
-  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster , Cluster& aSum );
   
 public:
   PRECISION x, y, r2 , r, phi;
@@ -85,7 +94,7 @@ public:
 
 
 
-bool CheckClusterization( std::vector<Data>& aData , const double& R , const double& T );
+bool CheckClusterization( std::vector<Data>& aData , std::vector< Cluster >& aClusters , const double& R , const double& T );
 void Clusterize( std::vector<Data>& aData , std::vector< Cluster >& aClusters , const double& R , const double& T );
 void ScanRT( std::vector<Data>& aData , const std::function< void( const std::vector< Cluster >& , const double& , const double& ) >& aCallback );
 void PrepData( std::vector<Data>& aData );

@@ -38,6 +38,7 @@ public:
 	void SetMaxR( const double& aMaxR );
 	void SetBins( const std::size_t& aRbins , const std::size_t& aTbins , const double& aMinScanR = 0.0 , const double& aMaxScanR = -1  , const double& aMinScanT = 0.0 , const double& aMaxScanT = -1 );
 	void SetPbAlpha( const double& aPB , const double& aAlpha );
+	void SetValidate( const bool& aValidate );
 
 public:
 	inline const double& scale() const { return mScale; }
@@ -76,6 +77,8 @@ public:
 	inline const double& pB() const { return mPB; }
 	inline const double& alpha() const { return mAlpha; }
 
+	inline const bool& validate() const { return mValidate; }
+
 private:	
 	double mScale , mScale2;
 
@@ -93,6 +96,7 @@ private:
 
 	double mPB , mAlpha;
 
+	bool mValidate;
 };
 
 extern GlobalVars Parameters;

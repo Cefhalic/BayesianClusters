@@ -69,6 +69,11 @@ mParent( NULL )
 {}
 
 
+Cluster::Cluster( const Data& aData ): mParams( Parameters.sigmacount() ),
+mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
+mParent( NULL )
+{ *this += aData; }
+
 double Cluster::log_score()
 {
   static constexpr double pi = atan(1)*4;
@@ -92,7 +97,7 @@ double Cluster::log_score()
 }
 
 
-void Cluster::operator+= ( const Data& aData )
+Cluster& Cluster::operator+= ( const Data& aData )
 {
   auto w( aData.mWeights.begin() );
   for( auto lIt( mParams.begin() ) ; lIt != mParams.end() ; ++lIt , ++w )
@@ -104,18 +109,20 @@ void Cluster::operator+= ( const Data& aData )
     lIt->logF += PRECISION( log( *w ) );
   }
   mClusterSize += 1;
+  return *this;
 }
 
-void Cluster::operator+= ( Cluster& aOther )
+Cluster& Cluster::operator+= ( Cluster& aOther )
 {
-  // if( &aOther == this ) throw std::runtime_error( "Error #1" );
-  // if( aOther.mClusterSize == 0 ) throw std::runtime_error( "Error #2" );
-  // if( aOther.mParent ) throw std::runtime_error( "Error #3" );
+  if( &aOther == this ) throw std::runtime_error( "Error #1" );
+  if( aOther.mClusterSize == 0 ) throw std::runtime_error( "Error #2" );
+  if( aOther.mParent ) throw std::runtime_error( "Error #3" );
 
   for( auto lIt( mParams.begin() ) , lIt2( aOther.mParams.begin() ) ; lIt != mParams.end() ; ++lIt , ++lIt2 ) *lIt += *lIt2;
   mClusterSize += aOther.mClusterSize;
   aOther.mClusterSize = 0;
   aOther.mParent = this;
+  return *this;
 }
 
 
@@ -142,14 +149,13 @@ mCluster( NULL )
 __attribute__((flatten))
 void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd )
 {
-  const auto dphi = Parameters.maxR() / ( r - Parameters.maxR() );
-  const auto dphi2 = Parameters.max2R() / ( r - Parameters.max2R() );
+  auto dphi = Parameters.max2R() / ( r - Parameters.max2R() );
 
   // Iterate over other hits and populate the mNeighbour list
   for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
   {
     if( ( aPlusIt->r - r ) > Parameters.max2R() ) break; // aPlusIt is always further out than curent 
-    if( fabs( aPlusIt->phi - phi ) > dphi ) continue;
+    if( dPhi( *aPlusIt ) > dphi ) continue;
     PRECISION ldR2 = dR2( *aPlusIt );
     if( ldR2 < Parameters.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
   }
@@ -157,7 +163,7 @@ void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::
   for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
   {
     if( ( r - aMinusIt->r ) > Parameters.max2R() ) break; // curent is always further out than aMinusIn
-    if( fabs( aPlusIt->phi - phi ) > dphi ) continue;
+    if( dPhi( *aMinusIt ) > dphi ) continue;
     PRECISION ldR2 = dR2( *aMinusIt );    
     if( ldR2 < Parameters.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
   }
@@ -195,6 +201,42 @@ void Data::UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  )
 
 
 
+
+// We are at the top-level
+// __attribute__((flatten))
+// void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , std::vector< Cluster >& aClusters )
+// {
+//   if( mLocalizationScore < aT ) return;
+
+//   if( ! mCluster ){
+//     aClusters.emplace_back( *this );
+//     mCluster = &aClusters.back();
+//   }
+//   else
+//   {
+//     mCluster = mCluster->GetParent();
+//   }
+
+//   for( auto& j : mNeighbours )
+//   {
+//     if( j.first > a2R2 ) break;
+//     if( j.second->mCluster )
+//     {
+//       if( ( j.second->mCluster = j.second->mCluster->GetParent() ) == mCluster ) continue;
+//       j.second->mCluster = &( *mCluster += *j.second->mCluster );
+//     }
+//     else
+//     {
+//       if( j.second->mLocalizationScore < aT ) continue;
+//       j.second->mCluster = &( *mCluster += *j.second );
+//     }
+//   }
+
+// }
+
+
+
+
 // We are at the top-level
 __attribute__((flatten))
 void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , std::vector< Cluster >& aClusters )
@@ -216,20 +258,17 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , std::vector
 }
 
 
-
 void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster )
 {
   if( mCluster )
   {
     if( ( mCluster = mCluster->GetParent() ) == aCluster ) return;
-    *aCluster += *mCluster;
-    mCluster = aCluster;
+    mCluster = &( *aCluster += *mCluster );
   }
   else
   {
     if( mLocalizationScore < aT ) return;
-    *aCluster += *this;
-    mCluster = aCluster;
+    mCluster = &( *aCluster += *this );
 
     for( auto& i : mNeighbours )
     {
@@ -237,39 +276,59 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aC
       i.second->Clusterize( a2R2 , aT , aCluster );
     }  
   }
-
 }
 
 
 
-bool CheckClusterization( std::vector<Data>& aData , const double& R , const double& T )
+bool CheckClusterization( std::vector<Data>& aData  , std::vector< Cluster >& aClusters, const double& R , const double& T )
 {
   const auto lRlimit = 4.0 * R * R;
 
+  uint32_t lBackground( 0 );
+  uint32_t lPointsInClusters( 0 );
+
+  uint32_t lExpected( 0 );
   uint32_t lNotClustered( 0 );
   uint32_t lNeighbourNotClustered( 0 );
   uint32_t lWrongNeighbour( 0 );
 
   for( auto& i : aData )
   {
-    if( i.mLocalizationScore > T )
-    {
-      if( ! i.mCluster ){ lNotClustered++ ; continue; }
-      i.mCluster = i.mCluster->GetParent(); // Update cache
-      for( auto& j : i.mNeighbours )
-      {
-        if( j.first > lRlimit ) break;
-        if( j.second->mLocalizationScore < T ) continue;
-
-        if( ! j.second->mCluster ){ lNeighbourNotClustered++; continue; }
-        if ( j.second->mCluster->GetParent() != i.mCluster ){ lWrongNeighbour++; continue; }
-      }
+    if( i.mLocalizationScore < T ){ 
+      lBackground++;
+      continue;
     }
+    
+    lExpected++;
+    if( ! i.mCluster ){ lNotClustered++ ; continue; }
+    i.mCluster = i.mCluster->GetParent(); // Update cache
+    for( auto& j : i.mNeighbours )
+    {
+      if( j.first > lRlimit ) break;
+      if( j.second->mLocalizationScore < T ) continue;
+
+      if( ! j.second->mCluster ){ lNeighbourNotClustered++; continue; }
+      if ( j.second->mCluster->GetParent() != i.mCluster )
+      { 
+        // std::cout << "Data | " << (&i - aData.data()) << " (" <<  (i.mCluster - aClusters.data()) << ") | " << (j.second - aData.data()) << " (" << (j.second->mCluster - aClusters.data()) << ")" << std::endl;
+        lWrongNeighbour++;
+        continue; 
+      }
+    }    
   }
+
+  for( auto& i : aClusters ) lPointsInClusters += i.mClusterSize;
+
+
+  if( lPointsInClusters + lBackground != aData.size() )
+  {
+    std::cout << "\nR = " << R << ", T = " << T << " | Points In Clusters = " << lPointsInClusters  << " | Background = " << lBackground << " | Total = " << aData.size() << std::endl;
+    return false;    
+  }  
 
   if( lNotClustered or lNeighbourNotClustered or lWrongNeighbour )
   {
-    std::cout << "Not Clustered = " << std::setw(8) << lNotClustered << " | Neighbour Not Clustered = " << std::setw(8) << lNeighbourNotClustered << " | Wrong Neighbour = " << std::setw(8) << lWrongNeighbour << std::endl;
+    std::cout << "\nR = " << R << ", T = " << T << " | Not Clustered = " << lNotClustered << "/" << lExpected << " | Neighbour Not Clustered = " << lNeighbourNotClustered << " | Wrong Neighbour = " << lWrongNeighbour << std::endl;
     return false;
   }
 
@@ -306,10 +365,6 @@ void ScanRT( std::vector<Data>& aData , const std::function< void( const std::ve
   std::vector< Cluster > lClusters;
   lClusters.reserve( aData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
 
-  auto UpdateLocalizationExpr = [ &Nminus1 , &R2 ]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); };
-  auto ResetClustersExpr = []( Data& i ){ i.mCluster = NULL; };
-  auto UpdateScoreExpr = []( Cluster& i ){ if( i.mClusterSize ) i.log_score(); };
-
   ProgressBar lProgressBar( "Scan over RT" , Parameters.Rbins() * Parameters.Tbins() );
 
   for( uint32_t i(0) ; i!=Parameters.Rbins() ; ++i , R+=Parameters.dR() )
@@ -318,21 +373,22 @@ void ScanRT( std::vector<Data>& aData , const std::function< void( const std::ve
     twoR2 = 4.0 * R2;
     T = Parameters.maxScanT();
 
-    UpdateLocalizationExpr || aData; // Use interleaving threading to average over systematic radial scaling
-
+    [&]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); i.mCluster = NULL; } || aData; // Use interleaving threading to average over systematic radial scaling
     lClusters.clear();
-    ResetClustersExpr || aData;
 
     for( uint32_t j(0) ; j!=Parameters.Tbins() ; ++j , T-=Parameters.dT() , ++lProgressBar )
     {
       for( auto& i : aData ) i.Clusterize( twoR2 , T , lClusters );
-      UpdateScoreExpr || lClusters; 
+
+      if( Parameters.validate() and !CheckClusterization( aData , lClusters , R , T ) ) throw std::runtime_error( "Check failed" );
+
+      []( Cluster& i ){ if( i.mClusterSize ) i.log_score(); } || lClusters; 
       aCallback( lClusters , R , T );
     }
   }
 
   lClusters.clear();
-  ResetClustersExpr || aData; // Delete cluster pointers which will be invalidated when we leave the function
+  [&]( Data& i ){ i.mCluster = NULL; } || aData; // Delete cluster pointers which will be invalidated when we leave the function
 
 }
 

@@ -62,4 +62,10 @@ void GlobalVars::SetPbAlpha( const double& aPB , const double& aAlpha )
 	mAlpha = aAlpha;
 }
 
+void GlobalVars::SetValidate( const bool& aValidate )
+{
+	mValidate = aValidate;
+}
+
+
 GlobalVars Parameters;
