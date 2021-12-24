@@ -149,13 +149,16 @@ mCluster( NULL )
 __attribute__((flatten))
 void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd )
 {
+  static constexpr double pi = atan(1)*4;  
   auto dphi = Parameters.max2R() / ( r - Parameters.max2R() );
+  auto dphi2 = (2*pi) - dphi;
 
   // Iterate over other hits and populate the mNeighbour list
   for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
   {
     if( ( aPlusIt->r - r ) > Parameters.max2R() ) break; // aPlusIt is always further out than curent 
-    if( dPhi( *aPlusIt ) > dphi ) continue;
+    auto lPhi = dPhi( *aPlusIt );
+    if( lPhi > dphi and lPhi < dphi2 ) continue;
     PRECISION ldR2 = dR2( *aPlusIt );
     if( ldR2 < Parameters.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
   }
@@ -163,7 +166,8 @@ void Data::PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::
   for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
   {
     if( ( r - aMinusIt->r ) > Parameters.max2R() ) break; // curent is always further out than aMinusIn
-    if( dPhi( *aMinusIt ) > dphi ) continue;
+    auto lPhi = dPhi( *aMinusIt );
+    if( lPhi > dphi and lPhi < dphi2 ) continue;
     PRECISION ldR2 = dR2( *aMinusIt );    
     if( ldR2 < Parameters.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
   }
@@ -201,38 +205,6 @@ void Data::UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  )
 
 
 
-
-// We are at the top-level
-// __attribute__((flatten))
-// void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , std::vector< Cluster >& aClusters )
-// {
-//   if( mLocalizationScore < aT ) return;
-
-//   if( ! mCluster ){
-//     aClusters.emplace_back( *this );
-//     mCluster = &aClusters.back();
-//   }
-//   else
-//   {
-//     mCluster = mCluster->GetParent();
-//   }
-
-//   for( auto& j : mNeighbours )
-//   {
-//     if( j.first > a2R2 ) break;
-//     if( j.second->mCluster )
-//     {
-//       if( ( j.second->mCluster = j.second->mCluster->GetParent() ) == mCluster ) continue;
-//       j.second->mCluster = &( *mCluster += *j.second->mCluster );
-//     }
-//     else
-//     {
-//       if( j.second->mLocalizationScore < aT ) continue;
-//       j.second->mCluster = &( *mCluster += *j.second );
-//     }
-//   }
-
-// }
 
 
 

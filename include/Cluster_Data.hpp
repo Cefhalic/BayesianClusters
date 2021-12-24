@@ -68,10 +68,7 @@ public:
 
   inline PRECISION dPhi( const Data& aOther ) const
   {
-    static constexpr double pi = atan(1)*4;
-    auto lPhi = fabs( phi - aOther.phi );
-    if( lPhi > pi ) lPhi = (2.0*pi) - lPhi;
-    return lPhi;
+   return fabs( phi - aOther.phi );
   }
 
   void PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd );
