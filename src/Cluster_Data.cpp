@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <iomanip>
+#include <mutex>
 
 /* ===== For Root ===== */
 #include "Math/ProbFunc.h" 
@@ -69,10 +70,15 @@ mParent( NULL )
 {}
 
 
-Cluster::Cluster( const Data& aData ): mParams( Parameters.sigmacount() ),
-mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
-mParent( NULL )
-{ *this += aData; }
+Cluster::Cluster( Cluster&& aOther ) : mParams( Parameters.sigmacount() ) , mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , mParent( NULL )
+{}
+
+
+Cluster& Cluster::operator=( Cluster&& aOther )
+{
+  throw std::runtime_error( "Should never be used" );
+}
+
 
 double Cluster::log_score()
 {
@@ -97,26 +103,45 @@ double Cluster::log_score()
 }
 
 
-Cluster& Cluster::operator+= ( const Data& aData )
-{
-  auto w( aData.mWeights.begin() );
-  for( auto lIt( mParams.begin() ) ; lIt != mParams.end() ; ++lIt , ++w )
-  {
-    lIt->A += *w;
-    lIt->Bx += (*w * aData.x);
-    lIt->By += (*w * aData.y);
-    lIt->C += (*w * aData.r2);
-    lIt->logF += PRECISION( log( *w ) );
-  }
-  mClusterSize += 1;
-  return *this;
-}
+// void Cluster::AddToMergeList( Cluster* aCluster )
+// {
+//   if( aCluster < this ) return aCluster->AddToMergeList( this );
+//   std::lock_guard< std::mutex > lLock( mMutex );
+//   mMergeList.push_back( aCluster );
+// }
+
+
+// Cluster& Cluster::operator+= ( const Data& aData )
+// {
+//   // if( mParent ) return *mParent += aData;
+  
+//   std::lock_guard< std::mutex > lLock( mMutex );
+
+//   auto w( aData.mWeights.begin() );
+//   for( auto lIt( mParams.begin() ) ; lIt != mParams.end() ; ++lIt , ++w )
+//   {
+//     lIt->A += *w;
+//     lIt->Bx += (*w * aData.x);
+//     lIt->By += (*w * aData.y);
+//     lIt->C += (*w * aData.r2);
+//     lIt->logF += PRECISION( log( *w ) );
+//   }
+//   mClusterSize += 1;
+//   return *this;
+// }
 
 Cluster& Cluster::operator+= ( Cluster& aOther )
 {
-  if( &aOther == this ) throw std::runtime_error( "Error #1" );
-  if( aOther.mClusterSize == 0 ) throw std::runtime_error( "Error #2" );
-  if( aOther.mParent ) throw std::runtime_error( "Error #3" );
+  // if( mParent ) return *mParent += aOther;
+  if( &aOther == this ) return *this; 
+  // if( aOther.mParent ) return *this += *aOther.mParent;
+ // if( aOther.mClusterSize == 0 ) throw std::runtime_error( "Error #2" );
+
+  // std::lock( mMutex , aOther.mMutex );
+  // std::lock_guard< std::mutex > lLock( mMutex, std::adopt_lock );
+  // std::lock_guard< std::mutex > lLock2( aOther.mMutex, std::adopt_lock );
+
+  std::lock_guard< std::mutex > lLock( mMutex );
 
   for( auto lIt( mParams.begin() ) , lIt2( aOther.mParams.begin() ) ; lIt != mParams.end() ; ++lIt , ++lIt2 ) *lIt += *lIt2;
   mClusterSize += aOther.mClusterSize;
@@ -139,11 +164,15 @@ x(aX) , y(aY) , r2( (aX*aX) + (aY*aY) ), r( sqrt( r2 ) ), phi( atan2( aY , aX ) 
 mWeights( [ &aS ]( const double& sig2 ){ return PRECISION( 1.0 / ( (aS*aS) + sig2 ) ); } | Parameters.sigmabins2() ),
 mLocalizationSum( 0.0 ) , mLocalizationScore( 0.0 ),
 mNeighbourit( mNeighbours.end() ),
-mCluster( NULL )
+mCluster( NULL ), mProtoCluster( NULL )
 {}
 
 
-
+Data::~Data()
+{
+  if( mProtoCluster ) delete mProtoCluster;
+  mProtoCluster = NULL;
+}
 
 
 __attribute__((flatten))
@@ -208,6 +237,7 @@ void Data::UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  )
 
 
 
+std::mutex gListMutex;
 
 // We are at the top-level
 __attribute__((flatten))
@@ -216,39 +246,54 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , std::vector
   if( mCluster ) return;
   if( mLocalizationScore < aT ) return;
 
+  // If we haven't already done so, create a proto-cluster to save us repeating this calculation many times
+  if( !mProtoCluster ){
+    mProtoCluster = new Cluster();
+    mProtoCluster->mClusterSize = 1;
+    auto w( mWeights.begin() );
+    for( auto lIt( mProtoCluster->mParams.begin() ) ; lIt != mProtoCluster->mParams.end() ; ++lIt , ++w )
+    {
+      lIt->A = *w;
+      lIt->Bx = (*w * x);
+      lIt->By = (*w * y);
+      lIt->C = (*w * r2);
+      lIt->logF = PRECISION( log( *w ) );
+    }
+  }
+
   // if one of our mNeighbours is already a cluster, join that
+  // and add any further clusters into the first
   for( auto& j : mNeighbours )
   {
     if( j.first > a2R2 ) break;
-    if( ! j.second->mCluster ) continue;  
-    return Clusterize( a2R2 , aT , j.second->mCluster->GetParent() );
+    auto lCluster = j.second->cluster();
+    if( !lCluster ) continue;  
+    if( !mCluster ) mCluster = lCluster;
+    // else            mCluster->AddToMergeList( lCluster );
   }
 
-  // else create a new cluster
-  aClusters.emplace_back();
-  Clusterize( a2R2 , aT , &aClusters.back() );
+  // if still no cluster, create one
+  if( !mCluster )
+  {
+    std::lock_guard< std::mutex > lLock( gListMutex );
+    mCluster = &*aClusters.insert( aClusters.end() , Cluster() );
+  }
+
+  // and don't forget to add this data point
+  *mCluster += *mProtoCluster;
+
 }
 
 
-void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster )
-{
-  if( mCluster )
-  {
-    if( ( mCluster = mCluster->GetParent() ) == aCluster ) return;
-    mCluster = &( *aCluster += *mCluster );
-  }
-  else
-  {
-    if( mLocalizationScore < aT ) return;
-    mCluster = &( *aCluster += *this );
+// void HandleMergeList( std::vector< Cluster >& aClusters )
+// {
+//   for( auto& i: aClusters )
+//   {
+//     for( auto& j : i.mMergeList ) *i.GetParent() += *j->GetParent();
+//     i.mMergeList.clear();
+//   }
+// }
 
-    for( auto& i : mNeighbours )
-    {
-      if( i.first > a2R2 ) break;
-      i.second->Clusterize( a2R2 , aT , aCluster );
-    }  
-  }
-}
 
 
 
@@ -350,7 +395,10 @@ void ScanRT( std::vector<Data>& aData , const std::function< void( const std::ve
 
     for( uint32_t j(0) ; j!=Parameters.Tbins() ; ++j , T-=Parameters.dT() , ++lProgressBar )
     {
-      for( auto& i : aData ) i.Clusterize( twoR2 , T , lClusters );
+      //for( auto& i : aData ) i.Clusterize( twoR2 , T , lClusters );
+      [&]( Data& i ){ i.Clusterize( twoR2 , T , lClusters ); } && aData;
+
+      // HandleMergeList( lClusters );
 
       if( Parameters.validate() and !CheckClusterization( aData , lClusters , R , T ) ) throw std::runtime_error( "Check failed" );
 
