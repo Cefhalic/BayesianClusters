@@ -12,3 +12,6 @@ std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& a
 
 /* ===== Function for loading data from CSV file ===== */
 std::vector< Data > LoadCSV( const std::string& aFilename , const double& c_x , const double& c_y );
+
+/* ===== Function for writing data to CSV file ===== */
+void WriteCSV( const std::string& aFilename , const std::vector< Data >& aData , const double& c_x , const double& c_y );

@@ -135,7 +135,7 @@ Cluster* Cluster::GetParent()
 
 
 Data::Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS ) : 
-x(aX) , y(aY) , r2( (aX*aX) + (aY*aY) ), r( sqrt( r2 ) ), phi( atan2( aY , aX ) ),
+x(aX) , y(aY) , s(aS) , r2( (aX*aX) + (aY*aY) ), r( sqrt( r2 ) ), phi( atan2( aY , aX ) ),
 mWeights( [ &aS ]( const double& sig2 ){ return PRECISION( 1.0 / ( (aS*aS) + sig2 ) ); } | Parameters.sigmabins2() ),
 mLocalizationSum( 0.0 ) , mLocalizationScore( 0.0 ),
 mNeighbourit( mNeighbours.end() ),

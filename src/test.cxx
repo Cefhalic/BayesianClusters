@@ -52,17 +52,17 @@ int main(int argc, char **argv)
                                  { 0.03631079  , 0.110302441  , 0.214839819  , 0.268302465  , 0.214839819  , 0.110302441  , 0.03631079   , 0.007664194  , 0.001037236  , 9.00054E-05 } ); // Default to cubic spline interpolation
   
   
-  Parameters.SetZoom( 20_micrometer );
+  Parameters.SetZoom( 2_micrometer );
   Parameters.SetSigmaParameters( 100 , 5_nanometer , 100_nanometer , [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } );
   Parameters.SetMaxR( 200_nanometer );  
-  Parameters.SetBins( 100 , 100 );
+  Parameters.SetBins( 35 , 35 );
   Parameters.SetPbAlpha( 0.2 , 20 );
   Parameters.SetValidate( false );
 
-//  auto lData = LoadCSV( "1_un_red.csv" , 1./64000. , -1. , -1. ); // Full file
   auto lData = LoadCSV( argv[1] , 87_micrometer , 32_micrometer ); // One cluster
-  //auto lData = LoadCSV( "1_un_red.csv" , 1./1000. , 87000. , 32000. ); // Very zoomed
 
+  // WriteCSV( "trunc_"+std::string(argv[1]) , lData , 87_micrometer , 32_micrometer );
+  // return 0;
 
   // // auto lData = CreatePseudoData( 10000 , 500 , 500 , 100_nanometer );
   // //auto lData = CreatePseudoData( 0 , 10 , 100 , 10_micrometer );

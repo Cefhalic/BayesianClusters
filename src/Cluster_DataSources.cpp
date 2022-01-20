@@ -168,12 +168,13 @@ std::vector< Data > LoadCSV( const std::string& aFilename , const double& c_x , 
   auto lSize = ftell(f); // get current file pointer
   fclose(f);
 
-  int lChunkSize = ceil( double(lSize) / Concurrency );
-  std::vector< std::vector< Data > > lData( Concurrency );
+  int lChunkSize = ceil( double(lSize) / (Concurrency+1) );
+  std::vector< std::vector< Data > > lData( Concurrency+1 );
 
   ProgressBar2 lProgressBar( "Reading File" , lSize );
   for( std::size_t i(0); i!=Concurrency ; ++i ) ThreadPool.at(i)->submit( [ i , &lChunkSize , &lData , &aFilename , &c_x , &c_y ](){ __LoadCSV__( aFilename , c_x , c_y , lData[i] , i*lChunkSize , lChunkSize ); } );
-  WrappedThread::wait();
+  WrappedThread::run_and_wait( [ &lChunkSize , &lData , &aFilename , &c_x , &c_y ](){ __LoadCSV__( aFilename , c_x , c_y , lData[Concurrency] , Concurrency*lChunkSize , lChunkSize ); } );
+  // WrappedThread::wait();
 
   std::size_t lSize2( 0 );
   for( auto& i : lData ) lSize2 += i.size();
@@ -195,6 +196,22 @@ std::vector< Data > LoadCSV( const std::string& aFilename , const double& c_x , 
 }
 
 
+
+void WriteCSV( const std::string& aFilename , const std::vector< Data >& aData , const double& c_x , const double& c_y )
+{
+  auto f = fopen( aFilename.c_str() , "w");
+  if ( f == NULL ) throw std::runtime_error( "File is not available" );
+
+  fprintf( f , "id,frame,x [nm],y [nm],sigma [nm],intensity [photon],offset [photon],bkgstd [photon],chi2,uncertainty_xy [nm]\n" );
+
+  ProgressBar lProgressBar( "Writing File" , aData.size() );
+  for( auto& i : aData ){
+    fprintf( f , ",,%f,%f,,,,,,%f\n" , ((i.x / Parameters.scale()) + c_x)/nanometer , ((i.y / Parameters.scale()) + c_y)/nanometer , (i.s / Parameters.scale())/nanometer );
+    lProgressBar++;
+  }
+
+  fclose(f);
+}
 
 
 // /* ===== Function for loading data from CSV file ===== */
@@ -230,7 +247,6 @@ std::vector< Data > LoadCSV( const std::string& aFilename , const double& c_x , 
 //     {
 //       ReadUntil( ',' ); //"id"
 //       if( *lPtr == EOF ) break;
-//       std::size_t i = strtoul( ch , &lPtr , 10 );
 //       ReadUntil( ',' ); //"frame"
 //       ReadUntil( ',' ); //"x [nm]"
 //       double x = Parameters.scale() * ( (strtod( ch , &lPtr ) * nanometer ) - c_x);
@@ -244,7 +260,7 @@ std::vector< Data > LoadCSV( const std::string& aFilename , const double& c_x , 
 //       ReadUntil( '\n' ); //"uncertainty_xy [nm]"
 //       double s = Parameters.scale() * ( strtod( ch , &lPtr ) * nanometer );      
 
-//       if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( i , x , y , s );
+//       if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( x , y , s );
 //     }
 //   }
 //   fclose(f);

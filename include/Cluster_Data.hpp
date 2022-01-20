@@ -78,7 +78,7 @@ public:
   void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster );
   
 public:
-  PRECISION x, y, r2 , r, phi;
+  PRECISION x, y, s , r2 , r, phi;
   std::vector< PRECISION > mWeights;
 
   PRECISION mLocalizationSum , mLocalizationScore;

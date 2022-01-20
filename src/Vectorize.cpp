@@ -28,6 +28,13 @@ void WrappedThread::wait()
   while( WrappedThread::sBusy ){}
 }
 
+void WrappedThread::run_and_wait( const std::function< void() >& aFunc )
+{
+  (aFunc)();
+  wait();
+}
+
+
 void WrappedThread::Runner()
 {
   while (true)
