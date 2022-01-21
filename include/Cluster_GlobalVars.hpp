@@ -32,6 +32,8 @@ constexpr long double operator"" _micrometer( unsigned long long aVal )
 class GlobalVars
 {
 public:
+	GlobalVars();
+
 	void SetZoom( const double& aScale );
 	// void SetScale( const double& aScale );
 	void SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator );
@@ -41,7 +43,7 @@ public:
 	void SetValidate( const bool& aValidate );
 
 public:
-	inline const double& scale() const { return mScale; }
+	//inline const double& scale() const { return mScale; }
 	inline const double& scale2() const { return mScale2; }
 
 	inline const std::size_t& sigmacount() const { return mSigmacount; }
@@ -79,6 +81,16 @@ public:
 
 	inline const bool& validate() const { return mValidate; }
 
+	inline double toPhysicalUnits( const double& aAlgorithmUnits ) const 
+	{
+		return aAlgorithmUnits / mScale;
+	}
+
+	inline double toAlgorithmUnits( const double& aPhysicalUnits ) const
+	{
+	  return aPhysicalUnits * mScale;
+	}
+
 private:	
 	double mScale , mScale2;
 
@@ -98,5 +110,3 @@ private:
 
 	bool mValidate;
 };
-
-extern GlobalVars Parameters;

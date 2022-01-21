@@ -15,44 +15,44 @@
 
 
 /* ===== Utility function for creating a vector of data ===== */
-std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& aClusterCount , const int& aClusterSize , const double& aClusterScale )
-{
-  std::cout << "Generating Pseudodata" << std::endl;
+// std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& aClusterCount , const int& aClusterSize , const double& aClusterScale )
+// {
+//   std::cout << "Generating Pseudodata" << std::endl;
 
-  const auto lClusterScale( aClusterScale * Parameters.scale() );
+//   const auto lClusterScale( aClusterScale * Parameters.scale() );
 
-  std::vector< Data > lData;
-  lData.reserve( aBackgroundCount + ( aClusterCount * aClusterSize ) );
+//   std::vector< Data > lData;
+//   lData.reserve( aBackgroundCount + ( aClusterCount * aClusterSize ) );
 
-  TRandom3 lRand( 2345234534 );
+//   TRandom3 lRand( 2345234534 );
 
-  for( int i(0); i!= aBackgroundCount; ++i )
-  {
-    double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) ) , s( lRand.Gaus( lClusterScale/10 , lClusterScale/30 ) );
-    lData.emplace_back( x , y , s );
-  }
+//   for( int i(0); i!= aBackgroundCount; ++i )
+//   {
+//     double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) ) , s( lRand.Gaus( lClusterScale/10 , lClusterScale/30 ) );
+//     lData.emplace_back( x , y , s );
+//   }
 
-  for( int i(0); i!= aClusterCount; ++i )
-  {
-    double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) );
-    double sigma( fabs( lRand.Gaus( lClusterScale , lClusterScale/3 ) ) );
-    for( int j(0) ; j!= aClusterSize ; /* */ )
-    {
-      double x2( lRand.Gaus( x , sigma ) ) , y2( lRand.Gaus( y , sigma ) ) , s( lRand.Gaus( lClusterScale/10 , lClusterScale/30 ) );  
-      if( x2 > 1 or x2 < -1 or y2 > 1 or y2 < -1 ) continue;    
-      lData.emplace_back( x2 , y2 , s );
-      ++j;
-    }
-  }
+//   for( int i(0); i!= aClusterCount; ++i )
+//   {
+//     double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) );
+//     double sigma( fabs( lRand.Gaus( lClusterScale , lClusterScale/3 ) ) );
+//     for( int j(0) ; j!= aClusterSize ; /* */ )
+//     {
+//       double x2( lRand.Gaus( x , sigma ) ) , y2( lRand.Gaus( y , sigma ) ) , s( lRand.Gaus( lClusterScale/10 , lClusterScale/30 ) );  
+//       if( x2 > 1 or x2 < -1 or y2 > 1 or y2 < -1 ) continue;    
+//       lData.emplace_back( x2 , y2 , s );
+//       ++j;
+//     }
+//   }
 
-  std::sort( lData.begin() , lData.end() );
-  return lData;
-}
+//   std::sort( lData.begin() , lData.end() );
+//   return lData;
+// }
 
 
 
 /* ===== Function for loading data from CSV file ===== */
-void __LoadCSV__( const std::string& aFilename , const double& c_x , const double& c_y , std::vector< Data >& aData , const std::size_t& aOffset , int aCount )
+void __LoadCSV__( const std::string& aFilename , const Event& aEvent , std::vector< Data >& aData , const std::size_t& aOffset , int aCount )
 {
   auto f = fopen( aFilename.c_str() , "rb");
   if (fseek(f, aOffset, SEEK_SET)) throw std::runtime_error( "Fseek failed" ); // seek to offset from start_point
@@ -77,16 +77,16 @@ void __LoadCSV__( const std::string& aFilename , const double& c_x , const doubl
     if( *lPtr == EOF ) break;
     ReadUntil( ',' ); //"frame"
     ReadUntil( ',' ); //"x [nm]"
-    double x = Parameters.scale() * ( (strtod( ch , &lPtr ) * nanometer ) - c_x);
+    double x = aEvent.toAlgorithmX( strtod( ch , &lPtr ) * nanometer );
     ReadUntil( ',' ); //"y [nm]"
-    double y = Parameters.scale() * ( (strtod( ch , &lPtr ) * nanometer ) - c_y);      
+    double y = aEvent.toAlgorithmY( strtod( ch , &lPtr ) * nanometer );      
     ReadUntil( ',' ); //"sigma [nm]"      
     ReadUntil( ',' ); //"intensity [photon]"
     ReadUntil( ',' ); //"offset [photon]"
     ReadUntil( ',' ); //"bkgstd [photon]"
     ReadUntil( ',' ); //"chi2"
     ReadUntil( '\n' ); //"uncertainty_xy [nm]"
-    double s = Parameters.scale() * ( strtod( ch , &lPtr ) * nanometer );      
+    double s = Event::mParameters.toAlgorithmUnits( strtod( ch , &lPtr ) * nanometer );      
 
     if( fabs(x) < 1 and fabs(y) < 1 ) aData.emplace_back( x , y , s );
   }
@@ -99,7 +99,7 @@ void __LoadCSV__( const std::string& aFilename , const double& c_x , const doubl
 
 
 /* ===== Function for loading data from CSV file ===== */
-std::vector< Data > LoadCSV( const std::string& aFilename , const double& c_x , const double& c_y )
+void LoadCSV( const std::string& aFilename , Event& aEvent )
 {
   auto f = fopen( aFilename.c_str() , "rb");
   if ( f == NULL ) throw std::runtime_error( "File is not available" );
@@ -111,41 +111,39 @@ std::vector< Data > LoadCSV( const std::string& aFilename , const double& c_x , 
   std::vector< std::vector< Data > > lData( Concurrency+1 );
 
   ProgressBar2 lProgressBar( "Reading File" , lSize );
-  for( std::size_t i(0); i!=Concurrency ; ++i ) ThreadPool.at(i)->submit( [ i , &lChunkSize , &lData , &aFilename , &c_x , &c_y ](){ __LoadCSV__( aFilename , c_x , c_y , lData[i] , i*lChunkSize , lChunkSize ); } );
-  WrappedThread::run_and_wait( [ &lChunkSize , &lData , &aFilename , &c_x , &c_y ](){ __LoadCSV__( aFilename , c_x , c_y , lData[Concurrency] , Concurrency*lChunkSize , lChunkSize ); } );
+  for( std::size_t i(0); i!=Concurrency ; ++i ) ThreadPool.at(i)->submit( [ i , &lChunkSize , &lData , &aFilename , &aEvent ](){ __LoadCSV__( aFilename , aEvent , lData[i] , i*lChunkSize , lChunkSize ); } );
+  WrappedThread::run_and_wait( [ &lChunkSize , &lData , &aFilename , &aEvent ](){ __LoadCSV__( aFilename , aEvent , lData[Concurrency] , Concurrency*lChunkSize , lChunkSize ); } );
   // WrappedThread::wait();
 
   std::size_t lSize2( 0 );
   for( auto& i : lData ) lSize2 += i.size();
 
-  std::vector< Data > lData2;
-  lData2.reserve( lSize2 );
+  aEvent.mData.clear();
+  aEvent.mData.reserve( lSize2 );
 
   for( auto& i : lData )
   {
-    lSize2 = lData2.size();
-    lData2.insert( lData2.end() , std::make_move_iterator( i.begin() ) , std::make_move_iterator( i.end() ) );
+    lSize2 = aEvent.mData.size();
+    aEvent.mData.insert( aEvent.mData.end() , std::make_move_iterator( i.begin() ) , std::make_move_iterator( i.end() ) );
     i.erase( i.begin() , i.end() );
-    std::inplace_merge ( lData2.begin() , lData2.begin()+lSize2 , lData2.end() );  
+    std::inplace_merge ( aEvent.mData.begin() , aEvent.mData.begin()+lSize2 , aEvent.mData.end() );  
   }
 
-  std::cout << "Read " << lData2.size() << " points" << std::endl;
-
-  return lData2;
+  std::cout << "Read " << aEvent.mData.size() << " points" << std::endl;
 }
 
 
 
-void WriteCSV( const std::string& aFilename , const std::vector< Data >& aData , const double& c_x , const double& c_y )
+void WriteCSV( const std::string& aFilename , const Event& aEvent )
 {
   auto f = fopen( aFilename.c_str() , "w");
   if ( f == NULL ) throw std::runtime_error( "File is not available" );
 
   fprintf( f , "id,frame,x [nm],y [nm],sigma [nm],intensity [photon],offset [photon],bkgstd [photon],chi2,uncertainty_xy [nm]\n" );
 
-  ProgressBar lProgressBar( "Writing File" , aData.size() );
-  for( auto& i : aData ){
-    fprintf( f , ",,%f,%f,,,,,,%f\n" , ((i.x / Parameters.scale()) + c_x)/nanometer , ((i.y / Parameters.scale()) + c_y)/nanometer , (i.s / Parameters.scale())/nanometer );
+  ProgressBar lProgressBar( "Writing File" , aEvent.mData.size() );
+  for( auto& i : aEvent.mData ){
+    fprintf( f , ",,%f,%f,,,,,,%f\n" , aEvent.toPhysicalX(i.x)/nanometer , aEvent.toPhysicalY(i.y)/nanometer , aEvent.mParameters.toPhysicalUnits(i.s)/nanometer );
     lProgressBar++;
   }
 

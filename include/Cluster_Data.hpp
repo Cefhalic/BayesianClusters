@@ -5,9 +5,55 @@
 #include <vector>
 #include <functional>
 
+/* ===== Local utilities ===== */
+#include "Cluster_GlobalVars.hpp"
+
+
 #define PRECISION float
 
 class Data;
+class Cluster;
+
+
+class Event
+{
+public:
+  Event( const double& aPhysicalCentreX , const double& aPhysicalCentreY );
+
+  std::vector<Data> mData;
+  std::vector< Cluster > mClusters;
+  static GlobalVars mParameters;
+
+
+  inline double toPhysicalX( const double& aAlgorithmX ) const 
+  {
+    return mParameters.toPhysicalUnits( aAlgorithmX ) + mPhysicalCentreX;
+  }
+
+  inline double toAlgorithmX( const double& aPhysicalX ) const
+  {
+    return mParameters.toAlgorithmUnits( aPhysicalX - mPhysicalCentreX );
+  }
+
+  inline double toPhysicalY( const double& aAlgorithmY ) const 
+  {
+    return mParameters.toPhysicalUnits( aAlgorithmY ) + mPhysicalCentreY;
+  }
+
+  inline double toAlgorithmY( const double& aPhysicalY ) const
+  {
+    return mParameters.toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
+  }
+
+  bool CheckClusterization( const double& R , const double& T );
+  // void Clusterize( const double& R , const double& T );
+  void ScanRT( const std::function< void( const Event& , const double& , const double& ) >& aCallback );
+  void PrepData();
+
+
+  double mPhysicalCentreX , mPhysicalCentreY;
+};
+
 
 class Cluster
 {
@@ -71,10 +117,10 @@ public:
    return fabs( phi - aOther.phi );
   }
 
-  void PopulateNeighbours( std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd );
+  void PopulateNeighbours( GlobalVars& aParameters , std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd );
   void UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  );
 
-  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , std::vector< Cluster >& aClusters );
+  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Event& aEvent );
   void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster );
   
 public:
@@ -91,9 +137,6 @@ public:
 
 
 
-bool CheckClusterization( std::vector<Data>& aData , std::vector< Cluster >& aClusters , const double& R , const double& T );
-void Clusterize( std::vector<Data>& aData , std::vector< Cluster >& aClusters , const double& R , const double& T );
-void ScanRT( std::vector<Data>& aData , const std::function< void( const std::vector< Cluster >& , const double& , const double& ) >& aCallback );
-void PrepData( std::vector<Data>& aData );
+
 
 

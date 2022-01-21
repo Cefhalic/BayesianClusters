@@ -5,6 +5,17 @@
 #include "Cluster_GlobalVars.hpp"
 
 
+GlobalVars::GlobalVars() :
+	mScale(-1) , mScale2(-1),
+	mSigmacount(-1), mSigmaspacing(-1),
+	mMaxR(-1), mMaxR2(-1), mMax2R(-1), mMax2R2(-1),
+	mMinScanR(-1), mMaxScanR(-1), mMinScanT(-1), mMaxScanT(-1),
+	mDR(-1), mDT(-1),
+	mRbins(-1),  mTbins(-1),
+	mPB(-1), mAlpha(-1),
+	mValidate(false)
+{}
+
 void GlobalVars::SetZoom( const double& aScale )
 {
 	mScale = 2.0 / aScale;
@@ -19,11 +30,13 @@ void GlobalVars::SetZoom( const double& aScale )
 
 void GlobalVars::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
 {
+	if( mScale < 0 ) throw std::runtime_error( "Scale must be set before setting Sigma parameters" );
+
 	mSigmacount = aSigmacount;
 	mSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
 	auto lSigmabins = [ & ]( const int& i ){ return ( i * mSigmaspacing ) + aSigmaMin;  } | range( mSigmacount );
 
-	mSigmabins = [ & ]( const double& i ){ return i * mScale; } | lSigmabins;
+	mSigmabins = [ & ]( const double& i ){ return toAlgorithmUnits( i ); } | lSigmabins;
 	mSigmabins2 = []( const double& i ){ return i * i; } | mSigmabins;
 	mProbabilitySigma = aInterpolator | lSigmabins;
 	mLogProbabilitySigma = []( const double& w){ return log(w); } | mProbabilitySigma;
@@ -33,7 +46,9 @@ void GlobalVars::SetSigmaParameters( const std::size_t& aSigmacount , const doub
 
 void GlobalVars::SetMaxR( const double& aMaxR )
 {
-	mMaxR = aMaxR * mScale;
+	if( mScale < 0 ) throw std::runtime_error( "Scale must be set before setting Sigma parameters" );
+
+	mMaxR = toAlgorithmUnits( aMaxR );
 	mMaxR2 = mMaxR * mMaxR;
 	mMax2R = 2.0 * mMaxR;
 	mMax2R2 = mMax2R * mMax2R;
@@ -67,5 +82,3 @@ void GlobalVars::SetValidate( const bool& aValidate )
 	mValidate = aValidate;
 }
 
-
-GlobalVars Parameters;
