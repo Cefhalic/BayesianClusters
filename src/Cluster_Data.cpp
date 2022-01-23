@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <iostream>
 #include <iomanip>
-#include <mutex>
 
 /* ===== For Root ===== */
 #include "Math/ProbFunc.h" 
@@ -117,16 +116,9 @@ void Cluster::UpdateLogScore()
 
 Cluster& Cluster::operator+= ( const Cluster& aOther )
 {
-  // if( mParent ) return *mParent += aOther;
-  if( &aOther == this ) return *this; 
-  // if( aOther.mParent ) return *this += *aOther.mParent;
- // if( aOther.mClusterSize == 0 ) throw std::runtime_error( "Error #2" );
-
-  // std::lock( mMutex , aOther.mMutex );
-  // std::lock_guard< std::mutex > lLock( mMutex, std::adopt_lock );
-  // std::lock_guard< std::mutex > lLock2( aOther.mMutex, std::adopt_lock );
-
-  std::lock_guard< std::mutex > lLock( mMutex );
+  if( &aOther == this ) throw std::runtime_error( "Error #1" );
+  if( aOther.mClusterSize == 0 ) throw std::runtime_error( "Error #2" );
+  if( aOther.mParent ) throw std::runtime_error( "Error #3" );
 
   auto lIt( mParams.begin() );
   auto lIt2( aOther.mParams.begin() );
@@ -154,11 +146,7 @@ mCluster( NULL ) , mProtoCluster( NULL )
 {}
 
 
-Data::~Data()
-{
-  if( mProtoCluster ) delete mProtoCluster;
-  mProtoCluster = NULL;
-}
+
 
 
 __attribute__((flatten))
@@ -223,7 +211,6 @@ void Data::UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  )
 
 
 
-std::mutex gListMutex;
 
 // We are at the top-level
 __attribute__((flatten))
@@ -232,23 +219,7 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Event& aEve
   if( mCluster ) return;
   if( mLocalizationScore < aT ) return;
 
-  // If we haven't already done so, create a proto-cluster to save us repeating this calculation many times
-  if( !mProtoCluster ){
-    mProtoCluster = new Cluster();
-    mProtoCluster->mClusterSize = 1;
-    auto w( mWeights.begin() );
-    for( auto lIt( mProtoCluster->mParams.begin() ) ; lIt != mProtoCluster->mParams.end() ; ++lIt , ++w )
-    {
-      lIt->A = *w;
-      lIt->Bx = (*w * x);
-      lIt->By = (*w * y);
-      lIt->C = (*w * r2);
-      lIt->logF = PRECISION( log( *w ) );
-    }
-  }
-
   // if one of our mNeighbours is already a cluster, join that
-  // and add any further clusters into the first
   for( auto& j : mNeighbours )
   {
     if( j.first > a2R2 ) break;
@@ -282,21 +253,13 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aC
     *aCluster += *mProtoCluster;
     mCluster = aCluster;
 
-  // and don't forget to add this data point
-  *mCluster += *mProtoCluster;
-
+    for( auto& i : mNeighbours )
+    {
+      if( i.first > a2R2 ) break;
+      i.second->Clusterize( a2R2 , aT , aCluster );
+    }  
+  }
 }
-
-
-// void HandleMergeList( std::vector< Cluster >& aClusters )
-// {
-//   for( auto& i: aClusters )
-//   {
-//     for( auto& j : i.mMergeList ) *i.GetParent() += *j->GetParent();
-//     i.mMergeList.clear();
-//   }
-// }
-
 
 
 

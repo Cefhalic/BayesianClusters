@@ -4,8 +4,6 @@
 #include <math.h>
 #include <vector>
 #include <functional>
-#include <mutex>
-#include <atomic>
 
 /* ===== Local utilities ===== */
 #include "Cluster_GlobalVars.hpp"
@@ -72,18 +70,12 @@ public:
   }; 
 
   Cluster();
-
-  Cluster( Cluster&& aOther );
-  Cluster& operator=( Cluster&& aOther );
+  Cluster( const Data& aData );
 
   std::vector< Parameter > mParams;
   std::size_t mClusterSize , mLastClusterSize;
   PRECISION mClusterScore;
   Cluster* mParent;
-  std::mutex mMutex;
-  // std::vector< Cluster* > mMergeList;
-
-  // void AddToMergeList( Cluster* aCluster );
 
   Cluster& operator+= ( const Cluster& aOther );
 
@@ -99,7 +91,6 @@ class Data
 {
 public:
   Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS );
-  virtual ~Data();
 
   Data( const Data& ) = delete;
   Data& operator = (const Data& ) = delete;
