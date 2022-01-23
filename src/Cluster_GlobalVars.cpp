@@ -4,6 +4,8 @@
 #include "ListComprehension.hpp"
 #include "Cluster_GlobalVars.hpp"
 
+/* ===== For Root ===== */
+#include "Math/SpecFunc.h" 
 
 GlobalVars::GlobalVars() :
 	mScale(-1) , mScale2(-1),
@@ -12,7 +14,8 @@ GlobalVars::GlobalVars() :
 	mMinScanR(-1), mMaxScanR(-1), mMinScanT(-1), mMaxScanT(-1),
 	mDR(-1), mDT(-1),
 	mRbins(-1),  mTbins(-1),
-	mPB(-1), mAlpha(-1),
+	mLogPb(-1), mLogPbDagger(-1), 
+	mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
 	mValidate(false)
 {}
 
@@ -73,8 +76,11 @@ void GlobalVars::SetBins( const std::size_t& aRbins , const std::size_t& aTbins 
 
 void GlobalVars::SetPbAlpha( const double& aPB , const double& aAlpha )
 {
-	mPB = aPB;
+	mLogPb = log( aPB );
+	mLogPbDagger = log( 1-aPB );
 	mAlpha = aAlpha;
+	mLogAlpha = log( aAlpha );
+	mLogGammaAlpha = ROOT::Math::lgamma( aAlpha );
 }
 
 void GlobalVars::SetValidate( const bool& aValidate )

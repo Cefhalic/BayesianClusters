@@ -46,11 +46,11 @@ int main(int argc, char **argv)
   ROOT::Math::Interpolator lInt( { 0_nanometer , 20_nanometer , 30_nanometer , 40_nanometer , 50_nanometer , 60_nanometer , 70_nanometer , 80_nanometer , 90_nanometer , 100_nanometer } , 
                                  { 0.03631079  , 0.110302441  , 0.214839819  , 0.268302465  , 0.214839819  , 0.110302441  , 0.03631079   , 0.007664194  , 0.001037236  , 9.00054E-05 } ); // Default to cubic spline interpolation
 
-  Event::mParameters.SetZoom( 2_micrometer );
+  Event::mParameters.SetZoom( 20_micrometer );
   Event::mParameters.SetMaxR( 200_nanometer );  
   Event::mParameters.SetBins( 35 , 35 );
   Event::mParameters.SetPbAlpha( 0.2 , 20 );
-  Event::mParameters.SetValidate( true );
+  Event::mParameters.SetValidate( 0 );
 
   Event::mParameters.SetSigmaParameters( 100 , 5_nanometer , 100_nanometer , [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } );
   // for( const auto& i :  Event::mParameters.sigmabins() ) std::cout << i << std::endl;
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
   Event lEvent( 87_micrometer , 32_micrometer );  
   LoadCSV( argv[1] , lEvent ); // One cluster
 
-  // WriteCSV( "trunc_"+std::string(argv[1]) , lData );
+  // WriteCSV( std::string("trunc_")+argv[1] , lData );
   // return 0;
 
   // // auto lData = CreatePseudoData( 10000 , 500 , 500 , 100_nanometer );

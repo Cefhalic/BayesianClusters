@@ -6,50 +6,9 @@
 #include <iostream>
 #include <algorithm>
 
-/* ===== For Root ===== */
-#include "TRandom3.h"
-
 /* ===== Local utilities ===== */
 #include "ProgressBar.hpp"
 #include "Vectorize.hpp"
-
-
-/* ===== Utility function for creating a vector of data ===== */
-// std::vector< Data > CreatePseudoData( const int& aBackgroundCount , const int& aClusterCount , const int& aClusterSize , const double& aClusterScale )
-// {
-//   std::cout << "Generating Pseudodata" << std::endl;
-
-//   const auto lClusterScale( aClusterScale * Parameters.scale() );
-
-//   std::vector< Data > lData;
-//   lData.reserve( aBackgroundCount + ( aClusterCount * aClusterSize ) );
-
-//   TRandom3 lRand( 2345234534 );
-
-//   for( int i(0); i!= aBackgroundCount; ++i )
-//   {
-//     double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) ) , s( lRand.Gaus( lClusterScale/10 , lClusterScale/30 ) );
-//     lData.emplace_back( x , y , s );
-//   }
-
-//   for( int i(0); i!= aClusterCount; ++i )
-//   {
-//     double x( lRand.Uniform( -1.0 , 1.0 ) ) , y( lRand.Uniform( -1.0 , 1.0 ) );
-//     double sigma( fabs( lRand.Gaus( lClusterScale , lClusterScale/3 ) ) );
-//     for( int j(0) ; j!= aClusterSize ; /* */ )
-//     {
-//       double x2( lRand.Gaus( x , sigma ) ) , y2( lRand.Gaus( y , sigma ) ) , s( lRand.Gaus( lClusterScale/10 , lClusterScale/30 ) );  
-//       if( x2 > 1 or x2 < -1 or y2 > 1 or y2 < -1 ) continue;    
-//       lData.emplace_back( x2 , y2 , s );
-//       ++j;
-//     }
-//   }
-
-//   std::sort( lData.begin() , lData.end() );
-//   return lData;
-// }
-
-
 
 /* ===== Function for loading data from CSV file ===== */
 void __LoadCSV__( const std::string& aFilename , const Event& aEvent , std::vector< Data >& aData , const std::size_t& aOffset , int aCount )

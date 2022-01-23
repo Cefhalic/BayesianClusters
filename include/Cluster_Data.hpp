@@ -22,7 +22,12 @@ public:
 
   std::vector<Data> mData;
   std::vector< Cluster > mClusters;
+
+  std::size_t mClusteredCount , mBackgroundCount , mClusterCount;
+  double mLogP;
+
   static GlobalVars mParameters;
+  double mPhysicalCentreX , mPhysicalCentreY;
 
 
   inline double toPhysicalX( const double& aAlgorithmX ) const 
@@ -45,13 +50,11 @@ public:
     return mParameters.toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
   }
 
-  bool CheckClusterization( const double& R , const double& T );
+  void CheckClusterization( const double& R , const double& T );
   // void Clusterize( const double& R , const double& T );
   void ScanRT( const std::function< void( const Event& , const double& , const double& ) >& aCallback );
   void PrepData();
-
-
-  double mPhysicalCentreX , mPhysicalCentreY;
+  void UpdateLogScore();
 };
 
 
@@ -74,12 +77,11 @@ public:
   PRECISION mClusterScore;
   Cluster* mParent;
 
-  Cluster& operator+= ( const Data& aData );
-  Cluster& operator+= ( Cluster& aData );
+  Cluster& operator+= ( const Cluster& aOther );
 
   Cluster* GetParent();
 
-  double log_score();
+  void UpdateLogScore();
 };
 
 
@@ -123,6 +125,12 @@ public:
   void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Event& aEvent );
   void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster );
   
+  inline Cluster* GetCluster()
+  {
+    if( ! mCluster ) return NULL;
+    return mCluster = mCluster->GetParent();
+  }
+
 public:
   PRECISION x, y, s , r2 , r, phi;
   std::vector< PRECISION > mWeights;
@@ -132,6 +140,7 @@ public:
   std::vector< std::pair< PRECISION , Data* > > mNeighbours;
   std::vector< std::pair< PRECISION , Data* > >::iterator mNeighbourit;
   Cluster* mCluster;
+  Cluster* mProtoCluster;
 };
 
 

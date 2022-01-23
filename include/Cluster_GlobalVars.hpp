@@ -76,8 +76,11 @@ public:
 	inline const double& dT() const { return mDT; }
 	inline const std::size_t& Tbins() const { return mTbins; }
 
-	inline const double& pB() const { return mPB; }
+	inline const double& logPb() const { return mLogPb; }
+	inline const double& logPbDagger() const { return mLogPbDagger; }
 	inline const double& alpha() const { return mAlpha; }
+	inline const double& logAlpha() const { return mLogAlpha; }
+	inline const double& logGammaAlpha() const { return mLogGammaAlpha; }
 
 	inline const bool& validate() const { return mValidate; }
 
@@ -106,7 +109,7 @@ private:
 	double mDR , mDT;
 	std::size_t mRbins ,  mTbins;
 
-	double mPB , mAlpha;
+	double mAlpha , mLogAlpha , mLogGammaAlpha , mLogPb , mLogPbDagger;
 
 	bool mValidate;
 };
