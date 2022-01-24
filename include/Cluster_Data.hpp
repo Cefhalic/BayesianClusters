@@ -12,6 +12,7 @@
 #define PRECISION float
 
 class Data;
+class DataProxy;
 class Cluster;
 
 
@@ -119,11 +120,11 @@ public:
    return fabs( phi - aOther.phi );
   }
 
-  void PopulateNeighbours( GlobalVars& aParameters , std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd );
-  void UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  );
+  // void Preprocess( const Event& aEvent , std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd );
+  void Preprocess( Event& aEvent );
 
-  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Event& aEvent );
-  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster );
+  void Clusterize( const PRECISION& a2R2 , Event& aEvent );
+  void Clusterize( const PRECISION& a2R2 , Cluster* aCluster );
   
   inline Cluster* GetCluster()
   {
@@ -133,17 +134,24 @@ public:
 
 public:
   PRECISION x, y, s , r2 , r, phi;
-  std::vector< PRECISION > mWeights;
-
-  PRECISION mLocalizationSum , mLocalizationScore;
-
+  std::vector< PRECISION > mLocalizationScores;
   std::vector< std::pair< PRECISION , Data* > > mNeighbours;
-  std::vector< std::pair< PRECISION , Data* > >::iterator mNeighbourit;
+
+  bool mExclude;
   Cluster* mCluster;
   Cluster* mProtoCluster;
 };
 
 
+
+
+// class DataProxy
+// {
+// public:
+//   Data* mData;
+//   Cluster* mCluster;
+
+// };
 
 
 

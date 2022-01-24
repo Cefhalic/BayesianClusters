@@ -79,14 +79,18 @@ Cluster::Cluster( const Data& aData ): mParams( Event::mParameters.sigmacount() 
 mClusterSize( 1 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
 mParent( NULL )
 { 
-  auto w( aData.mWeights.begin() );
-  for( auto lIt( mParams.begin() ) ; lIt != mParams.end() ; ++lIt , ++w )
+  const auto s2 = aData.s * aData.s;
+  auto lIt( mParams.begin() ) ;
+  auto lSig2It( Event::mParameters.sigmabins2().begin() );
+
+  for( ; lIt != mParams.end() ; ++lIt , ++lSig2It )
   {
-    lIt->A += *w;
-    lIt->Bx += (*w * aData.x);
-    lIt->By += (*w * aData.y);
-    lIt->C += (*w * aData.r2);
-    lIt->logF += PRECISION( log( *w ) );
+    double w = 1.0 / ( s2 + *lSig2It );
+    lIt->A = w;
+    lIt->Bx = (w * aData.x);
+    lIt->By = (w * aData.y);
+    lIt->C = (w * aData.r2);
+    lIt->logF = PRECISION( log( w ) );
   }
 }
 
@@ -139,9 +143,6 @@ Cluster* Cluster::GetParent()
 
 Data::Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS ) : 
 x(aX) , y(aY) , s(aS) , r2( (aX*aX) + (aY*aY) ), r( sqrt( r2 ) ), phi( atan2( aY , aX ) ),
-mWeights( [ &aS ]( const double& sig2 ){ return PRECISION( 1.0 / ( (aS*aS) + sig2 ) ); } | Event::mParameters.sigmabins2() ),
-mLocalizationSum( 0.0 ) , mLocalizationScore( 0.0 ),
-mNeighbourit( mNeighbours.end() ),
 mCluster( NULL ) , mProtoCluster( NULL )
 {}
 
@@ -150,62 +151,84 @@ mCluster( NULL ) , mProtoCluster( NULL )
 
 
 __attribute__((flatten))
-void Data::PopulateNeighbours( GlobalVars& aParameters , std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd )
+// void Data::Preprocess( const Event& aEvent , std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd )
+void Data::Preprocess( Event& aEvent )
 {
+
+ const std::size_t lIndex( this - aEvent.mData.data() );
+ std::vector<Data>::iterator         aPlusIt(  aEvent.mData.begin() + lIndex + 1 ) ,                    aPlusEnd( aEvent.mData.end() );
+ std::vector<Data>::reverse_iterator aMinusIt( aEvent.mData.rbegin() + aEvent.mData.size() - lIndex ) , aMinusEnd( aEvent.mData.rend() );
+
   static constexpr double pi = atan(1)*4;  
-  auto dphi = aParameters.max2R() / ( r - aParameters.max2R() );
+
+  // -----------------------------------------------------------------------------------------
+
+  auto dphi = aEvent.mParameters.max2R() / ( r - aEvent.mParameters.max2R() );
   auto dphi2 = (2*pi) - dphi;
 
   // Iterate over other hits and populate the mNeighbour list
   for( ; aPlusIt != aPlusEnd ; aPlusIt++ )
   {
-    if( ( aPlusIt->r - r ) > aParameters.max2R() ) break; // aPlusIt is always further out than curent 
+    if( ( aPlusIt->r - r ) > aEvent.mParameters.max2R() ) break; // aPlusIt is always further out than curent 
     auto lPhi = dPhi( *aPlusIt );
     if( lPhi > dphi and lPhi < dphi2 ) continue;
     PRECISION ldR2 = dR2( *aPlusIt );
-    if( ldR2 < aParameters.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
+    if( ldR2 < aEvent.mParameters.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , &*aPlusIt ) );
   }
 
   for( ; aMinusIt != aMinusEnd ; aMinusIt++ )
   {
-    if( ( r - aMinusIt->r ) > aParameters.max2R() ) break; // curent is always further out than aMinusIn
+    if( ( r - aMinusIt->r ) > aEvent.mParameters.max2R() ) break; // curent is always further out than aMinusIn
     auto lPhi = dPhi( *aMinusIt );
     if( lPhi > dphi and lPhi < dphi2 ) continue;
     PRECISION ldR2 = dR2( *aMinusIt );    
-    if( ldR2 < aParameters.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
+    if( ldR2 < aEvent.mParameters.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , &*aMinusIt ) );
   }
 
   std::sort( mNeighbours.begin() , mNeighbours.end() );
-  mNeighbourit = mNeighbours.begin();
-}
 
+  // -----------------------------------------------------------------------------------------
 
-void Data::UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  )
-{
-  constexpr PRECISION pi = atan(1)*4;
+  const double lLocalizationConstant( 4.0 / ( pi * ( aEvent.mData.size() - 1 ) ) ); 
+  const PRECISION eX( 1 - fabs( x ) ) , eY( 1 - fabs( y ) );
 
-  const PRECISION lLastLocalizationSum( mLocalizationSum );
+  auto lNeighbourit( mNeighbours.begin() );
+  PRECISION lLocalizationSum( 0 ) , lLastLocalizationSum( 0 ) , lLocalizationScore( 0 );
+  mLocalizationScores.reserve( aEvent.mParameters.Rbins() );
 
-  for( ; mNeighbourit != mNeighbours.end() ; ++mNeighbourit )
-  { 
-    if( mNeighbourit->first > aR2 ) break;
-    PRECISION lDist = sqrt( mNeighbourit->first );
+  bool lCreateProtocluster( false );
 
-    // Approximation of the edge-correction
-    PRECISION Weight( 1.0 );
-    PRECISION eX( 1 - fabs( x ) ) , eY( 1 - fabs( y ) );
-    if( eX < lDist )  Weight *= ( 1 + pow( acos( eX/lDist ) * (2/pi) , 4) );
-    if( eY < lDist )  Weight *= ( 1 + pow( acos( eY/lDist ) * (2/pi) , 4) );
+  double R( aEvent.mParameters.minScanR() ) , R2( 0 );
+  for( uint32_t i(0) ; i!=aEvent.mParameters.Rbins() ; ++i , R+=aEvent.mParameters.dR() )
+  {
+    R2 = R * R;
 
-    mLocalizationSum += Weight;
+    for(  ; lNeighbourit != mNeighbours.end() ; ++lNeighbourit )
+    { 
+      if( lNeighbourit->first > R2 ) break;
+      PRECISION lDist = sqrt( lNeighbourit->first );
+
+      // Noticeably faster polynomial approximation of the edge-correction
+      PRECISION Weight( 1.0 );
+      if( eX < lDist )  Weight *= ( 1 + pow( acos( eX/lDist ) * (2/pi) , 4) );
+      if( eY < lDist )  Weight *= ( 1 + pow( acos( eY/lDist ) * (2/pi) , 4) );
+
+      lLocalizationSum += Weight;
+    }
+
+    if( lLastLocalizationSum != lLocalizationSum )
+    {
+      lLocalizationScore = sqrt( lLocalizationConstant * lLocalizationSum );
+      if ( lLocalizationScore >= aEvent.mParameters.minScanT() ) lCreateProtocluster = true; // The scan will cluster us at some point
+      lLastLocalizationSum = lLocalizationSum;
+    }
+
+    mLocalizationScores.push_back( lLocalizationScore );
   }
 
-  if( lLastLocalizationSum == mLocalizationSum ) return;
-
-  const PRECISION LocalizationConstant( 4.0 / ( pi * Nminus1 ) ); 
-  mLocalizationScore = sqrt( LocalizationConstant * mLocalizationSum );
+  if( lCreateProtocluster ) mProtoCluster = new Cluster( *this );
+  // -----------------------------------------------------------------------------------------
 }
-
 
 
 
@@ -214,26 +237,26 @@ void Data::UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  )
 
 // We are at the top-level
 __attribute__((flatten))
-void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Event& aEvent )
+void Data::Clusterize( const PRECISION& a2R2 , Event& aEvent )
 {
   if( mCluster ) return;
-  if( mLocalizationScore < aT ) return;
+  if( mExclude ) return;
 
   // if one of our mNeighbours is already a cluster, join that
   for( auto& j : mNeighbours )
   {
     if( j.first > a2R2 ) break;
     if( ! j.second->mCluster ) continue;  
-    return Clusterize( a2R2 , aT , j.second->GetCluster() );
+    return Clusterize( a2R2 , j.second->GetCluster() );
   }
 
   // else create a new cluster
   aEvent.mClusters.emplace_back();
-  Clusterize( a2R2 , aT , &aEvent.mClusters.back() );
+  Clusterize( a2R2 , &aEvent.mClusters.back() );
 }
 
 
-void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aCluster )
+void Data::Clusterize( const PRECISION& a2R2 , Cluster* aCluster )
 {
   if( mCluster )
   {
@@ -245,18 +268,16 @@ void Data::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , Cluster* aC
   }
   else
   {
-    if( mLocalizationScore < aT ) return;
+    if( mExclude ) return;
 
-    // About 45% faster if we cache the Protocluster than create a cluster object on the fly and about 20% faster than overloading the += operator and adding variables directly to cluster at each iteration
-    // Doing it here (on-demand) ~halves file-loading time with no noticeable effect on clustering time
-    if( !mProtoCluster ) mProtoCluster = new Cluster( *this );
+    if( !mProtoCluster ) throw std::runtime_error( "NULL ProtoCluster!" );
     *aCluster += *mProtoCluster;
     mCluster = aCluster;
 
     for( auto& i : mNeighbours )
     {
       if( i.first > a2R2 ) break;
-      i.second->Clusterize( a2R2 , aT , aCluster );
+      i.second->Clusterize( a2R2 , aCluster );
     }  
   }
 }
@@ -304,7 +325,7 @@ void Event::CheckClusterization( const double& R , const double& T )
 
   for( auto& i : mData )
   {
-    if( i.mLocalizationScore < T ){ 
+    if( i.mExclude ){ 
       lBackgroundCount++;
       continue;
     }
@@ -314,7 +335,7 @@ void Event::CheckClusterization( const double& R , const double& T )
     for( auto& j : i.mNeighbours )
     {
       if( j.first > lRlimit ) break;
-      if( j.second->mLocalizationScore < T ) continue;
+      if( j.second->mExclude ) continue;
 
       if( ! j.second->mCluster ){ lNeighbourNotClustered++; continue; }
       if ( j.second->mCluster->GetParent() != i.mCluster )
@@ -372,7 +393,7 @@ __attribute__((flatten))
 void Event::ScanRT( const std::function< void( const Event& , const double& , const double& ) >& aCallback )
 {
   const std::size_t Nminus1( mData.size() - 1 );
-  double R( mParameters.minScanR() ) , R2( 0 ) , twoR2( 0 ) , T( 0 );
+  double R( mParameters.minScanR() ) , twoR2( 0 ) , T( 0 );
 
   mClusters.reserve( mData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
 
@@ -380,35 +401,34 @@ void Event::ScanRT( const std::function< void( const Event& , const double& , co
 
   for( uint32_t i(0) ; i!=mParameters.Rbins() ; ++i , R+=mParameters.dR() )
   {
-    R2 = R * R;
-    twoR2 = 4.0 * R2;
-    T = mParameters.maxScanT();
-
-    [&]( Data& i ){ i.UpdateLocalization( R2 , Nminus1 ); i.mCluster = NULL; } || mData; // Use interleaving threading to average over systematic radial scaling
     mClusters.clear();
+    [&]( Data& k ){ k.mCluster = NULL; } || mData; // Use interleaving threading to average over systematic radial scaling
+
+    twoR2 = 4.0 * R * R;
+    T = mParameters.maxScanT();
 
     for( uint32_t j(0) ; j!=mParameters.Tbins() ; ++j , T-=mParameters.dT() , ++lProgressBar )
     {
-      for( auto& i : mData ) i.Clusterize( twoR2 , T , *this );
+      //for( auto& k : mData ) k.mExclude = ( k.mLocalizationScores[ i ] < T ) ;
+      [&]( Data& k ){ k.mExclude = ( k.mLocalizationScores[ i ] < T ); } || mData;
+      for( auto& k : mData ) k.Clusterize( twoR2 , *this );
       UpdateLogScore();
-
       CheckClusterization( R , T ) ;
-
       aCallback( *this , R , T );
     }
   }
 
   mClusters.clear();
-  [&]( Data& i ){ i.mCluster = NULL; } || mData; // Clear cluster pointers which will be invalidated when we leave the function
+  [&]( Data& k ){ k.mCluster = NULL; } || mData; // Clear cluster pointers which will be invalidated when we leave the function
 }
 
 
 
 void Event::PrepData( )
 {
-  // Populate mNeighbour lists  
-  ProgressBar2 lProgressBar( "Populating neighbourhood" , mData.size() );
-  [&]( const std::size_t& i ){ mData.at( i ).PopulateNeighbours( mParameters , mData.begin() + i + 1 , mData.end() , mData.rbegin() + mData.size() - i , mData.rend() ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
+  ProgressBar2 lProgressBar( "Populating neighbourhood and calculating localization" , mData.size() );
+  // [&]( const std::size_t& i ){ mData.at( i ).Preprocess( *this , mData.begin() + i + 1 , mData.end() , mData.rbegin() + mData.size() - i , mData.rend() ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
+  [&]( Data& k ){ k.Preprocess( *this ); } || mData ;  // Interleave threading since processing time increases with radius from origin
 }
 
 
