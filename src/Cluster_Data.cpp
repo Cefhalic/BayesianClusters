@@ -291,7 +291,7 @@ GlobalVars Event::mParameters;
 
 Event::Event( const double& aPhysicalCentreX , const double& aPhysicalCentreY ) :
   mPhysicalCentreX( aPhysicalCentreX ) , mPhysicalCentreY( aPhysicalCentreY ) , 
-  mInstances( Concurrency + 1 )
+  mInstances( PARALLELIZATION )
 {}
 
 
