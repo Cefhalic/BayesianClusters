@@ -443,7 +443,7 @@ void Event::Preprocess()
     [&]( Data& k ){ k.Preprocess( *this ); } || mData ;  // Interleave threading since processing time increases with radius from origin
   }
 
-  for( std::size_t i(0) ; i != Concurrency+1 ; ++i )
+  for( std::size_t i(0) ; i != PARALLELIZATION ; ++i )
   {
     auto& lInstance = mInstances[i];    
     lInstance.mClusters.reserve( mData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!

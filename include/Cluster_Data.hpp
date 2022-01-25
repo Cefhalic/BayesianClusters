@@ -11,7 +11,7 @@
 
 #define PRECISION float
 
-#define PARALLELIZATION 8
+#define PARALLELIZATION 1
 
 
 class Data;
