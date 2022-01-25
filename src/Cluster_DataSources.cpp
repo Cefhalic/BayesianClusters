@@ -80,15 +80,17 @@ void LoadCSV( const std::string& aFilename , Event& aEvent )
   aEvent.mData.clear();
   aEvent.mData.reserve( lSize2 );
 
+  std::vector< Data >& lVector = aEvent.mData;
+
   for( auto& i : lData )
   {
-    lSize2 = aEvent.mData.size();
-    aEvent.mData.insert( aEvent.mData.end() , std::make_move_iterator( i.begin() ) , std::make_move_iterator( i.end() ) );
+    lSize2 = lVector.size();
+    lVector.insert( lVector.end() , std::make_move_iterator( i.begin() ) , std::make_move_iterator( i.end() ) );
     i.erase( i.begin() , i.end() );
-    std::inplace_merge ( aEvent.mData.begin() , aEvent.mData.begin()+lSize2 , aEvent.mData.end() );  
+    std::inplace_merge ( lVector.begin() , lVector.begin()+lSize2 , lVector.end() );  
   }
 
-  std::cout << "Read " << aEvent.mData.size() << " points" << std::endl;
+  std::cout << "Read " << lVector.size() << " points" << std::endl;
 }
 
 

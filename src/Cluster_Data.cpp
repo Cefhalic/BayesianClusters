@@ -143,7 +143,8 @@ Cluster* Cluster::GetParent()
 
 Data::Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS ) : 
 x(aX) , y(aY) , s(aS) , r2( (aX*aX) + (aY*aY) ), r( sqrt( r2 ) ), phi( atan2( aY , aX ) ),
-mCluster( NULL ) , mProtoCluster( NULL )
+mCluster{ NULL } , 
+mProtoCluster( NULL )
 {}
 
 
@@ -151,13 +152,12 @@ mCluster( NULL ) , mProtoCluster( NULL )
 
 
 __attribute__((flatten))
-// void Data::Preprocess( const Event& aEvent , std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd )
 void Data::Preprocess( Event& aEvent )
 {
 
- const std::size_t lIndex( this - aEvent.mData.data() );
- std::vector<Data>::iterator         aPlusIt(  aEvent.mData.begin() + lIndex + 1 ) ,                    aPlusEnd( aEvent.mData.end() );
- std::vector<Data>::reverse_iterator aMinusIt( aEvent.mData.rbegin() + aEvent.mData.size() - lIndex ) , aMinusEnd( aEvent.mData.rend() );
+  const std::size_t lIndex( this - aEvent.mData.data() );
+  std::vector<Data>::iterator aPlusIt(  aEvent.mData.begin() + lIndex + 1 ) , aPlusEnd( aEvent.mData.end() );
+  std::vector<Data>::reverse_iterator aMinusIt( aEvent.mData.rbegin() + aEvent.mData.size() - lIndex ) , aMinusEnd( aEvent.mData.rend() );
 
   static constexpr double pi = atan(1)*4;  
 
@@ -193,7 +193,7 @@ void Data::Preprocess( Event& aEvent )
   const PRECISION eX( 1 - fabs( x ) ) , eY( 1 - fabs( y ) );
 
   auto lNeighbourit( mNeighbours.begin() );
-  PRECISION lLocalizationSum( 0 ) , lLastLocalizationSum( 0 ) , lLocalizationScore( 0 );
+  PRECISION lLocalizationSum( 0 ) , lLastLocalizationSum( 0 ) , lLocalizationScore( 0 ) , lDist( 0 ) , lWeight( 0 );
   mLocalizationScores.reserve( aEvent.mParameters.Rbins() );
 
   bool lCreateProtocluster( false );
@@ -206,14 +206,13 @@ void Data::Preprocess( Event& aEvent )
     for(  ; lNeighbourit != mNeighbours.end() ; ++lNeighbourit )
     { 
       if( lNeighbourit->first > R2 ) break;
-      PRECISION lDist = sqrt( lNeighbourit->first );
+      lDist = sqrt( lNeighbourit->first );
 
       // Noticeably faster polynomial approximation of the edge-correction
-      PRECISION Weight( 1.0 );
-      if( eX < lDist )  Weight *= ( 1 + pow( acos( eX/lDist ) * (2/pi) , 4) );
-      if( eY < lDist )  Weight *= ( 1 + pow( acos( eY/lDist ) * (2/pi) , 4) );
-
-      lLocalizationSum += Weight;
+      lWeight = 1.0;
+      if( eX < lDist )  lWeight *= ( 1 + pow( acos( eX/lDist ) * (2/pi) , 4 ) );
+      if( eY < lDist )  lWeight *= ( 1 + pow( acos( eY/lDist ) * (2/pi) , 4 ) );
+      lLocalizationSum += lWeight;
     }
 
     if( lLastLocalizationSum != lLocalizationSum )
@@ -237,47 +236,47 @@ void Data::Preprocess( Event& aEvent )
 
 // We are at the top-level
 __attribute__((flatten))
-void Data::Clusterize( const PRECISION& a2R2 , Event& aEvent )
+void Data::Clusterize( const PRECISION& a2R2 , Event::Instance& aInstance )
 {
-  if( mCluster ) return;
-  if( mExclude ) return;
+  if( mCluster[ aInstance.mIndex ] ) return;
+  if( mExclude[ aInstance.mIndex ] ) return;
 
   // if one of our mNeighbours is already a cluster, join that
   for( auto& j : mNeighbours )
   {
     if( j.first > a2R2 ) break;
-    if( ! j.second->mCluster ) continue;  
-    return Clusterize( a2R2 , j.second->GetCluster() );
+    if( ! j.second->GetCluster( aInstance.mIndex ) ) continue;  
+    return Clusterize( a2R2 , aInstance , j.second->mCluster[ aInstance.mIndex ] );
   }
 
   // else create a new cluster
-  aEvent.mClusters.emplace_back();
-  Clusterize( a2R2 , &aEvent.mClusters.back() );
+  aInstance.mClusters.emplace_back();
+  Clusterize( a2R2 , aInstance , &aInstance.mClusters.back() );
 }
 
 
-void Data::Clusterize( const PRECISION& a2R2 , Cluster* aCluster )
+void Data::Clusterize( const PRECISION& a2R2 , Event::Instance& aInstance , Cluster* aCluster )
 {
-  if( mCluster )
+  if( GetCluster( aInstance.mIndex ) )
   {
-    if( GetCluster() == aCluster ) return;
-    *aCluster += *mCluster;
-    mCluster->mParent = aCluster;
-    mCluster->mClusterSize = 0;
-    mCluster = aCluster;
+    if( mCluster[ aInstance.mIndex ] == aCluster ) return;
+    *aCluster += *mCluster[ aInstance.mIndex ];
+    mCluster[ aInstance.mIndex ]->mParent = aCluster;
+    mCluster[ aInstance.mIndex ]->mClusterSize = 0;
+    mCluster[ aInstance.mIndex ] = aCluster;
   }
   else
   {
-    if( mExclude ) return;
+    if( mExclude[ aInstance.mIndex ] ) return;
 
     if( !mProtoCluster ) throw std::runtime_error( "NULL ProtoCluster!" );
     *aCluster += *mProtoCluster;
-    mCluster = aCluster;
+    mCluster[ aInstance.mIndex ] = aCluster;
 
     for( auto& i : mNeighbours )
     {
       if( i.first > a2R2 ) break;
-      i.second->Clusterize( a2R2 , aCluster );
+      i.second->Clusterize( a2R2 , aInstance , aCluster );
     }  
   }
 }
@@ -291,30 +290,18 @@ void Data::Clusterize( const PRECISION& a2R2 , Cluster* aCluster )
 GlobalVars Event::mParameters;
 
 Event::Event( const double& aPhysicalCentreX , const double& aPhysicalCentreY ) :
-  mBackgroundCount( 0 ) , 
-  mPhysicalCentreX( aPhysicalCentreX ) , mPhysicalCentreY( aPhysicalCentreY )
+  mPhysicalCentreX( aPhysicalCentreX ) , mPhysicalCentreY( aPhysicalCentreY ) , 
+  mInstances( Concurrency + 1 )
 {}
 
 
-void Event::CheckClusterization( const double& R , const double& T )
+void Event::Instance::CheckClusterization( std::vector< Data >& aData , const double& R , const double& T )
 {
   if( ! mParameters.validate() ) return;
 
   const auto lRlimit = 4.0 * R * R;
 
   uint32_t lClusterCount( 0 );
-
-  for( auto& i : mClusters )
-  {
-    if( i.mClusterSize ) ++lClusterCount;
-  }
-
-  if( lClusterCount != mClusterCount )
-  {
-    std::cout << "\nR = " << R << ", T = " << T << " | #Clusters = " << mClusterCount << " | Expected #Clusters = " << lClusterCount << std::endl;
-    throw std::runtime_error( "Check failed" );
-  }  
-
   uint32_t lBackgroundCount( 0 );
   uint32_t lPointsInClusters( 0 );
 
@@ -323,22 +310,30 @@ void Event::CheckClusterization( const double& R , const double& T )
   uint32_t lNeighbourNotClustered( 0 );
   uint32_t lWrongNeighbour( 0 );
 
-  for( auto& i : mData )
+  for( auto& i : mClusters )
   {
-    if( i.mExclude ){ 
+    if( i.mClusterSize ) ++lClusterCount;
+    lPointsInClusters += i.mClusterSize;
+  }
+
+
+
+  for( auto& i : aData )
+  {
+    if( i.mExclude[mIndex] ){ 
       lBackgroundCount++;
       continue;
     }
     
     lExpected++;
-    if( ! i.GetCluster() ){ lNotClustered++ ; continue; }
+    if( ! i.GetCluster( mIndex ) ){ lNotClustered++ ; continue; }
     for( auto& j : i.mNeighbours )
     {
       if( j.first > lRlimit ) break;
-      if( j.second->mExclude ) continue;
+      if( j.second->mExclude[mIndex] ) continue;
 
-      if( ! j.second->mCluster ){ lNeighbourNotClustered++; continue; }
-      if ( j.second->mCluster->GetParent() != i.mCluster )
+      if( ! j.second->mCluster[mIndex] ){ lNeighbourNotClustered++; continue; }
+      if ( j.second->mCluster[mIndex]->GetParent() != i.mCluster[mIndex] )
       { 
         lWrongNeighbour++;
         continue; 
@@ -346,23 +341,29 @@ void Event::CheckClusterization( const double& R , const double& T )
     }    
   }
 
-  for( auto& i : mClusters ) lPointsInClusters += i.mClusterSize;
+  //std::cout << "R = " << R << ", T = " << T << " | Clusters = " << lClusterCount << " | Clustered Points = " << lPointsInClusters << " | Background Points = " << lBackgroundCount << std::endl;
+
+  if( lClusterCount != mClusterCount )
+  {
+    std::cout << "R = " << R << ", T = " << T << " | #Clusters = " << mClusterCount << " | Expected #Clusters = " << lClusterCount << std::endl;
+    throw std::runtime_error( "Check failed" );
+  }  
 
   if( lBackgroundCount != mBackgroundCount )
   {
-    std::cout << "\nR = " << R << ", T = " << T << " | Background = " << mBackgroundCount  << " | Expected Background = " << lBackgroundCount << std::endl;
+    std::cout << "R = " << R << ", T = " << T << " | Background = " << mBackgroundCount  << " | Expected Background = " << lBackgroundCount << std::endl;
     throw std::runtime_error( "Check failed" ); 
   }  
 
-  if( lPointsInClusters + lBackgroundCount != mData.size() )
+  if( lPointsInClusters + lBackgroundCount != aData.size() )
   {
-    std::cout << "\nR = " << R << ", T = " << T << " | Points In Clusters = " << lPointsInClusters  << " | Background = " << lBackgroundCount << " | Total = " << mData.size() << std::endl;
+    std::cout << "R = " << R << ", T = " << T << " | Points In Clusters = " << lPointsInClusters  << " | Background = " << lBackgroundCount << " | Total = " << aData.size() << std::endl;
     throw std::runtime_error( "Check failed" ); 
   }  
 
   if( lNotClustered or lNeighbourNotClustered or lWrongNeighbour )
   {
-    std::cout << "\nR = " << R << ", T = " << T << " | Not Clustered = " << lNotClustered << "/" << lExpected << " | Neighbour Not Clustered = " << lNeighbourNotClustered << " | Wrong Neighbour = " << lWrongNeighbour << std::endl;
+    std::cout << "R = " << R << ", T = " << T << " | Not Clustered = " << lNotClustered << "/" << lExpected << " | Neighbour Not Clustered = " << lNeighbourNotClustered << " | Wrong Neighbour = " << lWrongNeighbour << std::endl;
     throw std::runtime_error( "Check failed" );
   }
 
@@ -390,50 +391,70 @@ void Event::CheckClusterization( const double& R , const double& T )
 
 
 __attribute__((flatten))
-void Event::ScanRT( const std::function< void( const Event& , const double& , const double& ) >& aCallback )
+void Event::ScanRT( const std::function< void( const Event::Instance& , const double& , const double& ) >& aCallback )
 {
   const std::size_t Nminus1( mData.size() - 1 );
-  double R( mParameters.minScanR() ) , twoR2( 0 ) , T( 0 );
 
-  mClusters.reserve( mData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
+  auto DR = PARALLELIZATION * mParameters.dR();
 
-  ProgressBar lProgressBar( "Scan over RT" , mParameters.Rbins() * mParameters.Tbins() );
-
-  for( uint32_t i(0) ; i!=mParameters.Rbins() ; ++i , R+=mParameters.dR() )
+  auto lGenerateLambda = [&]( const std::size_t& offset )
   {
-    mClusters.clear();
-    [&]( Data& k ){ k.mCluster = NULL; } || mData; // Use interleaving threading to average over systematic radial scaling
+    return [ & , offset ](){
+      // std::cout << offset << std::endl;
+      auto& lInstance = mInstances.at( offset );
+      double R( mParameters.minScanR() + ( offset * mParameters.dR() ) ) , twoR2( 0 ) , T( 0 );
 
-    twoR2 = 4.0 * R * R;
-    T = mParameters.maxScanT();
+      for( uint32_t i( offset ) ; i<mParameters.Rbins() ; i+=PARALLELIZATION , R+=DR )
+      {
+        lInstance.mClusters.clear();
+        for( auto& k : mData ) k.mCluster[offset] = NULL;
 
-    for( uint32_t j(0) ; j!=mParameters.Tbins() ; ++j , T-=mParameters.dT() , ++lProgressBar )
-    {
-      //for( auto& k : mData ) k.mExclude = ( k.mLocalizationScores[ i ] < T ) ;
-      [&]( Data& k ){ k.mExclude = ( k.mLocalizationScores[ i ] < T ); } || mData;
-      for( auto& k : mData ) k.Clusterize( twoR2 , *this );
-      UpdateLogScore();
-      CheckClusterization( R , T ) ;
-      aCallback( *this , R , T );
-    }
+        twoR2 = 4.0 * R * R;
+        T = mParameters.maxScanT();
+
+        for( uint32_t j(0) ; j!=mParameters.Tbins() ; ++j , T-=mParameters.dT() )
+        {
+          for( auto& k : mData ) k.mExclude[offset] = ( k.mLocalizationScores[ i ] < T ) ;
+          for( auto& k : mData ) k.Clusterize( twoR2 , lInstance );
+          lInstance.UpdateLogScore( mData );
+          lInstance.CheckClusterization( mData , R , T ) ;
+          //aCallback( lInstance , R , T );
+        }
+      }
+
+      lInstance.mClusters.clear();
+      for( auto& k : mData ) k.mCluster[offset] = NULL;
+    };
+  };
+
+  auto Thread( ThreadPool.begin() );
+  ProgressBar2 lProgressBar( "Scan over RT" , mParameters.Rbins() * mParameters.Tbins() );
+  for( std::size_t offset(0) ; offset!=(PARALLELIZATION-1) ; ++offset , ++Thread ) (**Thread).submit( lGenerateLambda( offset ) );
+  WrappedThread::run_and_wait( lGenerateLambda( PARALLELIZATION-1 ) );
+
+}
+
+
+
+void Event::Preprocess()
+{
+  {
+    ProgressBar2 lProgressBar( "Populating neighbourhood and calculating localization" , mData.size() );
+    [&]( Data& k ){ k.Preprocess( *this ); } || mData ;  // Interleave threading since processing time increases with radius from origin
   }
 
-  mClusters.clear();
-  [&]( Data& k ){ k.mCluster = NULL; } || mData; // Clear cluster pointers which will be invalidated when we leave the function
+  for( std::size_t i(0) ; i != Concurrency+1 ; ++i )
+  {
+    auto& lInstance = mInstances[i];    
+    lInstance.mClusters.reserve( mData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
+    lInstance.mIndex = i;
+  }
+
 }
 
 
 
-void Event::PrepData( )
-{
-  ProgressBar2 lProgressBar( "Populating neighbourhood and calculating localization" , mData.size() );
-  // [&]( const std::size_t& i ){ mData.at( i ).Preprocess( *this , mData.begin() + i + 1 , mData.end() , mData.rbegin() + mData.size() - i , mData.rend() ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
-  [&]( Data& k ){ k.Preprocess( *this ); } || mData ;  // Interleave threading since processing time increases with radius from origin
-}
-
-
-
-void Event::UpdateLogScore()
+void Event::Instance::UpdateLogScore( const std::vector< Data >& aData )
 {
   mClusterCount = mClusteredCount = 0;
   mLogP = 0.0;
@@ -448,7 +469,7 @@ void Event::UpdateLogScore()
     mLogP += ROOT::Math::lgamma( i.mClusterSize );
   }
 
-  mBackgroundCount = mData.size() - mClusteredCount;
+  mBackgroundCount = aData.size() - mClusteredCount;
   mLogP += ( mBackgroundCount * mParameters.logPb() ) 
          + ( mClusteredCount * mParameters.logPbDagger() )
          + ( mParameters.logAlpha() * mClusterCount )

@@ -11,6 +11,9 @@
 
 #define PRECISION float
 
+#define PARALLELIZATION 8
+
+
 class Data;
 class DataProxy;
 class Cluster;
@@ -21,11 +24,20 @@ class Event
 public:
   Event( const double& aPhysicalCentreX , const double& aPhysicalCentreY );
 
-  std::vector<Data> mData;
-  std::vector< Cluster > mClusters;
+  std::vector< Data > mData;
 
-  std::size_t mClusteredCount , mBackgroundCount , mClusterCount;
-  double mLogP;
+  struct Instance
+  {
+    std::size_t mIndex;
+    std::vector< Cluster > mClusters;
+    std::size_t mClusteredCount , mBackgroundCount , mClusterCount;
+    double mLogP;
+
+    void UpdateLogScore( const std::vector< Data >& aData );   
+    void CheckClusterization( std::vector< Data >& aData , const double& R , const double& T );
+  };
+
+  std::vector< Instance > mInstances;
 
   static GlobalVars mParameters;
   double mPhysicalCentreX , mPhysicalCentreY;
@@ -51,11 +63,11 @@ public:
     return mParameters.toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
   }
 
-  void CheckClusterization( const double& R , const double& T );
+
   // void Clusterize( const double& R , const double& T );
-  void ScanRT( const std::function< void( const Event& , const double& , const double& ) >& aCallback );
-  void PrepData();
-  void UpdateLogScore();
+  void ScanRT( const std::function< void( const Event::Instance& , const double& , const double& ) >& aCallback );
+  void Preprocess();
+
 };
 
 
@@ -120,40 +132,31 @@ public:
    return fabs( phi - aOther.phi );
   }
 
-  // void Preprocess( const Event& aEvent , std::vector<Data>::iterator aPlusIt , const std::vector<Data>::iterator& aPlusEnd , std::vector<Data>::reverse_iterator aMinusIt , const std::vector<Data>::reverse_iterator& aMinusEnd );
   void Preprocess( Event& aEvent );
 
-  void Clusterize( const PRECISION& a2R2 , Event& aEvent );
-  void Clusterize( const PRECISION& a2R2 , Cluster* aCluster );
+  void Clusterize( const PRECISION& a2R2 , Event::Instance& aInstance );
+  void Clusterize( const PRECISION& a2R2 , Event::Instance& aInstance , Cluster* aCluster );
   
-  inline Cluster* GetCluster()
+  inline Cluster* GetCluster( const std::size_t& aIndex )
   {
-    if( ! mCluster ) return NULL;
-    return mCluster = mCluster->GetParent();
+    Cluster*& lCluster = mCluster[ aIndex ];
+    if( ! lCluster ) return NULL;
+    return lCluster = lCluster->GetParent();
   }
+
+  // inline Cluster* GetCluster( const std::size_t& aIndex ) const
+  // {
+  //   Cluster* const& lCluster = mCluster[ aIndex ];
+  //   if( ! lCluster ) return NULL;
+  //   return lCluster->GetParent();
+  // }
 
 public:
   PRECISION x, y, s , r2 , r, phi;
   std::vector< PRECISION > mLocalizationScores;
   std::vector< std::pair< PRECISION , Data* > > mNeighbours;
 
-  bool mExclude;
-  Cluster* mCluster;
+  bool mExclude[PARALLELIZATION];
+  Cluster* mCluster[PARALLELIZATION];
   Cluster* mProtoCluster;
 };
-
-
-
-
-// class DataProxy
-// {
-// public:
-//   Data* mData;
-//   Cluster* mCluster;
-
-// };
-
-
-
-
-

@@ -14,12 +14,12 @@
 #include "RootWindow.hpp"
 
 
-void RTscanCallback( const Event& aEvent , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
+void RTscanCallback( const Event::Instance& aInstance , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
 {
   double lScore( 0.0 ) , lMean( 0.0 );
   std::size_t lCnt( 0 );
 
-  for( auto& i : aEvent.mClusters )
+  for( auto& i : aInstance.mClusters )
   {
     if( i.mClusterSize )
     {
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 
   // // InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } );
 
-  lEvent.PrepData();
+  lEvent.Preprocess();
 
   auto Rlo = Event::mParameters.minScanR() - ( 0.5 * Event::mParameters.dR() );
   auto Rhi = Event::mParameters.maxScanR() - ( 0.5 * Event::mParameters.dR() );
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
   auto ClustSize  = new TH2D( "ClustSize" ,  "<N_{points}>;r;T" , Event::mParameters.Rbins() , Rlo , Rhi , Event::mParameters.Tbins() , Tlo , Thi );
   auto ClustScore = new TH2D( "ClustScore" , "Score;r;T" ,        Event::mParameters.Rbins() , Rlo , Rhi , Event::mParameters.Tbins() , Tlo , Thi );
 
-  lEvent.ScanRT( [&]( const Event& aEvent , const double& aR , const double& aT ){ RTscanCallback( aEvent , aR , aT , ClustScore , Nclust , ClustSize ); } );
+  lEvent.ScanRT( [&]( const Event::Instance& aInstance , const double& aR , const double& aT ){ RTscanCallback( aInstance , aR , aT , ClustScore , Nclust , ClustSize ); } );
 
 
   // const double R( 50_nanometer*Parameters.scale() );
