@@ -11,7 +11,7 @@
 
 #define PRECISION float
 
-#define PARALLELIZATION 1
+#define PARALLELIZATION 8
 
 
 class Data;
@@ -156,7 +156,7 @@ public:
   std::vector< PRECISION > mLocalizationScores;
   std::vector< std::pair< PRECISION , Data* > > mNeighbours;
 
-  bool mExclude[PARALLELIZATION];
-  Cluster* mCluster[PARALLELIZATION];
+  std::vector< bool > mExclude;
+  std::vector< Cluster* > mCluster;
   Cluster* mProtoCluster;
 };

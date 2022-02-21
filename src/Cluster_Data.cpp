@@ -143,7 +143,7 @@ Cluster* Cluster::GetParent()
 
 Data::Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS ) : 
 x(aX) , y(aY) , s(aS) , r2( (aX*aX) + (aY*aY) ), r( sqrt( r2 ) ), phi( atan2( aY , aX ) ),
-mCluster{ NULL } , 
+mExclude( PARALLELIZATION , false ) , mCluster( PARALLELIZATION , NULL ) , 
 mProtoCluster( NULL )
 {}
 
