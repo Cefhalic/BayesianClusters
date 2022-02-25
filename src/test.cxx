@@ -12,6 +12,7 @@
   
 /* ===== Local utilities ===== */
 #include "RootWindow.hpp"
+#include "ProgressBar.hpp"
 
 
 void RTscanCallback( const EventProxy& aEvent , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
@@ -46,6 +47,7 @@ int main(int argc, char **argv)
   ROOT::Math::Interpolator lInt( { 0_nanometer , 20_nanometer , 30_nanometer , 40_nanometer , 50_nanometer , 60_nanometer , 70_nanometer , 80_nanometer , 90_nanometer , 100_nanometer } , 
                                  { 0.03631079  , 0.110302441  , 0.214839819  , 0.268302465  , 0.214839819  , 0.110302441  , 0.03631079   , 0.007664194  , 0.001037236  , 9.00054E-05 } ); // Default to cubic spline interpolation
 
+  Event::mParameters.SetCentre( 87_micrometer , 32_micrometer );
   Event::mParameters.SetZoom( 20_micrometer );
   Event::mParameters.SetMaxR( 200_nanometer );  
   Event::mParameters.SetBins( 35 , 35 );
@@ -53,9 +55,11 @@ int main(int argc, char **argv)
   Event::mParameters.SetValidate( 0 );
   Event::mParameters.SetSigmaParameters( 100 , 5_nanometer , 100_nanometer , [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } );
 
-  Event lEvent( 87_micrometer , 32_micrometer );  
-  LoadCSV( argv[1] , lEvent ); // One cluster
+  ProgressBar2 lBar( "Cluster Scan. Andrew W. Rose. 2022" , 1 );
+  std::cout << "-----------------------------------" << std::endl;
 
+  Event lEvent( argv[1] );  
+  
   // WriteCSV( std::string("trunc_")+argv[1] , lData );
   // return 0;
 
@@ -64,8 +68,6 @@ int main(int argc, char **argv)
   // //auto lData = CreatePseudoData( 70000 , 700 , 700 , .005 );
 
   // // InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } );
-
-  lEvent.Preprocess();
 
   auto Rlo = Event::mParameters.minScanR() - ( 0.5 * Event::mParameters.dR() );
   auto Rhi = Event::mParameters.maxScanR() - ( 0.5 * Event::mParameters.dR() );
@@ -87,5 +89,7 @@ int main(int argc, char **argv)
   // CheckClusterization( lData , R , T );
   // InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } , [ &lData ](){ DrawClusters( lData ); } );
 
-   return 0;
+
+  std::cout << "-----------------------------------" << std::endl;
+
 }

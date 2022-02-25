@@ -22,7 +22,8 @@ class DataProxy;
 class Event
 {
 public:
-  Event( const double& aPhysicalCentreX , const double& aPhysicalCentreY );
+  Event();  
+  Event( const std::string& aFilename );
 
   Event( const Event& ) = delete;
   Event& operator = (const Event& ) = delete;
@@ -33,27 +34,6 @@ public:
   std::vector<Data> mData;
   
   static GlobalVars mParameters;
-  double mPhysicalCentreX , mPhysicalCentreY;
-
-  inline double toPhysicalX( const double& aAlgorithmX ) const  
-  {
-    return mParameters.toPhysicalUnits( aAlgorithmX ) + mPhysicalCentreX;
-  }
-
-  inline double toAlgorithmX( const double& aPhysicalX ) const
-  {
-    return mParameters.toAlgorithmUnits( aPhysicalX - mPhysicalCentreX );
-  }
-
-  inline double toPhysicalY( const double& aAlgorithmY ) const 
-  {
-    return mParameters.toPhysicalUnits( aAlgorithmY ) + mPhysicalCentreY;
-  }
-
-  inline double toAlgorithmY( const double& aPhysicalY ) const
-  {
-    return mParameters.toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
-  }
 
   void Preprocess();
 

@@ -34,8 +34,8 @@ class GlobalVars
 public:
 	GlobalVars();
 
+	void SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY );
 	void SetZoom( const double& aScale );
-	// void SetScale( const double& aScale );
 	void SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator );
 	void SetMaxR( const double& aMaxR );
 	void SetBins( const std::size_t& aRbins , const std::size_t& aTbins , const double& aMinScanR = 0.0 , const double& aMaxScanR = -1  , const double& aMinScanT = 0.0 , const double& aMaxScanT = -1 );
@@ -43,7 +43,6 @@ public:
 	void SetValidate( const bool& aValidate );
 
 public:
-	//inline const double& scale() const { return mScale; }
 	inline const double& scale2() const { return mScale2; }
 
 	inline const std::size_t& sigmacount() const { return mSigmacount; }
@@ -94,8 +93,30 @@ public:
 	  return aPhysicalUnits * mScale;
 	}
 
+
+	inline double toPhysicalX( const double& aAlgorithmX ) const  
+	{
+		return toPhysicalUnits( aAlgorithmX ) + mPhysicalCentreX;
+	}
+
+	inline double toAlgorithmX( const double& aPhysicalX ) const
+	{
+		return toAlgorithmUnits( aPhysicalX - mPhysicalCentreX );
+	}
+
+	inline double toPhysicalY( const double& aAlgorithmY ) const 
+	{
+		return toPhysicalUnits( aAlgorithmY ) + mPhysicalCentreY;
+	}
+
+	inline double toAlgorithmY( const double& aPhysicalY ) const
+	{
+		return toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
+	}
+
 private:	
 	double mScale , mScale2;
+  	double mPhysicalCentreX , mPhysicalCentreY;
 
 	std::size_t mSigmacount;
 	double mSigmaspacing;

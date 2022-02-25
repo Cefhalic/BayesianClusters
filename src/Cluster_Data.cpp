@@ -12,6 +12,7 @@
 
 /* ===== Cluster sources ===== */
 #include "Cluster_GlobalVars.hpp"
+#include "Cluster_DataSources.hpp"
 #include "Cluster_Data.hpp"
 
 /* ===== Local utilities ===== */
@@ -24,9 +25,14 @@
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 GlobalVars Event::mParameters;
 
-Event::Event( const double& aPhysicalCentreX , const double& aPhysicalCentreY ) :
-  mPhysicalCentreX( aPhysicalCentreX ) , mPhysicalCentreY( aPhysicalCentreY )
+Event::Event()
 {}
+
+Event::Event( const std::string& aFilename )
+{
+  LoadCSV( aFilename , *this );
+  Preprocess();
+}
 
 void Event::Preprocess()
 {
@@ -52,6 +58,7 @@ void Event::ScanRT( const std::function< void( const EventProxy& , const double&
 EventProxy::EventProxy( Event& aEvent ) :
   mBackgroundCount( 0 )
 {
+  mClusters.reserve( aEvent.mData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
   mData.reserve( aEvent.mData.size() );
   for( auto& i : aEvent.mData ) mData.emplace_back( i );  
 }
@@ -133,8 +140,6 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
   double dR( aParallelization * Event::mParameters.dR() );
   double R( Event::mParameters.minScanR() + ( aOffset * Event::mParameters.dR() ) ) , R2( 0 ) , twoR2( 0 ) , T( 0 );
 
-  mClusters.reserve( mData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
-
   for( uint32_t i( aOffset ) ; i<Event::mParameters.Rbins() ; i+=aParallelization , R+=dR )
   {
     R2 = R * R;
@@ -163,7 +168,6 @@ void EventProxy::UpdateLogScore()
   mClusterCount = mClusteredCount = 0;
   mLogP = 0.0;
 
-  // Independent - could be parallelized?
   for( auto& i: mClusters )
   {
     if( i.mClusterSize == 0 ) continue;
@@ -395,14 +399,14 @@ void DataProxy::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventP
 {
   if( mCluster || mExclude ) return;
 
-  // if one of our mNeighbours is already a cluster, join that
-  for( auto& j : mData->mNeighbours )
-  {
-    if( j.first > a2R2 ) break;
-    auto& lNeighbour( GetNeighbour( aEvent , j.second ) );    
-    if( ! lNeighbour.mCluster ) continue;  
-    return Clusterize( a2R2 , aT , aEvent , lNeighbour.GetCluster() );
-  }
+  // // if one of our mNeighbours is already a cluster, join that
+  // for( auto& j : mData->mNeighbours )
+  // {
+  //   if( j.first > a2R2 ) break;
+  //   auto& lNeighbour( GetNeighbour( aEvent , j.second ) );    
+  //   if( ! lNeighbour.mCluster ) continue;  
+  //   return Clusterize( a2R2 , aT , aEvent , lNeighbour.GetCluster() );
+  // }
 
   // else create a new cluster
   aEvent.mClusters.emplace_back();

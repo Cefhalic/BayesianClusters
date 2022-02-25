@@ -36,9 +36,9 @@ void __LoadCSV__( const std::string& aFilename , Event& aEvent , std::vector< Da
     if( *lPtr == EOF ) break;
     ReadUntil( ',' ); //"frame"
     ReadUntil( ',' ); //"x [nm]"
-    double x = aEvent.toAlgorithmX( strtod( ch , &lPtr ) * nanometer );
+    double x = Event::mParameters.toAlgorithmX( strtod( ch , &lPtr ) * nanometer );
     ReadUntil( ',' ); //"y [nm]"
-    double y = aEvent.toAlgorithmY( strtod( ch , &lPtr ) * nanometer );      
+    double y = Event::mParameters.toAlgorithmY( strtod( ch , &lPtr ) * nanometer );      
     ReadUntil( ',' ); //"sigma [nm]"      
     ReadUntil( ',' ); //"intensity [photon]"
     ReadUntil( ',' ); //"offset [photon]"
@@ -101,7 +101,7 @@ void WriteCSV( const std::string& aFilename , const Event& aEvent )
 
   ProgressBar lProgressBar( "Writing File" , aEvent.mData.size() );
   for( auto& i : aEvent.mData ){
-    fprintf( f , ",,%f,%f,,,,,,%f\n" , aEvent.toPhysicalX(i.x)/nanometer , aEvent.toPhysicalY(i.y)/nanometer , Event::mParameters.toPhysicalUnits(i.s)/nanometer );
+    fprintf( f , ",,%f,%f,,,,,,%f\n" , Event::mParameters.toPhysicalX(i.x)/nanometer , Event::mParameters.toPhysicalY(i.y)/nanometer , Event::mParameters.toPhysicalUnits(i.s)/nanometer );
     lProgressBar++;
   }
 

@@ -19,17 +19,18 @@ GlobalVars::GlobalVars() :
 	mValidate(false)
 {}
 
+
+void GlobalVars::SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY )
+{
+  mPhysicalCentreX = aPhysicalCentreX;
+  mPhysicalCentreY = aPhysicalCentreY;
+}
+
 void GlobalVars::SetZoom( const double& aScale )
 {
 	mScale = 2.0 / aScale;
 	mScale2 = mScale * mScale;
 }
-
-// void GlobalVars::SetScale( const double& aScale )
-// {
-// 	mScale = aScale;
-// 	mScale2 = mScale * mScale;
-// }
 
 void GlobalVars::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
 {
