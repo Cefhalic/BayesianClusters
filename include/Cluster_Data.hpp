@@ -11,23 +11,31 @@
 
 #define PRECISION float
 
-class Data;
-class DataWrapper;
+class Event;
+class EventProxy;
 class Cluster;
+class Data;
+class DataProxy;
 
 
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Event
 {
 public:
   Event( const double& aPhysicalCentreX , const double& aPhysicalCentreY );
+
+  Event( const Event& ) = delete;
+  Event& operator = (const Event& ) = delete;
+
+  Event( Event&& ) = default;
+  Event& operator = ( Event&& ) = default;
 
   std::vector<Data> mData;
   
   static GlobalVars mParameters;
   double mPhysicalCentreX , mPhysicalCentreY;
 
-
-  inline double toPhysicalX( const double& aAlgorithmX ) const 
+  inline double toPhysicalX( const double& aAlgorithmX ) const  
   {
     return mParameters.toPhysicalUnits( aAlgorithmX ) + mPhysicalCentreX;
   }
@@ -47,31 +55,41 @@ public:
     return mParameters.toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
   }
 
-  void PrepData();
+  void Preprocess();
+
+  void ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback );
 };
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
-
-class EventWrapper
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class EventProxy
 {
 public:
-  EventWrapper( Event& aEvent );
+  EventProxy( Event& aEvent );
+
+  EventProxy( const EventProxy& ) = delete;
+  EventProxy& operator = (const EventProxy& ) = delete;
+
+  EventProxy( EventProxy&& ) = default;
+  EventProxy& operator = ( EventProxy&& ) = default;
   
-  std::vector<DataWrapper> mData;
+  std::vector<DataProxy> mData;
   std::vector< Cluster > mClusters;
 
   std::size_t mClusteredCount , mBackgroundCount , mClusterCount;
   double mLogP;
 
   void CheckClusterization( const double& R , const double& T );
-  // void Clusterize( const double& R , const double& T );
-  void ScanRT( const std::function< void( const EventWrapper& , const double& , const double& ) >& aCallback , const uint8_t& aParallelization = 1 , const uint8_t& aOffset = 0 );
+  void ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback , const uint8_t& aParallelization = 1 , const uint8_t& aOffset = 0 );
   void UpdateLogScore();
 };
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Cluster
 {
 public:
@@ -97,10 +115,11 @@ public:
 
   void UpdateLogScore();
 };
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
-/* ===== Struct for storing data ===== */
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Data
 {
 public:
@@ -138,30 +157,32 @@ public:
 public:
   PRECISION x, y, s , r2 , r, phi;
   std::vector< PRECISION > mLocalizationScores;
-  // std::vector< PRECISION > mWeights;
   std::vector< std::pair< PRECISION , std::size_t > > mNeighbours;
   Cluster* mProtoCluster;  
 };
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
-class DataWrapper
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class DataProxy
 {
 public:
-  DataWrapper( Data& aData );
+  DataProxy( Data& aData );
 
-  DataWrapper( const DataWrapper& ) = delete;
-  DataWrapper& operator = (const DataWrapper& ) = delete;
+  DataProxy( const DataProxy& ) = delete;
+  DataProxy& operator = (const DataProxy& ) = delete;
 
-  DataWrapper( DataWrapper&& ) = default;
-  DataWrapper& operator = ( DataWrapper&& ) = default;
+  DataProxy( DataProxy&& ) = default;
+  DataProxy& operator = ( DataProxy&& ) = default;
 
-  // void UpdateLocalization( const PRECISION& aR2 , const size_t& Nminus1  );
+  inline DataProxy& GetNeighbour( EventProxy& aEvent , const std::size_t& aIndex )
+  {
+    return aEvent.mData.at( aIndex );
+  }
 
-  DataWrapper& GetNeighbour( EventWrapper& aEvent , const std::size_t& aIndex );
-
-  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventWrapper& aEvent );
-  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventWrapper& aEvent , Cluster* aCluster );
+  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventProxy& aEvent );
+  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventProxy& aEvent , Cluster* aCluster );
   
   inline Cluster* GetCluster()
   {
@@ -171,16 +192,7 @@ public:
 
 public:
   Data* mData;
-
-  // PRECISION mLocalizationSum , mLocalizationScore;
-  // std::vector< std::pair< PRECISION , std::size_t > >::iterator mNeighbourit;
-  bool mExclude;
   Cluster* mCluster;
+  bool mExclude;
 };
-
-
-
-
-
-
-
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

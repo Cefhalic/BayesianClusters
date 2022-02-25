@@ -12,12 +12,9 @@
   
 /* ===== Local utilities ===== */
 #include "RootWindow.hpp"
-#include "ListComprehension.hpp"
-#include "ProgressBar.hpp"
-#include "Vectorize.hpp"
 
 
-void RTscanCallback( const EventWrapper& aEvent , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
+void RTscanCallback( const EventProxy& aEvent , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
 {
   double lScore( 0.0 ) , lMean( 0.0 );
   std::size_t lCnt( 0 );
@@ -54,10 +51,7 @@ int main(int argc, char **argv)
   Event::mParameters.SetBins( 35 , 35 );
   Event::mParameters.SetPbAlpha( 0.2 , 20 );
   Event::mParameters.SetValidate( 0 );
-
   Event::mParameters.SetSigmaParameters( 100 , 5_nanometer , 100_nanometer , [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } );
-  // for( const auto& i :  Event::mParameters.sigmabins() ) std::cout << i << std::endl;
-
 
   Event lEvent( 87_micrometer , 32_micrometer );  
   LoadCSV( argv[1] , lEvent ); // One cluster
@@ -71,7 +65,7 @@ int main(int argc, char **argv)
 
   // // InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } );
 
-  lEvent.PrepData();
+  lEvent.Preprocess();
 
   auto Rlo = Event::mParameters.minScanR() - ( 0.5 * Event::mParameters.dR() );
   auto Rhi = Event::mParameters.maxScanR() - ( 0.5 * Event::mParameters.dR() );
@@ -83,16 +77,7 @@ int main(int argc, char **argv)
   auto ClustScore = new TH2D( "ClustScore" , "Score;r;T" ,        Event::mParameters.Rbins() , Rlo , Rhi , Event::mParameters.Tbins() , Tlo , Thi );
 
 
-  std::vector< EventWrapper > lEventWrappers;
-  lEventWrappers.reserve( 8 );
-  for( int i(0) ; i!=8 ; ++i ) lEventWrappers.emplace_back( lEvent );
-
-//  for( int i(0) ; i!=8 ; ++i ) lEventWrappers.at(i).ScanRT( [&]( const EventWrapper& aEvent , const double& aR , const double& aT ){ RTscanCallback( aEvent , aR , aT , ClustScore , Nclust , ClustSize ); } , 8 , i );
-
-
-  ProgressBar2 lProgressBar( "Scan over RT"  , 0 );
-  [&]( const std::size_t& i ){ lEventWrappers.at(i).ScanRT( [&]( const EventWrapper& aEvent , const double& aR , const double& aT ){ RTscanCallback( aEvent , aR , aT , ClustScore , Nclust , ClustSize ); } , 8 , i ); } || range( 8 );
-
+  lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT ){ RTscanCallback( aEvent , aR , aT , ClustScore , Nclust , ClustSize ); } );
   // const double R( 50_nanometer*Parameters.scale() );
   // const double T( 70_nanometer*Parameters.scale() );
   // std::cout << std::dec << "R=" << R << " | T=" << T << std::endl;
