@@ -60,15 +60,14 @@ inline void operator|| ( tExpr&& aExpr , tContainer&& aContainer )
   WrappedThread::run_and_wait( [ aExpr , &aContainer , &N ](){ for( auto i( aContainer.begin() + Concurrency ) ; i<aContainer.end() ; i+=N ) aExpr( *i ); } );
 }
 
-// // Syntactic sugar
-// template< typename tContainer , typename tExpr, typename tContainerType = typename std::remove_reference<tContainer>::type::value_type >
-// inline void operator&& ( tExpr&& aExpr , tContainer&& aContainer )
-// {
-//   const std::size_t lChunksize( ceil( double(aContainer.size()) / Concurrency ) );
-//   auto Thread( ThreadPool.begin() );
-//   for( auto A( aContainer.begin() ) , B( aContainer.begin() + lChunksize ) ; A != aContainer.end() ; ++Thread , A = B , B+=lChunksize ){
-//     if ( B > aContainer.end() ) B = aContainer.end();
-//     (**Thread).submit( [ aExpr , A , B ](){ for( auto i( A ) ; i != B ; ++i ) aExpr( *i ); } );
-//   } 
-//   WrappedThread::wait();
-// }
+// Syntactic sugar
+template< typename tContainer , typename tExpr, typename tContainerType = typename std::remove_reference<tContainer>::type::value_type >
+inline void operator&& ( tExpr&& aExpr , tContainer&& aContainer )
+{
+  const std::size_t lChunksize( ceil( double( aContainer.size() ) / Concurrency ) );
+  auto Thread( ThreadPool.begin() );
+
+  auto A( aContainer.begin() ) , B( aContainer.begin() + lChunksize );
+  for( ; B < aContainer.end() ; ++Thread , A = B , B+=lChunksize ){ (**Thread).submit( [ aExpr , A , B ](){ for( auto i( A ) ; i != B ; ++i ) aExpr( *i ); } ); } 
+  WrappedThread::run_and_wait( [ aExpr , A , &aContainer ](){ for( auto i( A ) ; i != aContainer.end() ; ++i ) aExpr( *i ); } );
+}

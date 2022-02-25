@@ -11,7 +11,7 @@
 #include "Vectorize.hpp"
 
 /* ===== Function for loading data from CSV file ===== */
-void __LoadCSV__( const std::string& aFilename , const Event& aEvent , std::vector< Data >& aData , const std::size_t& aOffset , int aCount )
+void __LoadCSV__( const std::string& aFilename , Event& aEvent , std::vector< Data >& aData , const std::size_t& aOffset , int aCount )
 {
   auto f = fopen( aFilename.c_str() , "rb");
   if (fseek(f, aOffset, SEEK_SET)) throw std::runtime_error( "Fseek failed" ); // seek to offset from start_point
@@ -77,20 +77,17 @@ void LoadCSV( const std::string& aFilename , Event& aEvent )
   std::size_t lSize2( 0 );
   for( auto& i : lData ) lSize2 += i.size();
 
-  aEvent.mData.clear();
   aEvent.mData.reserve( lSize2 );
-
-  std::vector< Data >& lVector = aEvent.mData;
 
   for( auto& i : lData )
   {
-    lSize2 = lVector.size();
-    lVector.insert( lVector.end() , std::make_move_iterator( i.begin() ) , std::make_move_iterator( i.end() ) );
+    lSize2 = aEvent.mData.size();
+    aEvent.mData.insert( aEvent.mData.end() , std::make_move_iterator( i.begin() ) , std::make_move_iterator( i.end() ) );
     i.erase( i.begin() , i.end() );
-    std::inplace_merge ( lVector.begin() , lVector.begin()+lSize2 , lVector.end() );  
+    std::inplace_merge ( aEvent.mData.begin() , aEvent.mData.begin()+lSize2 , aEvent.mData.end() );  
   }
 
-  std::cout << "Read " << lVector.size() << " points" << std::endl;
+  std::cout << "Read " << aEvent.mData.size() << " points" << std::endl;
 }
 
 
@@ -104,7 +101,7 @@ void WriteCSV( const std::string& aFilename , const Event& aEvent )
 
   ProgressBar lProgressBar( "Writing File" , aEvent.mData.size() );
   for( auto& i : aEvent.mData ){
-    fprintf( f , ",,%f,%f,,,,,,%f\n" , aEvent.toPhysicalX(i.x)/nanometer , aEvent.toPhysicalY(i.y)/nanometer , aEvent.mParameters.toPhysicalUnits(i.s)/nanometer );
+    fprintf( f , ",,%f,%f,,,,,,%f\n" , aEvent.toPhysicalX(i.x)/nanometer , aEvent.toPhysicalY(i.y)/nanometer , Event::mParameters.toPhysicalUnits(i.s)/nanometer );
     lProgressBar++;
   }
 

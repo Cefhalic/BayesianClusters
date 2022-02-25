@@ -12,14 +12,17 @@
   
 /* ===== Local utilities ===== */
 #include "RootWindow.hpp"
+#include "ListComprehension.hpp"
+#include "ProgressBar.hpp"
+#include "Vectorize.hpp"
 
 
-void RTscanCallback( const Event::Instance& aInstance , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
+void RTscanCallback( const EventWrapper& aEvent , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
 {
   double lScore( 0.0 ) , lMean( 0.0 );
   std::size_t lCnt( 0 );
 
-  for( auto& i : aInstance.mClusters )
+  for( auto& i : aEvent.mClusters )
   {
     if( i.mClusterSize )
     {
@@ -68,7 +71,7 @@ int main(int argc, char **argv)
 
   // // InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } );
 
-  lEvent.Preprocess();
+  lEvent.PrepData();
 
   auto Rlo = Event::mParameters.minScanR() - ( 0.5 * Event::mParameters.dR() );
   auto Rhi = Event::mParameters.maxScanR() - ( 0.5 * Event::mParameters.dR() );
@@ -79,8 +82,16 @@ int main(int argc, char **argv)
   auto ClustSize  = new TH2D( "ClustSize" ,  "<N_{points}>;r;T" , Event::mParameters.Rbins() , Rlo , Rhi , Event::mParameters.Tbins() , Tlo , Thi );
   auto ClustScore = new TH2D( "ClustScore" , "Score;r;T" ,        Event::mParameters.Rbins() , Rlo , Rhi , Event::mParameters.Tbins() , Tlo , Thi );
 
-  lEvent.ScanRT( [&]( const Event::Instance& aInstance , const double& aR , const double& aT ){ RTscanCallback( aInstance , aR , aT , ClustScore , Nclust , ClustSize ); } );
 
+  std::vector< EventWrapper > lEventWrappers;
+  lEventWrappers.reserve( 8 );
+  for( int i(0) ; i!=8 ; ++i ) lEventWrappers.emplace_back( lEvent );
+
+//  for( int i(0) ; i!=8 ; ++i ) lEventWrappers.at(i).ScanRT( [&]( const EventWrapper& aEvent , const double& aR , const double& aT ){ RTscanCallback( aEvent , aR , aT , ClustScore , Nclust , ClustSize ); } , 8 , i );
+
+
+  ProgressBar2 lProgressBar( "Scan over RT"  , 0 );
+  [&]( const std::size_t& i ){ lEventWrappers.at(i).ScanRT( [&]( const EventWrapper& aEvent , const double& aR , const double& aT ){ RTscanCallback( aEvent , aR , aT , ClustScore , Nclust , ClustSize ); } , 8 , i ); } || range( 8 );
 
   // const double R( 50_nanometer*Parameters.scale() );
   // const double T( 70_nanometer*Parameters.scale() );
