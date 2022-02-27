@@ -1,6 +1,5 @@
 /* ===== Cluster sources ===== */
 #include "Cluster_Data.hpp"
-#include "Cluster_DataSources.hpp"
 #include "Cluster_PlotTools.hpp"
 
 // /* ===== C++ ===== */
@@ -13,6 +12,10 @@
 /* ===== Local utilities ===== */
 #include "RootWindow.hpp"
 #include "ProgressBar.hpp"
+
+
+// #include "boost/program_options.hpp"
+// namespace po = boost::program_options;
 
 
 void RTscanCallback( const EventProxy& aEvent , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
@@ -41,7 +44,31 @@ void RTscanCallback( const EventProxy& aEvent , const double& aR , const double&
 /* ===== Main function ===== */
 int main(int argc, char **argv)
 {
-  if (argc < 2) throw std::runtime_error( "Expecting a filename" );
+
+
+  // po::options_description desc("Allowed options");
+  // desc.add_options()
+  //     ("help", "produce help message")
+  //     ("compression", po::value<int>(), "set compression level")
+  // ;
+
+  // po::variables_map vm;
+  // po::store(po::parse_command_line( argc , argv , desc ) , vm );
+  // po::notify(vm);    
+
+  // if (vm.count("help")) {
+  //     std::cout << desc << std::endl;
+  //     return 1;
+  // }
+
+  // if (vm.count("compression")) {
+  //     std::cout << "Compression level was set to "  << vm["compression"].as<int>() << "." << std::endl;
+  // } else {
+  //     std::cout << "Compression level was not set." << std::endl;
+  // }
+
+
+  // if (argc < 2) throw std::runtime_error( "Expecting a filename" );
 
 
   ROOT::Math::Interpolator lInt( { 0_nanometer , 20_nanometer , 30_nanometer , 40_nanometer , 50_nanometer , 60_nanometer , 70_nanometer , 80_nanometer , 90_nanometer , 100_nanometer } , 

@@ -12,7 +12,6 @@
 
 /* ===== Cluster sources ===== */
 #include "Cluster_GlobalVars.hpp"
-#include "Cluster_DataSources.hpp"
 #include "Cluster_Data.hpp"
 
 /* ===== Local utilities ===== */
@@ -30,7 +29,7 @@ Event::Event()
 
 Event::Event( const std::string& aFilename )
 {
-  LoadCSV( aFilename , *this );
+  LoadCSV( aFilename );
   Preprocess();
 }
 
@@ -47,9 +46,100 @@ void Event::ScanRT( const std::function< void( const EventProxy& , const double&
   std::vector< EventProxy > lEventProxys;
   lEventProxys.reserve( N );
   for( int i(0) ; i!=N ; ++i ) lEventProxys.emplace_back( *this );
-  //  for( int i(0) ; i!=N ; ++i ) lEventProxys.at(i).ScanRT( aCallback , N , i );
   ProgressBar2 lProgressBar( "Scan over RT"  , 0 );
   [&]( const std::size_t& i ){ lEventProxys.at(i).ScanRT( aCallback , N , i ); } || range( N );
+}
+
+/* ===== Function for loading a chunk of data from CSV file ===== */
+void __LoadCSV__( const std::string& aFilename , Event& aEvent , std::vector< Data >& aData , const std::size_t& aOffset , int aCount )
+{
+  auto f = fopen( aFilename.c_str() , "rb");
+  if (fseek(f, aOffset, SEEK_SET)) throw std::runtime_error( "Fseek failed" ); // seek to offset from start_point
+
+  char ch[256];
+  char* lPtr( ch );
+
+  auto ReadUntil = [ & ]( const char& aChar ){
+    lPtr = ch;
+    while ( ( *lPtr = fgetc(f)) != EOF )
+    {
+      aCount--;
+      if( *lPtr == aChar ) return;
+      lPtr++;
+    }
+  };
+
+  ReadUntil( '\n' ); // Throw away first line, or any partial lines (other thread will handle it)
+  while( aCount > 0 )
+  {
+    ReadUntil( ',' ); //"id"
+    if( *lPtr == EOF ) break;
+    ReadUntil( ',' ); //"frame"
+    ReadUntil( ',' ); //"x [nm]"
+    double x = Event::mParameters.toAlgorithmX( strtod( ch , &lPtr ) * nanometer );
+    ReadUntil( ',' ); //"y [nm]"
+    double y = Event::mParameters.toAlgorithmY( strtod( ch , &lPtr ) * nanometer );      
+    ReadUntil( ',' ); //"sigma [nm]"      
+    ReadUntil( ',' ); //"intensity [photon]"
+    ReadUntil( ',' ); //"offset [photon]"
+    ReadUntil( ',' ); //"bkgstd [photon]"
+    ReadUntil( ',' ); //"chi2"
+    ReadUntil( '\n' ); //"uncertainty_xy [nm]"
+    double s = Event::mParameters.toAlgorithmUnits( strtod( ch , &lPtr ) * nanometer );      
+
+    if( fabs(x) < 1 and fabs(y) < 1 ) aData.emplace_back( x , y , s );
+  }
+  
+  fclose(f);
+
+  std::sort( aData.begin() , aData.end() );
+}
+
+void Event::LoadCSV( const std::string& aFilename )
+{
+  auto f = fopen( aFilename.c_str() , "rb");
+  if ( f == NULL ) throw std::runtime_error( "File is not available" );
+  fseek(f, 0, SEEK_END); // seek to end of file
+  auto lSize = ftell(f); // get current file pointer
+  fclose(f);
+
+  int lChunkSize = ceil( double(lSize) / (Concurrency+1) );
+  std::vector< std::vector< Data > > lData( Concurrency+1 );
+
+  ProgressBar2 lProgressBar( "Reading File" , lSize );
+  for( std::size_t i(0); i!=Concurrency ; ++i ) ThreadPool.at(i)->submit( [ & , i ](){ __LoadCSV__( aFilename , *this , lData[i] , i*lChunkSize , lChunkSize ); } );
+  WrappedThread::run_and_wait( [ & ](){ __LoadCSV__( aFilename , *this , lData[Concurrency] , Concurrency*lChunkSize , lChunkSize ); } );
+
+  std::size_t lSize2( 0 );
+  for( auto& i : lData ) lSize2 += i.size();
+
+  mData.reserve( lSize2 );
+
+  for( auto& i : lData )
+  {
+    lSize2 = mData.size();
+    mData.insert( mData.end() , std::make_move_iterator( i.begin() ) , std::make_move_iterator( i.end() ) );
+    i.erase( i.begin() , i.end() );
+    std::inplace_merge ( mData.begin() , mData.begin()+lSize2 , mData.end() );  
+  }
+
+  std::cout << "Read " << mData.size() << " points" << std::endl;
+}
+
+void Event::WriteCSV( const std::string& aFilename )
+{
+  auto f = fopen( aFilename.c_str() , "w");
+  if ( f == NULL ) throw std::runtime_error( "File is not available" );
+
+  fprintf( f , "id,frame,x [nm],y [nm],sigma [nm],intensity [photon],offset [photon],bkgstd [photon],chi2,uncertainty_xy [nm]\n" );
+
+  ProgressBar lProgressBar( "Writing File" , mData.size() );
+  for( auto& i : mData ){
+    fprintf( f , ",,%f,%f,,,,,,%f\n" , Event::mParameters.toPhysicalX(i.x)/nanometer , Event::mParameters.toPhysicalY(i.y)/nanometer , Event::mParameters.toPhysicalUnits(i.s)/nanometer );
+    lProgressBar++;
+  }
+
+  fclose(f);
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -60,7 +150,7 @@ EventProxy::EventProxy( Event& aEvent ) :
 {
   mClusters.reserve( aEvent.mData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
   mData.reserve( aEvent.mData.size() );
-  for( auto& i : aEvent.mData ) mData.emplace_back( i );  
+  for( auto& i : aEvent.mData ) mData.emplace_back( i );
 }
 
 void EventProxy::CheckClusterization( const double& R , const double& T )

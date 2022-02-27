@@ -31,13 +31,14 @@ public:
   Event( Event&& ) = default;
   Event& operator = ( Event&& ) = default;
 
-  std::vector<Data> mData;
-  
-  static GlobalVars mParameters;
-
   void Preprocess();
-
   void ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback );
+  void LoadCSV( const std::string& aFilename );
+  void WriteCSV( const std::string& aFilename );
+
+public:
+  std::vector<Data> mData;
+  static GlobalVars mParameters;
 };
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -54,16 +55,17 @@ public:
 
   EventProxy( EventProxy&& ) = default;
   EventProxy& operator = ( EventProxy&& ) = default;
-  
+
+  void CheckClusterization( const double& R , const double& T );
+  void ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback , const uint8_t& aParallelization = 1 , const uint8_t& aOffset = 0 );
+  void UpdateLogScore();
+
+public:
   std::vector<DataProxy> mData;
   std::vector< Cluster > mClusters;
 
   std::size_t mClusteredCount , mBackgroundCount , mClusterCount;
   double mLogP;
-
-  void CheckClusterization( const double& R , const double& T );
-  void ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback , const uint8_t& aParallelization = 1 , const uint8_t& aOffset = 0 );
-  void UpdateLogScore();
 };
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -84,17 +86,20 @@ public:
   Cluster();
   Cluster( const Data& aData );
 
-  std::vector< Parameter > mParams;
-  std::size_t mClusterSize , mLastClusterSize;
-  PRECISION mClusterScore;
-  Cluster* mParent;
-
   Cluster& operator+= ( const Cluster& aOther );
 
   Cluster* GetParent();
 
   void UpdateLogScore();
+
+public:
+  std::vector< Parameter > mParams;
+  std::size_t mClusterSize , mLastClusterSize;
+  PRECISION mClusterScore;
+  Cluster* mParent;
 };
+
+
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
