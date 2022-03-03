@@ -7,15 +7,10 @@
 
 /* ===== For Root ===== */
 #include "TH2D.h"
-#include "Math/Interpolator.h" 
   
 /* ===== Local utilities ===== */
 #include "RootWindow.hpp"
 #include "ProgressBar.hpp"
-
-
-// #include "boost/program_options.hpp"
-// namespace po = boost::program_options;
 
 
 void RTscanCallback( const EventProxy& aEvent , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
@@ -41,51 +36,21 @@ void RTscanCallback( const EventProxy& aEvent , const double& aR , const double&
 
 
 
+
+
+
 /* ===== Main function ===== */
 int main(int argc, char **argv)
 {
 
 
-  // po::options_description desc("Allowed options");
-  // desc.add_options()
-  //     ("help", "produce help message")
-  //     ("compression", po::value<int>(), "set compression level")
-  // ;
+  std::cout << "+------------------------------------+" << std::endl;
+  ProgressBar2 lBar( "| Cluster Scan. Andrew W. Rose. 2022 |" , 1 );
+  std::cout << "+------------------------------------+" << std::endl;
+  std::string lInputFile = Event::mParameters.FromCommandline( argc , argv );
+  std::cout << "+------------------------------------+" << std::endl;
 
-  // po::variables_map vm;
-  // po::store(po::parse_command_line( argc , argv , desc ) , vm );
-  // po::notify(vm);    
-
-  // if (vm.count("help")) {
-  //     std::cout << desc << std::endl;
-  //     return 1;
-  // }
-
-  // if (vm.count("compression")) {
-  //     std::cout << "Compression level was set to "  << vm["compression"].as<int>() << "." << std::endl;
-  // } else {
-  //     std::cout << "Compression level was not set." << std::endl;
-  // }
-
-
-  // if (argc < 2) throw std::runtime_error( "Expecting a filename" );
-
-
-  ROOT::Math::Interpolator lInt( { 0_nanometer , 20_nanometer , 30_nanometer , 40_nanometer , 50_nanometer , 60_nanometer , 70_nanometer , 80_nanometer , 90_nanometer , 100_nanometer } , 
-                                 { 0.03631079  , 0.110302441  , 0.214839819  , 0.268302465  , 0.214839819  , 0.110302441  , 0.03631079   , 0.007664194  , 0.001037236  , 9.00054E-05 } ); // Default to cubic spline interpolation
-
-  Event::mParameters.SetCentre( 87_micrometer , 32_micrometer );
-  Event::mParameters.SetZoom( 20_micrometer );
-  Event::mParameters.SetMaxR( 200_nanometer );  
-  Event::mParameters.SetBins( 35 , 35 );
-  Event::mParameters.SetPbAlpha( 0.2 , 20 );
-  Event::mParameters.SetValidate( 0 );
-  Event::mParameters.SetSigmaParameters( 100 , 5_nanometer , 100_nanometer , [ &lInt ]( const double& aPt ){ return lInt.Eval( aPt ); } );
-
-  ProgressBar2 lBar( "Cluster Scan. Andrew W. Rose. 2022" , 1 );
-  std::cout << "-----------------------------------" << std::endl;
-
-  Event lEvent( argv[1] );  
+  Event lEvent( lInputFile );  
   
   // WriteCSV( std::string("trunc_")+argv[1] , lData );
   // return 0;
@@ -117,6 +82,6 @@ int main(int argc, char **argv)
   // InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } , [ &lData ](){ DrawClusters( lData ); } );
 
 
-  std::cout << "-----------------------------------" << std::endl;
+  std::cout << "+------------------------------------+" << std::endl;
 
 }

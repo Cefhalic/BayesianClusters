@@ -2,10 +2,22 @@
 
 /* ===== C++ ===== */
 #include <functional>
+#include <map>
 #include <vector>
+#include <sstream>
+#include <string>
 
-constexpr double nanometer = 1e-9;
+/* ===== BOOST libraries ===== */
+#include "boost/program_options.hpp"
+namespace po = boost::program_options;
+
+
+constexpr double nanometer  = 1e-9;
 constexpr double micrometer = 1e-6;
+constexpr double millimeter = 1e-3;
+constexpr double meter      = 1e-0;
+const std::map< std::string , double > UnitMap{ {"nm",nanometer} , {"um",micrometer} , {"mm",millimeter} , {"m",meter} };
+
 
 constexpr long double operator"" _nanometer( long double aVal )
 {
@@ -27,6 +39,18 @@ constexpr long double operator"" _micrometer( unsigned long long aVal )
 	return aVal * micrometer;
 }
 
+inline long double StrToDist( const std::string& aStr )
+{
+	std::stringstream lStr;
+	lStr << aStr;
+	double lVal;
+	std::string lUnits;
+	lStr >> lVal >> lUnits;
+	return lVal * UnitMap.at( lUnits );
+}
+
+
+
 
 
 class GlobalVars
@@ -41,6 +65,8 @@ public:
 	void SetBins( const std::size_t& aRbins , const std::size_t& aTbins , const double& aMinScanR = 0.0 , const double& aMaxScanR = -1  , const double& aMinScanT = 0.0 , const double& aMaxScanT = -1 );
 	void SetPbAlpha( const double& aPB , const double& aAlpha );
 	void SetValidate( const bool& aValidate );
+
+	std::string FromCommandline( int argc , char **argv );
 
 public:
 	inline const double& scale2() const { return mScale2; }

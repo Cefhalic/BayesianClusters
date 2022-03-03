@@ -1,0 +1,10 @@
+--centre 87um 32um
+--zoom 20um
+--sigma-bins 100
+--sigma-low 5nm
+--sigma-high 100nm
+--sigma-curve 0nm:0.03631079 20nm:0.110302441 30nm:0.214839819 40nm:0.268302465 50nm:0.214839819 60nm:0.110302441 70nm:0.03631079 80nm:0.007664194 90nm:0.001037236 100nm:9.00054E-05
+--bins 35 35
+--pb 0.2
+--alpha 20
+--maxr 200nm
