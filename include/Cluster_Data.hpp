@@ -19,13 +19,20 @@ class DataProxy;
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//! A class which holds the raw event data and global parameters
 class Event
 {
 public:
+  //! Constructor
   Event();  
+
+  //! Destructor
   Event( const std::string& aFilename );
 
+  //! Deleted copy constructor
   Event( const Event& ) = delete;
+
+  //! Deleted assignment operator
   Event& operator = (const Event& ) = delete;
 
   Event( Event&& ) = default;
@@ -48,8 +55,10 @@ public:
 class EventProxy
 {
 public:
+  //! Constructor
   EventProxy( Event& aEvent );
 
+  //! Deleted copy constructor
   EventProxy( const EventProxy& ) = delete;
   EventProxy& operator = (const EventProxy& ) = delete;
 
@@ -83,6 +92,7 @@ public:
     PRECISION A , Bx, By, C, logF;
   }; 
 
+  //! Constructor
   Cluster();
   Cluster( const Data& aData );
 
@@ -108,8 +118,10 @@ public:
 class Data
 {
 public:
+  //! Constructor
   Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS );
 
+  //! Deleted copy constructor
   Data( const Data& ) = delete;
   Data& operator = (const Data& ) = delete;
 
@@ -153,8 +165,10 @@ public:
 class DataProxy
 {
 public:
+  //! Constructor
   DataProxy( Data& aData );
 
+  //! Deleted copy constructor
   DataProxy( const DataProxy& ) = delete;
   DataProxy& operator = (const DataProxy& ) = delete;
 
