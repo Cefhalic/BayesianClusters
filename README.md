@@ -5,6 +5,14 @@
 make
 ```
 
+## To generate the documentation
+```
+doxygen Doxyfile
+```
+
+The generated output is then at `doxygen/html/index.html'
+
+
 ## To see help
 ```
 ./Cluster.exe --help
