@@ -4,7 +4,7 @@
 ```
 make
 ```
-The executable is then at `./Cluster.exe' and the generated documentation is at `doxygen/html/index.html'.
+The executable is then at `./Cluster.exe` and the generated documentation is at `doxygen/html/index.html`.
 
 ## To see help
 ```
