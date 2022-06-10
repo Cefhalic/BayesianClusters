@@ -25,12 +25,12 @@
 GlobalVars Event::mParameters;
 
 Event::Event()
-{}
-
-Event::Event( const std::string& aFilename )
 {
-  LoadCSV( aFilename );
-  Preprocess();
+  const std::string& lFilename = Event::mParameters.inputFile();
+  if( lFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
+
+  LoadCSV( lFilename );
+  Preprocess();  
 }
 
 void Event::Preprocess()
@@ -245,7 +245,7 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
       for( auto& k : mData ) k.Clusterize( twoR2 , T , *this );
       UpdateLogScore();
       if( Event::mParameters.validate() ) CheckClusterization( R , T ) ;
-      //aCallback( *this , R , T );
+      aCallback( *this , R , T );
     }
   }
 
@@ -339,11 +339,11 @@ mParent( NULL )
   for( ; lIt != mParams.end() ; ++lIt , ++lSig2It )
   {
     double w = 1.0 / ( s2 + *lSig2It );
-    lIt->A += w;
-    lIt->Bx += (w * aData.x);
-    lIt->By += (w * aData.y);
-    lIt->C += (w * aData.r2);
-    lIt->logF += PRECISION( log( w ) );
+    lIt->A = w;
+    lIt->Bx = (w * aData.x);
+    lIt->By = (w * aData.y);
+    lIt->C = (w * aData.r2);
+    lIt->logF = PRECISION( log( w ) );
   }
 }
 
@@ -397,6 +397,12 @@ Data::Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS ) :
 x(aX) , y(aY) , s(aS) , r2( (aX*aX) + (aY*aY) ), r( sqrt( r2 ) ), phi( atan2( aY , aX ) ),
 mProtoCluster( NULL )
 {}
+
+Data::~Data()
+{
+  if( mProtoCluster ) delete mProtoCluster;
+  mProtoCluster = NULL;
+}
 
 // Although the neighbourhood calculation is reciprocal (if I am your neighbour then you are mine) and we can, in fact, use that to halve the number of calculations,
 // doing so requires arbitration between threads or a single-threaded reciprocation step, both of which take longer than brute-forcing it
@@ -489,16 +495,6 @@ void DataProxy::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventP
 {
   if( mCluster || mExclude ) return;
 
-  // // if one of our mNeighbours is already a cluster, join that
-  // for( auto& j : mData->mNeighbours )
-  // {
-  //   if( j.first > a2R2 ) break;
-  //   auto& lNeighbour( GetNeighbour( aEvent , j.second ) );    
-  //   if( ! lNeighbour.mCluster ) continue;  
-  //   return Clusterize( a2R2 , aT , aEvent , lNeighbour.GetCluster() );
-  // }
-
-  // else create a new cluster
   aEvent.mClusters.emplace_back();
   Clusterize( a2R2 , aT , aEvent , &aEvent.mClusters.back() );
 }

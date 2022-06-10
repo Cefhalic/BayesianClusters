@@ -26,10 +26,6 @@ public:
   //! Default Constructor
   Event();  
 
-  //! Load event from data file
-  //! \param aFilename The file from which to load the event
-  Event( const std::string& aFilename );
-
   //! Deleted copy constructor
   Event( const Event& aOther /*!< Anonymous argument */ ) = delete;
 
@@ -228,6 +224,9 @@ public:
   //! Default move-assignment constructor
   //! \return Reference to this, for chaining calls  
   Data& operator = ( Data&& aOther /*!< Anonymous argument */ ) = default;
+
+  //! Destructor
+  virtual ~Data();
 
   //! Comparison operator for sorting data-points by distance from the origin
   //! \return Whether this data-point is closer to the origin than another

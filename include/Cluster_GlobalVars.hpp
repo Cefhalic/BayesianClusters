@@ -118,11 +118,19 @@ public:
   //! \param aValidate Whether to validate clusterization
 	void SetValidate( const bool& aValidate );
 
+  //! Setter for the input file 
+  //! \param aFileName The name of the file 
+  void SetInputFile( const std::string& aFileName );
+  //! Setter for the output file 
+  //! \param aFileName The name of the file
+  void SetOutputFile( const std::string& aFileName );
+
   //! Parse the parameters when passed in as commandline arguments
   //! \param argc The number of commandline arguments
   //! \param argv The commandline arguments
-  //! \return The name of the event file
-	std::string FromCommandline( int argc , char **argv );
+	void FromCommandline( int argc , char **argv );
+
+
 
 public:
   //! Getter for the scale-parameter squared
@@ -226,6 +234,14 @@ public:
   //! Getter for whether or not to run the validation on the clustering 
   //! \return Whether or not to run the validation on the clustering 
 	inline const bool& validate() const { return mValidate; }
+
+
+  //! Getter for the input file 
+  //! \return The name of the input event file
+  inline const std::string& inputFile() const { return mInputFile; }
+  //! Getter for the output file 
+  //! \return The name of the output file
+  inline const std::string& outputFile() const { return mOutputFile; }
 
 
   //! Utility function to convert a normalized algorithm distance to physical distance 
@@ -341,4 +357,11 @@ private:
 
   //! Whether or not to run the validation on the clustering 
 	bool mValidate;
+
+  //! The input event file
+  std::string mInputFile;
+
+  //! The output file 
+  std::string mOutputFile;
+
 };

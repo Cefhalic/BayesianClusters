@@ -26,7 +26,8 @@ GlobalVars::GlobalVars() :
 	mRbins(-1),  mTbins(-1),
 	mLogPb(-1), mLogPbDagger(-1), 
 	mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
-	mValidate(false)
+	mValidate(false),
+  mInputFile(""), mOutputFile("")
 {}
 
 
@@ -110,6 +111,21 @@ void GlobalVars::SetValidate( const bool& aValidate )
 }
 
 
+void GlobalVars::SetInputFile( const std::string& aFileName )
+{ 
+  std::cout << "input file: " << aFileName << std::endl;
+
+  mInputFile = aFileName;
+}
+
+void GlobalVars::SetOutputFile( const std::string& aFileName )
+{ 
+  std::cout << "output file: " << aFileName << std::endl;
+
+  mOutputFile = aFileName;
+}
+
+
 
 void config_file( const po::options_description& aDesc , const std::string& aFilename )
 {
@@ -126,7 +142,7 @@ void config_file( const po::options_description& aDesc , const std::string& aFil
 
 
 
-std::string GlobalVars::FromCommandline( int argc , char **argv )
+void GlobalVars::FromCommandline( int argc , char **argv )
 {
   typedef std::string tS;
   typedef std::vector<std::string> tVS;
@@ -139,7 +155,7 @@ std::string GlobalVars::FromCommandline( int argc , char **argv )
   tU Nsig , Nr , Nt;
   tVD SigKeys, SigVals;
   bool val( false );
-  tS lInput;
+  tS input , output;
 
   po::positional_options_description lPositional;
   lPositional.add( "input-file" , 1 );
@@ -169,7 +185,8 @@ std::string GlobalVars::FromCommandline( int argc , char **argv )
     ( "pb",           po::value<tD>(&pb)                                                                                                                      , "pb parameter" )
     ( "alpha",        po::value<tD>(&alpha)                                                                                                                   , "alpha parameter" )
     ( "validate,v",   po::bool_switch(&val)                                                                                                                   , "validate clusters" )
-    ( "input-file,i", po::value<tS>(&lInput)                                                                                                                  , "input file")
+    ( "input-file,i", po::value<tS>(&input)                                                                                                                   , "input file")
+    ( "output-file,o", po::value<tS>(&output)                                                                                                                 , "output file")
   ;
 
   po::variables_map lVm;
@@ -183,11 +200,10 @@ std::string GlobalVars::FromCommandline( int argc , char **argv )
   SetRBins( Nr , rLo , rHi );
   SetTBins( Nt , tLo, tHi );
   SetValidate( val );
+  SetInputFile( input );
+  SetOutputFile( output );
 
   ROOT::Math::Interpolator lInterpolator( SigKeys , SigVals ); // Default to cubic spline interpolation
   SetSigmaParameters( Nsig , sigLo , sigHi , [&]( const double& aPt ){ return lInterpolator.Eval( aPt ); } );  
 
-
-
-  return lVm["input-file"].as<tS>();
 }
