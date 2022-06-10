@@ -1,17 +1,10 @@
 # Bayesian Clusters
 
-## To build
+## To build the executable and generate the documentation
 ```
 make
 ```
-
-## To generate the documentation
-```
-doxygen Doxyfile
-```
-
-The generated output is then at `doxygen/html/index.html'
-
+The executable is then at `./Cluster.exe' and the generated documentation is at `doxygen/html/index.html'.
 
 ## To see help
 ```
