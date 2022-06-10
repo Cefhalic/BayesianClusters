@@ -11,6 +11,7 @@ EXECUTABLE_OBJECT_FILES = $(patsubst src/%.cxx,obj/bin/%.o,${EXECUTABLE_SOURCES}
 EXECUTABLES = $(patsubst src/%.cxx,%.exe,${EXECUTABLE_SOURCES})
 
 DOXYGEN = doxygen/html/index.html
+DOCUMENTATION = documentation/OptimizingTheMaths.pdf
 
 DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${EXECUTABLE_OBJECT_FILES}, $(dir ${filePath})))
 
@@ -26,7 +27,7 @@ all: _all
 build: _all
 buildall: _all
 # _all: ${LIBRARY_FILE} ${EXECUTABLES}
-_all: ${DOXYGEN} ${EXECUTABLES}
+_all: ${DOCUMENTATION} ${DOXYGEN} ${EXECUTABLES}
 
 FLAGS = -g -std=c++11 -march=native -O3 -lm `root-config --glibs --cflags --libs` -lMathMore -flto -MMD -MP -lboost_program_options
 
@@ -56,3 +57,7 @@ ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
 
 ${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
 	doxygen Doxyfile
+
+${DOCUMENTATION}:
+  pdflatex documentation/OptimizingTheMaths -output-directory=./documentation
+  pdflatex documentation/OptimizingTheMaths -output-directory=./documentation
