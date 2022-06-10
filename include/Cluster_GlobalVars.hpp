@@ -12,33 +12,53 @@
 namespace po = boost::program_options;
 
 
+//! Define a constant for converting nanometers to meters
 constexpr double nanometer  = 1e-9;
+//! Define a constant for converting micrometers to meters
 constexpr double micrometer = 1e-6;
+//! Define a constant for converting millimeters to meters
 constexpr double millimeter = 1e-3;
+//! Define a constant for converting meters to meters
 constexpr double meter      = 1e-0;
+
+//! A map for converting string representations of SI units to scaling factors
 const std::map< std::string , double > UnitMap{ {"nm",nanometer} , {"um",micrometer} , {"mm",millimeter} , {"m",meter} };
 
-
+//! User-defined literals fot nanometer quantities
+//! \param aVal The specified value
+//! \return The literal value
 constexpr long double operator"" _nanometer( long double aVal )
 {
 	return aVal * nanometer;
 }
 
+//! User-defined literals fot nanometer quantities
+//! \param aVal The specified value
+//! \return The literal value
 constexpr long double operator"" _nanometer( unsigned long long aVal )
 {
 	return aVal * nanometer;
 }
 
+//! User-defined literals fot micrometer quantities
+//! \param aVal The specified value
+//! \return The literal value
 constexpr long double operator"" _micrometer( long double aVal )
 {
 	return aVal * micrometer;
 }
 
+//! User-defined literals fot micrometer quantities
+//! \param aVal The specified value
+//! \return The literal value
 constexpr long double operator"" _micrometer( unsigned long long aVal )
 {
 	return aVal * micrometer;
 }
 
+//! Convert a string representation to a distance
+//! \param aStr A string representation of a distance
+//! \return The literal value
 inline long double StrToDist( const std::string& aStr )
 {
 	std::stringstream lStr;
@@ -52,10 +72,11 @@ inline long double StrToDist( const std::string& aStr )
 
 
 
-
+//! Class for storing the configuration parameters
 class GlobalVars
 {
 public:
+  //! Default constructor
 	GlobalVars();
 
 	void SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY );
@@ -141,22 +162,39 @@ public:
 	}
 
 private:	
-	double mScale , mScale2;
-  	double mPhysicalCentreX , mPhysicalCentreY;
+	double mScale;
+  double mScale2;
+  double mPhysicalCentreX;
+  double mPhysicalCentreY;
 
 	std::size_t mSigmacount;
 	double mSigmaspacing;
 
-	std::vector< double > mSigmabins, mSigmabins2;
-	std::vector< double > mProbabilitySigma, mLogProbabilitySigma;
+	std::vector< double > mSigmabins;
+  std::vector< double > mSigmabins2;
+	std::vector< double > mProbabilitySigma;
+  std::vector< double > mLogProbabilitySigma;
 
-	double mMaxR, mMaxR2, mMax2R, mMax2R2;
+	double mMaxR;
+  double mMaxR2;
+  double mMax2R;
+  double mMax2R2;
 
-	double mMinScanR , mMaxScanR , mMinScanT , mMaxScanT;
-	double mDR , mDT;
-	std::size_t mRbins ,  mTbins;
+	double mMinScanR;
+  double mMaxScanR;
+  double mMinScanT;
+  double mMaxScanT;
+	double mDR;
+  double mDT;
+	std::size_t mRbins;
+	std::size_t mTbins;
 
-	double mAlpha , mLogAlpha , mLogGammaAlpha , mLogPb , mLogPbDagger;
+	double mAlpha;
+  double mLogAlpha;
+  double mLogGammaAlpha;
+  double mLogPb;
+  double mLogPbDagger;
 
+  //! Run the validation on the clustering 
 	bool mValidate;
 };

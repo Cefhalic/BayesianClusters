@@ -9,45 +9,85 @@
 
 #include "ListComprehension.hpp"
 
+//! A class to wrap a worker-thread
 class WrappedThread
 {
 public:
+  //! Default constructor
   WrappedThread();
 
-  WrappedThread( const WrappedThread& ) = delete;
-  WrappedThread& operator = (const WrappedThread&) = delete;
+  //! Deleted copy constructor
+  WrappedThread( const WrappedThread& aOther /*!< Anonymous argument */ ) = delete;
 
-  WrappedThread(WrappedThread&&) = default;
-  WrappedThread& operator = (WrappedThread&&) = default;
+  //! Deleted assignment operator
+  //! \return Reference to this, for chaining calls
+  WrappedThread& operator = (const WrappedThread& aOther /*!< Anonymous argument */ ) = delete;
 
+  //! Default move constructor
+  WrappedThread(WrappedThread&& aOther /*!< Anonymous argument */ ) = default;
+
+  //! Default move-assignment constructor
+  //! \return Reference to this, for chaining calls
+  WrappedThread& operator = (WrappedThread&& aOther /*!< Anonymous argument */ ) = default;
+
+  //! Destructor
   virtual ~WrappedThread();
 
+  //! Submit a job to this thread
+  //! \param aFunc The job to run
   void submit( const std::function< void() >& aFunc );
  
+  //! Submit a job to the current thread and then wait for all other threads to finish
+  //! \param aFunc The job to run
   static void run_and_wait( const std::function< void() >& aFunc );
+  
+  //! Wait for all other threads to finish  
   static void wait();
 
 private:
+  //! The function run by the raw thread 
   void Runner();
 
+  //! An atomic static register keeping track of which threads are busy
   static std::atomic< std::uint64_t > sBusy;
+  
+  //! A static counter to tell us how many threads are available
   static std::uint64_t sInstanceCounter;
+  
+  //! A mask indicating which thread we are on
   const std::uint64_t mMask;
 
+  //! A condition variable for talking across threads
   std::condition_variable mConditionVariable;
+  
+  //! The function call to be run by the thread
   std::function< void() > mFunc;
+  
+  //! An atomic flag indicating termination
   std::atomic< bool > mTerminate;
+
+  //! The access mutex
   std::mutex mMutex;
+  
+  //! The raw thread
   std::thread mThread; // MUST BE LAST!
    
 };
 
-
+//! Utility variable for the concurrency
+//! \todo The factor of -1 is legacy and should probably be cleaned up through-out the code
 const std::size_t Concurrency( std::thread::hardware_concurrency() - 1 );
+
+//! The pool of all wrapped threads
 extern std::vector< std::unique_ptr< WrappedThread > > ThreadPool;
 
 
-// Syntactic sugar
+//! Syntactic sugar to allow you to interleave parallelize via operator
+//! \tparam tContainer A container type
+//! \tparam tExpr      A function-call type
+//! \tparam tContainerType A SFINAE hack to ensure that the container is a container
+//! \param  aExpr      A function-call to be applied to each element of the container
+//! \param  aContainer A container holding the arguments to be distributed to the parallelized function calls
 template< typename tContainer , typename tExpr, typename tContainerType = typename std::remove_reference<tContainer>::type::value_type >
 inline void operator|| ( tExpr&& aExpr , tContainer&& aContainer )
 {
@@ -60,7 +100,12 @@ inline void operator|| ( tExpr&& aExpr , tContainer&& aContainer )
   WrappedThread::run_and_wait( [ aExpr , &aContainer , &N ](){ for( auto i( aContainer.begin() + Concurrency ) ; i<aContainer.end() ; i+=N ) aExpr( *i ); } );
 }
 
-// Syntactic sugar
+//! Syntactic sugar to allow you to block parallelize via operator
+//! \tparam tContainer A container type
+//! \tparam tExpr      A function-call type
+//! \tparam tContainerType A SFINAE hack to ensure that the container is a container
+//! \param  aExpr      A function-call to be applied to each element of the container
+//! \param  aContainer A container holding the arguments to be distributed to the parallelized function calls
 template< typename tContainer , typename tExpr, typename tContainerType = typename std::remove_reference<tContainer>::type::value_type >
 inline void operator&& ( tExpr&& aExpr , tContainer&& aContainer )
 {

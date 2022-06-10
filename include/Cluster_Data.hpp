@@ -30,16 +30,18 @@ public:
   Event( const std::string& aFilename );
 
   //! Deleted copy constructor
-  Event( const Event& ) = delete;
+  Event( const Event& aOther /*!< Anonymous argument */ ) = delete;
 
   //! Deleted assignment operator
-  Event& operator = (const Event& ) = delete;
+  //! \return Reference to this, for chaining calls
+  Event& operator = (const Event& aOther /*!< Anonymous argument */ ) = delete;
 
   //! Default move constructor
-  Event( Event&& ) = default;
+  Event( Event&& aOther /*!< Anonymous argument */ ) = default;
 
   //! Default move-assignment constructor
-  Event& operator = ( Event&& ) = default;
+  //! \return Reference to this, for chaining calls
+  Event& operator = ( Event&& aOther /*!< Anonymous argument */ ) = default;
 
   //! All the necessary pre-processing to get the event ready for an RT-scan
   void Preprocess();
@@ -76,16 +78,18 @@ public:
   EventProxy( Event& aEvent );
 
   //! Deleted copy constructor
-  EventProxy( const EventProxy& ) = delete;
+  EventProxy( const EventProxy& aOther /*!< Anonymous argument */ ) = delete;
 
   //! Deleted assignment operator
-  EventProxy& operator = (const EventProxy& ) = delete;
+  //! \return Reference to this, for chaining calls
+  EventProxy& operator = (const EventProxy& aOther /*!< Anonymous argument */ ) = delete;
 
   //! Default move constructor
-  EventProxy( EventProxy&& ) = default;
+  EventProxy( EventProxy&& aOther /*!< Anonymous argument */ ) = default;
 
   //! Default move-assignment constructor
-  EventProxy& operator = ( EventProxy&& ) = default;
+  //! \return Reference to this, for chaining calls
+  EventProxy& operator = ( EventProxy&& aOther /*!< Anonymous argument */ ) = default;
 
   //! Run validation tests on the clusters
   //! \param R The R of the last run scan
@@ -207,16 +211,18 @@ public:
   Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS );
 
   //! Deleted copy constructor
-  Data( const Data& ) = delete;
+  Data( const Data& aOther /*!< Anonymous argument */ ) = delete;
 
   //! Deleted assignment operator
-  Data& operator = (const Data& ) = delete;
+  //! \return Reference to this, for chaining calls  
+  Data& operator = (const Data& aOther /*!< Anonymous argument */ ) = delete;
 
   //! Default move constructor
-  Data( Data&& ) = default;
+  Data( Data&& aOther /*!< Anonymous argument */ ) = default;
 
   //! Default move-assignment constructor
-  Data& operator = ( Data&& ) = default;
+  //! \return Reference to this, for chaining calls  
+  Data& operator = ( Data&& aOther /*!< Anonymous argument */ ) = default;
 
   //! Comparison operator for sorting data-points by distance from the origin
   //! \return Whether this data-point is closer to the origin than another
@@ -290,16 +296,18 @@ public:
   DataProxy( Data& aData );
 
   //! Deleted copy constructor
-  DataProxy( const DataProxy& ) = delete;
+  DataProxy( const DataProxy& aOther /*!< Anonymous argument */ ) = delete;
 
   //! Deleted assignment operator
-  DataProxy& operator = (const DataProxy& ) = delete;
+  //! \return Reference to this, for chaining calls  
+  DataProxy& operator = (const DataProxy& aOther /*!< Anonymous argument */ ) = delete;
 
   //! Default move constructor
-  DataProxy( DataProxy&& ) = default;
+  DataProxy( DataProxy&& aOther /*!< Anonymous argument */ ) = default;
 
   //! Default move-assignment constructor
-  DataProxy& operator = ( DataProxy&& ) = default;
+  //! \return Reference to this, for chaining calls  
+  DataProxy& operator = ( DataProxy&& aOther /*!< Anonymous argument */ ) = default;
 
   //! Get the proxy for the Nth neighbour of this data-point
   //! \return A reference to the neighbour data-proxy
