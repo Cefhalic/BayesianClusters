@@ -21,7 +21,7 @@ default: all
 
 clean: _cleanall
 _cleanall:
-	rm -rf obj doxygen
+	rm -rf obj doxygen ${DOCUMENTATION}
 
 all: _all
 build: _all
@@ -36,6 +36,7 @@ ${DIRECTORIES}:
 
 .SECONDEXPANSION:
 obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o)
+	@echo -e "*************************************************************************************************************************************\n* Building Object Files\n*************************************************************************************************************************************"
 	g++ -c ${FLAGS} -Iinclude -fPIC $< -o $@
 
 .SECONDEXPANSION:
@@ -53,11 +54,14 @@ obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o)
 
 
 ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
+	@echo -e "*************************************************************************************************************************************\n* Building Executable\n*************************************************************************************************************************************"
 	g++ $^ ${FLAGS} -o $@
 
 ${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
+	@echo -e "*************************************************************************************************************************************\n* Generating Doxygen Documentation\n*************************************************************************************************************************************"
 	doxygen Doxyfile
 
 ${DOCUMENTATION}:
+	@echo -e "*************************************************************************************************************************************\n* Generating Maths Documentation\n*************************************************************************************************************************************"
 	pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
 	pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
