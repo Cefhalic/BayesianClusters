@@ -4,7 +4,9 @@
 ```
 make
 ```
-The executable is then at `./Cluster.exe` and the generated documentation is at `doxygen/html/index.html`.
+ * The executable is then at `./Cluster.exe` 
+ * The doxygen documentation is at `doxygen/html/index.html`
+ * The maths documentation is at `documentation/OptimizingTheMaths.pdf`
 
 ## To see help
 ```
