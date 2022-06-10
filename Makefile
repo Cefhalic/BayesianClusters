@@ -59,5 +59,5 @@ ${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
 	doxygen Doxyfile
 
 ${DOCUMENTATION}:
-  pdflatex documentation/OptimizingTheMaths -output-directory=./documentation
-  pdflatex documentation/OptimizingTheMaths -output-directory=./documentation
+	pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
+	pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
