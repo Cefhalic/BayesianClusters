@@ -1,38 +1,48 @@
 /* ===== Cluster sources ===== */
 #include "Cluster_Data.hpp"
-#include "Cluster_PlotTools.hpp"
 
 // /* ===== C++ ===== */
 #include <vector>
-
-/* ===== For Root ===== */
-#include "TH2D.h"
+#include <fstream>
+#include <sstream>
+#include <mutex>
   
 /* ===== Local utilities ===== */
-#include "RootWindow.hpp"
 #include "ProgressBar.hpp"
 
 
-void RTscanCallback( const EventProxy& aEvent , const double& aR , const double& aT , TH2D* ClustScore , TH2D* Nclust , TH2D* ClustSize )
+std::mutex mtx; // mutex for critical section
+
+
+
+void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT , std::stringstream& aOutput )
 {
-  double lScore( 0.0 ) , lMean( 0.0 );
-  std::size_t lCnt( 0 );
+  mtx.lock();
+  aOutput << "  <Scan R='" << aR << "' T='" << aT << "' Score='" << aEvent.mLogP << " NumClusteredPts='" << aEvent.mClusteredCount << "' NumBackgroundPts='" << aEvent.mBackgroundCount << "'>\n";
 
   for( auto& i : aEvent.mClusters )
   {
-    if( i.mClusterSize )
-    {
-      lScore += i.mClusterScore;
-      lCnt += 1;
-      lMean += i.mClusterSize;
-    }
+    if( i.mClusterSize ) aOutput << "      <Cluster Points='" << i.mClusterSize << "' Score='" << i.mClusterScore << "' />\n";
   }
 
-  ClustScore -> Fill( aR , aT , lScore );
-  Nclust -> Fill( aR , aT , lCnt );
-  ClustSize -> Fill( aR , aT , lMean / lCnt );
+  aOutput << "  </Scan>\n";
+  mtx.unlock();  
 }
 
+
+void JsonCallback( const EventProxy& aEvent , const double& aR , const double& aT , std::stringstream& aOutput )
+{
+  mtx.lock();
+  aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << ", Clusters:[\n";
+
+  for( auto& i : aEvent.mClusters )
+  {
+    if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
+  }
+
+  aOutput << "  ] },\n";
+  mtx.unlock();  
+}
 
 
 
@@ -47,40 +57,37 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
   ProgressBar2 lBar( "| Cluster Scan. Andrew W. Rose. 2022 |" , 1 );
   std::cout << "+------------------------------------+" << std::endl;
-  std::string lInputFile = Event::mParameters.FromCommandline( argc , argv );
+  Event::mParameters.FromCommandline( argc , argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  Event lEvent( lInputFile );  
-  
-  // WriteCSV( std::string("trunc_")+argv[1] , lData );
-  // return 0;
-
-  // // auto lData = CreatePseudoData( 10000 , 500 , 500 , 100_nanometer );
-  // //auto lData = CreatePseudoData( 0 , 10 , 100 , 10_micrometer );
-  // //auto lData = CreatePseudoData( 70000 , 700 , 700 , .005 );
-
-  // // InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } );
-
-  auto Rlo = Event::mParameters.minScanR() - ( 0.5 * Event::mParameters.dR() );
-  auto Rhi = Event::mParameters.maxScanR() - ( 0.5 * Event::mParameters.dR() );
-  auto Tlo = Event::mParameters.minScanT() - ( 0.5 * Event::mParameters.dT() );
-  auto Thi = Event::mParameters.maxScanT() - ( 0.5 * Event::mParameters.dT() );
-
-  auto Nclust     = new TH2D( "Nclust" ,     "N_{clusters};r;T" , Event::mParameters.Rbins() , Rlo , Rhi , Event::mParameters.Tbins() , Tlo , Thi );
-  auto ClustSize  = new TH2D( "ClustSize" ,  "<N_{points}>;r;T" , Event::mParameters.Rbins() , Rlo , Rhi , Event::mParameters.Tbins() , Tlo , Thi );
-  auto ClustScore = new TH2D( "ClustScore" , "Score;r;T" ,        Event::mParameters.Rbins() , Rlo , Rhi , Event::mParameters.Tbins() , Tlo , Thi );
+  Event lEvent;  
 
 
-  lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT ){ RTscanCallback( aEvent , aR , aT , ClustScore , Nclust , ClustSize ); } );
-  // const double R( 50_nanometer*Parameters.scale() );
-  // const double T( 70_nanometer*Parameters.scale() );
-  // std::cout << std::dec << "R=" << R << " | T=" << T << std::endl;
-  // std::vector< Cluster > lClusters;
-  // lClusters.reserve( lData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
-  // Clusterize( lData , lClusters , R , T );
-  // CheckClusterization( lData , R , T );
-  // InteractiveDisplay( [ &lData ](){ DrawPoints( lData ); } , [ &lData ](){ DrawClusters( lData ); } );
+  const std::string& lFilename = Event::mParameters.outputFile();
 
+  if( lFilename.size() == 0 )
+  {
+    std::cout << "Warning: Running scan without callback" << std::endl;
+    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT ){} ); // Null callback
+  }
+  else if( lFilename.size() > 4 and lFilename.substr(lFilename.size() - 4) == ".xml" )
+  {
+    std::stringstream lOutput;
+    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT ){ XmlCallback( aEvent , aR , aT , lOutput ); } );
+    std::ofstream lOutFile( lFilename );
+    lOutFile << "<Results>\n" << lOutput.str() << "</Results>\n";
+  }
+  else if( lFilename.size() > 5 and lFilename.substr(lFilename.size() - 5) == ".json" )
+  {
+    std::stringstream lOutput;
+    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT ){ JsonCallback( aEvent , aR , aT , lOutput ); } );
+    std::ofstream lOutFile( lFilename );
+    lOutFile << "{\nResults:[\n" << lOutput.str() << "]\n}";
+  }
+  else
+  {
+    throw std::runtime_error( "No handler for specified output-file" );
+  }
 
   std::cout << "+------------------------------------+" << std::endl;
 

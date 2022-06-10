@@ -25,12 +25,12 @@
 GlobalVars Event::mParameters;
 
 Event::Event()
-{
-  const std::string& lFilename = Event::mParameters.inputFile();
-  if( lFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
+{}
 
-  LoadCSV( lFilename );
-  Preprocess();  
+Event::Event( const std::string& aFilename )
+{
+  LoadCSV( aFilename );
+  Preprocess();
 }
 
 void Event::Preprocess()
@@ -274,6 +274,23 @@ void EventProxy::UpdateLogScore()
          + Event::mParameters.logGammaAlpha()
          - ROOT::Math::lgamma( Event::mParameters.alpha() + mClusteredCount );  
 }
+
+EventProxy EventProxy::LightweightClone() const
+{
+  EventProxy lRet;
+
+  lRet.mClusteredCount = mClusteredCount;
+  lRet.mBackgroundCount = mBackgroundCount;
+  lRet.mLogP = mLogP;
+
+  lRet.mClusters.reserve( mClusters.size() );
+  for( auto& i : mClusters )
+  {
+    if( i.mClusterSize ) lRet.mClusters.emplace_back( i.LightweightClone() );
+  }
+
+  return lRet;
+}
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -296,8 +313,8 @@ Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& a
 inline double CDF( const double& aArg )
 {
   // Above or below ~8 are indistinguishable from 0 and 1 respectively
-  if( aArg > 8.0 ) return 1.0;
-  if( aArg < 8.0 ) return 0.0;
+  // if( aArg > 8.0 ) return 1.0;
+  // if( aArg < 8.0 ) return 0.0;
   return  ROOT::Math::normal_cdf( aArg );
 }
 
@@ -315,6 +332,12 @@ double Cluster::Parameter::log_score() const
   if( Gx != 1.0 ) log_sum += log( Gx );
   auto Gy = CDF( sqrt_A * (1.0-Dy) ) - CDF( sqrt_A * (-1.0-Dy) );
   if( Gy != 1.0 ) log_sum += log( Gy );
+
+  std::stringstream lStr;
+  lStr << "A=" << std::setw(14) << A << " logA=" << std::setw(14) << log(A) << " sqrtA=" << std::setw(14) << sqrt_A << " 1/A=" << std::setw(14) << inv_A \
+      << " Dx=" << std::setw(14) << Dx << " Dy="  << std::setw(14) << Dy<< " E="  << std::setw(14) << E<< " logF="  << std::setw(14) << logF \
+      << " Gx=" << std::setw(14) << Gx << " Gy=" << std::setw(14) << Gy << " => " << log_sum << "\n";
+  std::cout << lStr.str() << std::flush; 
 
   return log_sum;
 }
@@ -343,7 +366,7 @@ mParent( NULL )
     lIt->Bx = (w * aData.x);
     lIt->By = (w * aData.y);
     lIt->C = (w * aData.r2);
-    lIt->logF = PRECISION( log( w ) );
+    lIt->logF = PRECISION( log( w ) + Event::mParameters.normalization() );
   }
 }
 
@@ -355,16 +378,28 @@ void Cluster::UpdateLogScore()
   if( mClusterSize <= mLastClusterSize ) return; // We were not bigger than the previous size when we were evaluated - score is still valid
   mLastClusterSize = mClusterSize;
 
-  thread_local static std::vector< double > MuIntegral( Event::mParameters.sigmacount() , 1.0 );
+  thread_local static std::vector< double > MuIntegral( Event::mParameters.sigmacount() , 0.0 );
+
+  std::stringstream lStr;
+  // lStr << "Size = " << mClusterSize << " | ";
 
   // double constant( mParams[0].log_score() + Event::mParameters.log_probability_sigma( 0 ) );
   // for( std::size_t i(1) ; i!=Event::mParameters.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Event::mParameters.log_probability_sigma( i ) - constant );
-  for( std::size_t i(0) ; i!=Event::mParameters.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Event::mParameters.log_probability_sigma( i ) );
+  for( std::size_t i(0) ; i!=Event::mParameters.sigmacount() ; ++i )
+  { 
+    auto lScore( mParams[i].log_score() );
+    MuIntegral[i] = exp( lScore + Event::mParameters.log_probability_sigma( i ) );
+    //lStr << i << ";" << lScore << ";" << Event::mParameters.log_probability_sigma( i ) << ";" << MuIntegral[i] << " | ";
+  }
+
+  lStr << "\n\n";
+  std::cout << lStr.str() << std::flush;  
 
   thread_local static ROOT::Math::Interpolator lInt( Event::mParameters.sigmacount() , ROOT::Math::Interpolation::kLINEAR );
   lInt.SetData( Event::mParameters.sigmabins() , MuIntegral );
 
   static const double Lower( Event::mParameters.sigmabins(0) ) , Upper( Event::mParameters.sigmabins(Event::mParameters.sigmacount()-1) );
+
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
 }
@@ -387,6 +422,15 @@ Cluster* Cluster::GetParent()
 {
   if( mParent ) return mParent = mParent->GetParent();
   return this;
+}
+
+Cluster Cluster::LightweightClone() const
+{
+  Cluster lRet;
+  lRet.mParams.clear();
+  lRet.mClusterSize =  mClusterSize;
+  lRet.mClusterScore = mClusterScore;
+  return lRet;
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -494,7 +538,6 @@ mCluster( NULL )
 void DataProxy::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventProxy& aEvent ) // We are at the top-level
 {
   if( mCluster || mExclude ) return;
-
   aEvent.mClusters.emplace_back();
   Clusterize( a2R2 , aT , aEvent , &aEvent.mClusters.back() );
 }

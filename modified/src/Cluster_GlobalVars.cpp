@@ -20,14 +20,14 @@
 GlobalVars::GlobalVars() :
 	mScale(-1) , mScale2(-1),
 	mSigmacount(-1), mSigmaspacing(-1),
+	mNormalization(-1),
 	mMaxR(-1), mMaxR2(-1), mMax2R(-1), mMax2R2(-1),
 	mMinScanR(-1), mMaxScanR(-1), mMinScanT(-1), mMaxScanT(-1),
 	mDR(-1), mDT(-1),
 	mRbins(-1),  mTbins(-1),
 	mLogPb(-1), mLogPbDagger(-1), 
 	mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
-	mValidate(false),
-  mInputFile(""), mOutputFile("")
+	mValidate(false)
 {}
 
 
@@ -106,25 +106,14 @@ void GlobalVars::SetAlpha( const double& aAlpha )
 void GlobalVars::SetValidate( const bool& aValidate )
 {
 	std::cout << "validate: " << aValidate << std::endl;
-
 	mValidate = aValidate;
 }
 
-
-void GlobalVars::SetInputFile( const std::string& aFileName )
-{ 
-  std::cout << "input file: " << aFileName << std::endl;
-
-  mInputFile = aFileName;
+void GlobalVars::SetNormalization( const double& aNormalization )
+{
+	std::cout << "normalization: " << aNormalization << std::endl;
+	mNormalization = aNormalization;
 }
-
-void GlobalVars::SetOutputFile( const std::string& aFileName )
-{ 
-  std::cout << "output file: " << aFileName << std::endl;
-
-  mOutputFile = aFileName;
-}
-
 
 
 void config_file( const po::options_description& aDesc , const std::string& aFilename )
@@ -142,7 +131,7 @@ void config_file( const po::options_description& aDesc , const std::string& aFil
 
 
 
-void GlobalVars::FromCommandline( int argc , char **argv )
+std::string GlobalVars::FromCommandline( int argc , char **argv )
 {
   typedef std::string tS;
   typedef std::vector<std::string> tVS;
@@ -155,7 +144,7 @@ void GlobalVars::FromCommandline( int argc , char **argv )
   tU Nsig , Nr , Nt;
   tVD SigKeys, SigVals;
   bool val( false );
-  tS input , output;
+  tS lInput;
 
   po::positional_options_description lPositional;
   lPositional.add( "input-file" , 1 );
@@ -173,20 +162,20 @@ void GlobalVars::FromCommandline( int argc , char **argv )
                                                                                                         std::vector<std::string> lStrs; 
                                                                                                         boost::split( lStrs , i , [](char c){return c==':';} ); 
                                                                                                         SigKeys.push_back( StrToDist( lStrs.at(0) ) ); 
-                                                                                                        SigVals.push_back( std::stoll( lStrs.at(1) ) ); 
+                                                                                                        SigVals.push_back( std::stod( lStrs.at(1) ) ); 
                                                                                                       } 
                                                                                                     } )                                                       , "Parameterized sigma probability curve (list of colon-separated size-probability pairs)" )           
-    ( "r-bins",       po::value<tU>(&Nr)                                                                                                                      , "Number of R bins" )
-    ( "r-low",        po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ rLo=StrToDist(aArg); } )                               , "Lower R bound" )
-    ( "r-high",       po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ rHi=StrToDist(aArg); } )                               , "High R bound" )
-    ( "t-bins",       po::value<tU>(&Nt)                                                                                                                      , "Number of T bins" )
-    ( "t-low",        po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ tLo=StrToDist(aArg); } )                               , "Lower T bound" )
-    ( "t-high",       po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ tHi=StrToDist(aArg); } )                               , "High T bound" )
-    ( "pb",           po::value<tD>(&pb)                                                                                                                      , "pb parameter" )
-    ( "alpha",        po::value<tD>(&alpha)                                                                                                                   , "alpha parameter" )
-    ( "validate,v",   po::bool_switch(&val)                                                                                                                   , "validate clusters" )
-    ( "input-file,i", po::value<tS>(&input)                                                                                                                   , "input file")
-    ( "output-file,o", po::value<tS>(&output)                                                                                                                 , "output file")
+    ( "r-bins",   po::value<tU>(&Nr)                                                                                                                          , "Number of R bins" )
+    ( "r-low",    po::value<tS>()                               ->notifier( [&]( const   tS& aArg ){ rLo=StrToDist(aArg); } )                                 , "Lower R bound" )
+    ( "r-high",   po::value<tS>()                               ->notifier( [&]( const   tS& aArg ){ rHi=StrToDist(aArg); } )                                 , "High R bound" )
+    ( "t-bins",   po::value<tU>(&Nt)                                                                                                                          , "Number of T bins" )
+    ( "t-low",    po::value<tS>()                               ->notifier( [&]( const   tS& aArg ){ tLo=StrToDist(aArg); } )                                 , "Lower T bound" )
+    ( "t-high",   po::value<tS>()                               ->notifier( [&]( const   tS& aArg ){ tHi=StrToDist(aArg); } )                                 , "High T bound" )
+    ( "pb",            po::value<tD>(&pb)                                                                                                                     , "pb parameter" )
+    ( "alpha",         po::value<tD>(&alpha)                                                                                                                  , "alpha parameter" )
+    ( "normalization", po::value<tD>(&normalization)                                                                                                          , "gaussian normalization constant" )
+    ( "validate,v",    po::bool_switch(&val)                                                                                                                  , "validate clusters" )
+    ( "input-file,i",  po::value<tS>(&lInput)                                                                                                                 , "input file")
   ;
 
   po::variables_map lVm;
@@ -197,13 +186,15 @@ void GlobalVars::FromCommandline( int argc , char **argv )
   SetZoom( Z );
   SetPb( pb );
   SetAlpha( alpha );
-  SetRBins( Nr , rLo , rHi );
-  SetTBins( Nt , tLo, tHi );
+	SetRBins( Nr , rLo , rHi );
+	SetTBins( Nt , tLo, tHi );
   SetValidate( val );
-  SetInputFile( input );
-  SetOutputFile( output );
+  SetNormalization( normalization );
 
   ROOT::Math::Interpolator lInterpolator( SigKeys , SigVals ); // Default to cubic spline interpolation
   SetSigmaParameters( Nsig , sigLo , sigHi , [&]( const double& aPt ){ return lInterpolator.Eval( aPt ); } );  
 
+
+
+  return lVm["input-file"].as<tS>();
 }

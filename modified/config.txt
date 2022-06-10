@@ -12,3 +12,4 @@
 --t-high 500nm
 --pb 0.2
 --alpha 20
+--normalization -30

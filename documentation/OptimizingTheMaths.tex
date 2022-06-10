@@ -1,0 +1,180 @@
+\documentclass{article}
+\usepackage{amsmath}
+% \usepackage{relsize}
+\usepackage{breqn}
+% \usepackage{graphicx}
+% \usepackage{stix}
+% \usepackage{listings}
+% \usepackage{xcolor}
+% \usepackage{caption}
+
+\newcommand{\sig}{\overline{\sigma}_i}
+\newcommand{\eq}{=&\ }
+\newcommand{\ints}{\int\displaylimits_\sigma}
+\newcommand{\intm}{\int\displaylimits_\mu}
+
+% \renewcommand{\a}[1]{a_{t-#1}}
+
+% \lstdefinestyle{mystyle}{
+    % % backgroundcolor=\color{backcolour},   
+    % commentstyle=\color{gray},
+    % keywordstyle=\color{magenta},
+    % numberstyle=\tiny\color{lightgray},
+    % % stringstyle=\color{codepurple},
+    % basicstyle=\ttfamily\footnotesize,
+    % % breakatwhitespace=false,         
+    % % breaklines=true,                 
+    % captionpos=b,                    
+    % keepspaces=true,                 
+    % numbers=left,                    
+    % numbersep=5pt,                  
+    % showspaces=false,                
+    % showstringspaces=false,
+    % showtabs=false,                  
+    % tabsize=2
+% }
+
+% \lstset{style=mystyle}
+
+
+
+\title{Clustering}
+\author{Andrew W. Rose}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The probability (density?) of a point with index, $i$, originating from a circular (spherical) Gaussian distribution with parameters $(\mu_d,\sigma)$ is
+\begin{align}
+  p(V_{i}\,|\,\mu,\sigma) \eq \prod_d \frac{1}{\sqrt{2\pi\sig^2}}\ \text{exp}\left( \frac{-(x_{d,i}-\mu_d)^2 }{ 2\sig^2 }\right)
+\end{align}
+
+where $d$ are the indices of the spacial dimensions, $x_d$ are the spatial coordinates of the point, and $\sig^2 = \sigma^2 + s_i^2$.
+
+If many points originate from the same given distribution, we may multiply the probabilities of the individual points. The probability that all the points belong to any spherical Gaussian distribution may be obtained by integrating over the parameters of the Gaussian  
+\begin{align}
+  p( \nu ) \eq \ints p(\sigma) \intm p(\mu) \prod_{i=1}^{N} p(V_{i}\,|\,\mu,\sigma)\,d\mu\,d\sigma
+\end{align}
+
+Assuming a flat distribution of $\mu_d$ gives
+\begin{align}
+  p(\mu) \eq \prod_d (x_d^+ - x_d^-)^{-1} \\
+         \eq V^{-1}
+\end{align}
+
+Where $V$ is the area (volume) over which we are integrating.
+
+Since the circular (spherical) Gaussian is separable, we may consider the each integral over the spatial dimension of $\mu$ independently, and dropping the subscript `$d$' for clarity:
+\begin{align}
+  \int_{x_d-}^{x_d+} \prod_{i=1}^{N} & \left( \frac{1}{\sqrt{2\pi\sig^2}} \text{exp}\left( \frac{-(x_i-\mu)^2 }{ 2\sig^2 }\right)\right)\,d\mu \nonumber \\
+    \eq \int_{x_d-}^{x_d+} \left(\prod_{i=1}^{N} \frac{1}{\sqrt{2\pi\sig^2}}\right)\left(\prod_{i=1}^{N} \text{exp}\left( \frac{-(x_i-\mu)^2 }{ 2\sig^2 }\right)\right)\,d\mu \\
+    \eq \left(\prod_{i=1}^{N} \frac{1}{\sqrt{2\pi\sig^2}}\right) \int_{x_d-}^{x_d+} \prod_{i=1}^{N} \text{exp}\left( \frac{-(x_i-\mu)^2 }{ 2\sig^2 }\right)\,d\mu \\
+    \eq \left(\prod_{i=1}^{N} \frac{1}{\sqrt{2\pi\sig^2}}\right) \int_{x_d-}^{x_d+} \text{exp}\left( -\sum_{i=1}^{N} \frac{(x_i-\mu)^2 }{ 2\sig^2 }\right)\,d\mu
+\end{align}
+
+Expanding the sum inside the integral and regrouping common terms in $\mu$,
+\begin{align}
+  \sum_{i=1}^{N} \frac{(x_i-\mu)^2 }{ 2\sig^2 } 
+    \eq \frac{1}{2}\left( \mu^{2}\sum_{i=1}^{N}\frac{1}{\sig^2} - 2\mu\sum_{i=1}^{N}\frac{x_i}{\sig^2} + \sum_{i=1}^{N}\frac{x_i^2}{\sig^2} \right) \\
+    \eq \frac{1}{2}\left( A\mu^{2} - 2B\mu + C \right) \\
+    \eq \frac{1}{2}\left( A(\mu - D)^2 + E \right) \label{eq1}                                                 
+\end{align}
+
+Where (readding the subscript `$d$'),
+\begin{align}
+  A \eq \sum_{i=1}^{N}\frac{1}{\sig^2} \\
+  B_d \eq \sum_{i=1}^{N}\frac{x_{d,i}}{\sig^2} = AD_d \\
+  C_d \eq \sum_{i=1}^{N}\frac{x_{d,i}^2}{\sig^2} = AD_d^2 + E_d = \frac{B_d^2}{A} + E_d \\     
+  D_d \eq \frac{B_d}{A} \\
+  E_d \eq C_d - AD_d^2 = C_d - \frac{B_d^2}{A}
+\end{align}
+
+The form in equation \ref{eq1} is convenient for taking the integral
+\begin{align}
+  \int_{x^-}^{x^+} & \text{exp}\left( -\sum_{i=1}^{N} \frac{(x_i-\mu)^2 }{ 2\sig^2 } \right)\,d\mu \nonumber \\
+    \eq \int_{x^-}^{x^+} \text{exp}\left( -\frac{1}{2}\left( A(\mu - D)^2 + E \right) \right)\,d\mu \\
+    \eq \int_{x^-}^{x^+} \text{exp}\left(-\frac{E}{2}\right) \text{exp}\left( -\frac{1}{2}\left( A(\mu - D)^2 \right) \right)\,d\mu \\
+    \eq \text{exp}\left(-\frac{E}{2}\right) \int_{x^-}^{x^+} \text{exp}\left( -\frac{1}{2}\left( A(\mu - D)^2 \right) \right)\,d\mu \\
+    \eq \text{exp}\left(-\frac{E}{2}\right) \int_{x^-}^{x^+} \text{exp}\left( \frac{-(\mu - D)^2}{2\frac{1}{A}}\right)\,d\mu \\
+    \eq \text{exp}\left(-\frac{E}{2}\right) \int_{x^-}^{x^+} \frac{\sqrt{2\pi\frac{1}{A}}}{\sqrt{2\pi\frac{1}{A}}} \text{exp}\left( \frac{-(\mu - D)^2}{2\frac{1}{A}}\right)\,d\mu \\
+    \eq \sqrt{\frac{2\pi}{A}}\cdot\text{exp}\left(-\frac{E}{2}\right) \int_{x^-}^{x^+} \frac{1}{\sqrt{2\pi\frac{1}{A}}} \text{exp}\left( \frac{-(\mu - D)^2}{2\frac{1}{A}}\right)\,d\mu \\
+    \eq \sqrt{\frac{2\pi}{A}}\cdot\text{exp}\left(-\frac{E}{2}\right) \left[ \phi\left(\frac{x^+-D}{\sqrt{\frac{1}{A}}}\right) - \phi\left(\frac{x^--D}{\sqrt{\frac{1}{A}}}\right) \right] \\
+    \eq \sqrt{\frac{2\pi}{A}}\cdot\text{exp}\left(-\frac{E}{2}\right) \left[ \phi\left(\sqrt{A}(x^+-D)\right) - \phi\left(\sqrt{A}(x^--D)\right) \right] \\
+    \eq \sqrt{\frac{2\pi}{A}}\cdot\text{exp}\left(-\frac{E}{2}\right) \cdot G
+\end{align}
+
+Where we have defined
+\begin{align}
+  G_d \eq \phi\left(\sqrt{A}(x_d^+-D_d)\right) - \phi\left(\sqrt{A}(x_d^--D_d)\right)
+\end{align}
+
+We may, therefore, write
+\begin{align}
+  p( \nu ) \eq \ints p(\sigma) \intm p(\mu) \prod_{i=1}^{N} p(V_{i}\,|\,\mu,\sigma)\,d\mu\,d\sigma \nonumber \\
+           \eq \ints p(\sigma) \prod_d \left[ \frac{1}{(x_d^+ - x_d^-)} \left(\prod_{i=1}^{N} \frac{1}{\sqrt{2\pi\sig^2}}\right)\sqrt{\frac{2\pi}{A}}\text{exp}\left(-\frac{E_d}{2}\right)G_d \right]\,d\sigma \\  
+           \eq (2\pi)^{(1-N)\cdot\tau/2} \cdot V^{-1} \ints p(\sigma) \cdot \left(\prod_{i=1}^{N} \frac{1}{\sig^2}\right)^{\tau/2} \cdot A^{-\tau/2} \cdot \prod_d\left[\text{exp}\left(-\frac{E_d}{2}\right)\right] \cdot \prod_d G_d \,d\sigma \\
+           \eq (2\pi)^{(1-N)\cdot\tau/2} \cdot V^{-1} \ints p(\sigma) \cdot F^{\tau/2} \cdot A^{-\tau/2} \cdot \text{exp}\left(-\frac{1}{2}\sum_d E_d\right) \cdot \prod_d G_d \,d\sigma \\
+           \eq (2\pi)^{(1-N)\cdot\tau/2} \cdot V^{-1} \ints p(\sigma)\cdot\left(\frac{F}{A}\right)^{\tau/2}\cdot\text{exp}\left(-\frac{E}{2}\right) \cdot \prod_d G_d \,d\sigma \label{eq2}
+\end{align}
+
+Where
+
+\begin{align}
+  E \eq \sum_d E_d \\
+    \eq \sum_d (C_d - B_d D_d) \\
+    \eq \sum_d C_d - \sum_d B_d D_d \\
+    \eq C - \sum_d B_d D_d \\
+  C \eq \sum_d C_d \\
+    \eq \sum_d \sum_{i=1}^{N} \frac{x_{d,i}^2}{\sig^2} \\
+    \eq \sum_{i=1}^{N} \frac{\sum_d x_{d,i}^2}{\sig^2} \\
+    \eq \sum_{i=1}^{N}\frac{r_i^2}{\sig^2} \\
+  F \eq \prod_{i=1}^{N} \frac{1}{\sig^2}  
+\end{align} 
+
+Noting that since the variable $D_d$ can be expressed as a function of $B_d$, and that all the $C_d$ are folded into $C$, equation \ref{eq2} can be written in a form depending only on the ``fundamental'' variables:
+
+\begin{align}
+  A \eq \sum_{i=1}^{N}\frac{1}{\sig^2} \\
+  B_d \eq \sum_{i=1}^{N}\frac{x_{d,i}}{\sig^2} \\
+  C \eq \sum_{i=1}^{N}\frac{r_i^2}{\sig^2} \\
+  F \eq \prod_{i=1}^{N} \frac{1}{\sig^2}  
+\end{align} 
+
+
+
+If the product inside the integral is numerically unstable, so can instead perform the sum of logarithms and take the exponent only prior to performing the integral.
+
+\begin{align}
+  ln & \left( p(\sigma)\cdot \left(\frac{F}{A}\right)^{\tau/2} \cdot\text{exp}\left(-\frac{E}{2}\right) \cdot \prod_d G_d \right) \nonumber \\
+     \eq ln\left(p(\sigma)\right) + \frac{\tau}{2}\left( ln\left(F\right) - ln\left(A\right)\right) - \frac{1}{2}E + \sum_d ln\left(G_d\right) \\
+\end{align}
+
+And, we may simplify $ln\left(F\right)$ as
+
+\begin{align}
+  ln\left(F\right) \eq ln\left(\prod_{i=1}^{N} \frac{1}{\sig^2}\right) \\
+                    \eq \sum_{i=1}^{N} ln\left(\frac{1}{\sig^2}\right)
+\end{align}
+
+\newpage
+
+\begin{align}
+  p(l) \eq p_B^{n_B}\left(1-p_B\right)^{N-n_B}\frac{\alpha^m\Gamma(\alpha)\prod_{k=1}^{m}\Gamma(n_k)}{\Gamma(\alpha + N - n_B) }
+\end{align}
+
+\begin{align}
+  ln\left(p\left(l\right)\right) \eq n_{B}\cdot ln\left(p_B\right) + (N-n_B)\cdot ln\left(1-p_B\right) + m\cdot ln\left(\alpha\right) \nonumber \\
+    & + ln\left(\Gamma\left(\alpha\right)\right) + ln\left(\prod_{k=1}^{m}\Gamma\left(n_k\right)\right) - ln\left(\Gamma\left(\alpha + N - n_B\right)\right) \\
+    \eq n_{B}\cdot ln\left(p_B\right) + (N-n_B)\cdot ln\left(1-p_B\right) + m\cdot ln\left(\alpha\right) \nonumber \\
+    & + ln\left(\Gamma\left(\alpha\right)\right) + \sum_{k=1}^{m}ln\left(\Gamma\left(n_k\right)\right) - ln\left(\Gamma\left(\alpha + N - n_B\right)\right) \\
+    \eq n_{B}\cdot ln\left(p_B\right) + (N-n_B)\cdot ln\left(1-p_B\right) + m\cdot ln\left(\alpha\right) \nonumber \\
+    & + \overline{\Gamma}\left(\alpha\right) + \sum_{k=1}^{m}\overline{\Gamma}\left(n_k\right) - \overline{\Gamma}\left(\alpha + N - n_B\right)                        
+\end{align}
+
+where $\overline{\Gamma}$ is the $ln$ of the $\Gamma$ function.
+
+
+\end{document}
