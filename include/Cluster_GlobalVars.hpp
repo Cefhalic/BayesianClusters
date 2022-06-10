@@ -79,26 +79,74 @@ public:
   //! Default constructor
 	GlobalVars();
 
+  //! Setter for the centre of the scan window
+  //! \param aPhysicalCentreX The x-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
+  //! \param aPhysicalCentreY The y-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
 	void SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY );
+  
+  //! Setter for the half-width of the scan window
+  //! \param aScale The scale of the window in physical units (becomes ±1 in algorithm units)
 	void SetZoom( const double& aScale );
+
+  //! Setter for the sigma-bins to be integrated over
+  //! \param aSigmacount   The number of sigma bins
+  //! \param aSigmaMin     The lowest sigma bin
+  //! \param aSigmaMax     The highest sigma bin
+  //! \param aInterpolator Function-object to generate the probability of any given sigma
 	void SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator );
+
+  //! Setter for the maximum allowed R parameter
+  //! \param aMaxR The maximum allowed R parameter
 	void SetMaxR( const double& aMaxR );
+
+  //! Setter for the R and T bins for the RT scan
+  //! \param aRbins    The number of R bins to scan over
+  //! \param aTbins    The number of T bins to scan over
+  //! \param aMinScanR The lowest value of R to scan
+  //! \param aMaxScanR The largest value of R to scan
+  //! \param aMinScanT The lowest value of T to scan
+  //! \param aMaxScanT The largest value of T to scan
 	void SetBins( const std::size_t& aRbins , const std::size_t& aTbins , const double& aMinScanR = 0.0 , const double& aMaxScanR = -1  , const double& aMinScanT = 0.0 , const double& aMaxScanT = -1 );
+
+  //! Setter for the P_b and alpha parameters
+  //! \param aPB    The P_b parameter
+  //! \param aAlpha The alpha parameter
 	void SetPbAlpha( const double& aPB , const double& aAlpha );
+  
+  //! Set whether to validate clusterization
+  //! \param aValidate Whether to validate clusterization
 	void SetValidate( const bool& aValidate );
 
+  //! Parse the parameters when passed in as commandline arguments
+  //! \param argc The number of commandline arguments
+  //! \param argv The commandline arguments
+  //! \return The name of the event file
 	std::string FromCommandline( int argc , char **argv );
 
 public:
+  //! Getter for the scale-parameter squared
+  //! \return The scale-parameter squared
 	inline const double& scale2() const { return mScale2; }
 
+  //! Getter for the sigma count
+  //! \return The sigma count
 	inline const std::size_t& sigmacount() const { return mSigmacount; }
+
+  //! Getter for the sigma spacing
+  //! \return The sigma spacing  
 	inline const double& sigmaspacing() const { return mSigmaspacing; }
 
+  //! Getter for the values of sigma
+  //! \return The values of sigma
 	inline const std::vector< double >& sigmabins( ) const { return mSigmabins; }
+  //! Getter for the values of sigma squared
+  //! \return The values of sigma squared 
 	inline const std::vector< double >& sigmabins2( ) const { return mSigmabins2; }
-
+  //! Getter for the probabilities of a given sigma
+  //! \return The probabilities of given sigma
 	inline const std::vector< double >& probability_sigma( ) const { return mProbabilitySigma; }
+  //! Getter for the log of the probabilities of a given sigma
+  //! \return The log of the probabilities of given sigma
 	inline const std::vector< double >& log_probability_sigma( ) const { return mLogProbabilitySigma; }
 
 	inline const double& sigmabins( const std::size_t& i ) const { return mSigmabins[i]; }
@@ -161,38 +209,67 @@ public:
 		return toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
 	}
 
-private:	
+private:
+  //! The scale parameter
 	double mScale;
+  
+  //! The scale parameter squared
   double mScale2;
+
+  //! The x-coordinate of the centre of the window in physical units
   double mPhysicalCentreX;
+  //! The y-coordinate of the centre of the window in physical units 
   double mPhysicalCentreY;
 
+  //! The number of sigma bins
 	std::size_t mSigmacount;
+  //! The spacing of sigma bins
 	double mSigmaspacing;
-
+  //! The values of sigma
 	std::vector< double > mSigmabins;
+  //! The values of sigma squared
   std::vector< double > mSigmabins2;
+  //! The probability of a given sigma
 	std::vector< double > mProbabilitySigma;
+  //! The log-probability of a gievn sigma
   std::vector< double > mLogProbabilitySigma;
 
+  //! The maximum value of R
 	double mMaxR;
+  //! The maximum value of R squared
   double mMaxR2;
+  //! The maximum value of 2R  
   double mMax2R;
+  //! The maximum value of 2R squared
   double mMax2R2;
 
+  //! The lowest value of R to scan 
 	double mMinScanR;
+  //! The largest value of R to scan
   double mMaxScanR;
+  //! The lowest value of T to scan
   double mMinScanT;
+  //! The largest value of T to scan
   double mMaxScanT;
+  //! The spacing of value of R to scan 
 	double mDR;
+  //! The spacing of value of T to scan 
   double mDT;
+  //! The number of R values to scan 
 	std::size_t mRbins;
+  //! The number of T values to scan 
 	std::size_t mTbins;
 
+  //! The alpha parameter
 	double mAlpha;
+  //! Logarithm of the alpha parameter
   double mLogAlpha;
+  //! Logarithm of the gamma function of alpha parameter  
   double mLogGammaAlpha;
+  
+  //! Logarithm of the P_b parameter  
   double mLogPb;
+  //! Logarithm of the( 1- P_b ) parameter  
   double mLogPbDagger;
 
   //! Run the validation on the clustering 
