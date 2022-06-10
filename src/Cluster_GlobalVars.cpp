@@ -51,58 +51,52 @@ void GlobalVars::SetSigmaParameters( const std::size_t& aSigmacount , const doub
 	std::cout << "Sigma-integral: " << aSigmaMin << " to " << aSigmaMax << " in " << aSigmacount << " steps" << std::endl;
 
 	mSigmacount = aSigmacount;
-	mSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
-	auto lSigmabins = [ & ]( const int& i ){ return ( i * mSigmaspacing ) + aSigmaMin;  } | range( mSigmacount );
+	auto lSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
+	auto lSigmabins = [ & ]( const int& i ){ return ( i * lSigmaspacing ) + aSigmaMin;  } | range( mSigmacount );
 
 	mSigmabins = [ & ]( const double& i ){ return toAlgorithmUnits( i ); } | lSigmabins;
 	mSigmabins2 = []( const double& i ){ return i * i; } | mSigmabins;
 	mProbabilitySigma = aInterpolator | lSigmabins;
 	mLogProbabilitySigma = []( const double& w){ return log(w); } | mProbabilitySigma;
 
-	mSigmaspacing *= mScale;
+	mSigmaspacing = toAlgorithmUnits( lSigmaspacing );
 }
 
-void GlobalVars::SetMaxR( const double& aMaxR )
+void GlobalVars::SetRBins( const std::size_t& aRbins , const double& aMinScanR , const double& aMaxScanR )
 {
-	if( mScale < 0 ) throw std::runtime_error( "Scale must be set before setting Sigma parameters" );
+	mRbins = aRbins;
+	mMinScanR = toAlgorithmUnits( aMinScanR );
+	mMaxScanR = toAlgorithmUnits( aMaxScanR );
+	mDR = ( mMaxScanR - mMinScanR ) / mRbins;
 
-	std::cout << "Max-R: " << aMaxR << std::endl;
+	std::cout << "R-bins: " << aRbins << " bins from " << aMinScanR << " to " << aMaxScanR << " in steps of " << toPhysicalUnits( mDR ) << std::endl;
 
-	mMaxR = toAlgorithmUnits( aMaxR );
+	mMaxR = toAlgorithmUnits( aMaxScanR );
 	mMaxR2 = mMaxR * mMaxR;
 	mMax2R = 2.0 * mMaxR;
-	mMax2R2 = mMax2R * mMax2R;
+	mMax2R2 = mMax2R * mMax2R;	
 }
 
-void GlobalVars::SetBins( const std::size_t& aRbins , const std::size_t& aTbins , const double& aMinScanR , const double& aMaxScanR  , const double& aMinScanT , const double& aMaxScanT )
+void GlobalVars::SetTBins( const std::size_t& aTbins , const double& aMinScanT , const double& aMaxScanT )
 {
-	if( ( aMaxScanR < 0 || aMaxScanT < 0 ) && ( mMaxR < 0 ) ) throw std::runtime_error( "'maxr' must be set before using default values" );
-
-	mRbins = aRbins;
 	mTbins = aTbins;
-
-	mMinScanR = aMinScanR;
-	if( aMaxScanR < 0 ) mMaxScanR = mMaxR;
-	else mMaxScanR = aMaxScanR;
-
-	mMinScanT = aMinScanT;
-	if( aMaxScanT < 0 ) mMaxScanT = 2.5 * mMaxR;
-	else mMaxScanT = aMaxScanT;
-
-	mDR = ( mMaxScanR - mMinScanR ) / mRbins;
+	mMinScanT = toAlgorithmUnits( aMinScanT );
+	mMaxScanT = toAlgorithmUnits( aMaxScanT );
 	mDT = ( mMaxScanT - mMinScanT ) / mTbins;
 
-	std::cout << "R-bins: " << aRbins << " | " << toPhysicalUnits( mMinScanR ) << " to " << toPhysicalUnits( mMaxScanR ) << " in steps of " << toPhysicalUnits( mDR ) << std::endl;
-	std::cout << "T-bins: " << aTbins << " | " << toPhysicalUnits( mMinScanT ) << " to " << toPhysicalUnits( mMaxScanT ) << " in steps of " << toPhysicalUnits( mDT ) << std::endl;
+	std::cout << "T-bins: " << aTbins << " bins from " << aMinScanT << " to " << aMaxScanT << " in steps of " << toPhysicalUnits( mDT ) << std::endl;
 }
 
-void GlobalVars::SetPbAlpha( const double& aPB , const double& aAlpha )
+void GlobalVars::SetPb( const double& aPB )
 {
 	std::cout << "pb: " << aPB << std::endl;
-	std::cout << "alpha: " << aAlpha << std::endl;
-
 	mLogPb = log( aPB );
 	mLogPbDagger = log( 1-aPB );
+}
+
+void GlobalVars::SetAlpha( const double& aAlpha )
+{
+	std::cout << "alpha: " << aAlpha << std::endl;
 	mAlpha = aAlpha;
 	mLogAlpha = log( aAlpha );
 	mLogGammaAlpha = ROOT::Math::lgamma( aAlpha );
@@ -119,8 +113,6 @@ void GlobalVars::SetValidate( const bool& aValidate )
 
 void config_file( const po::options_description& aDesc , const std::string& aFilename )
 {
-	namespace po = boost::program_options;
-
   std::ifstream lFstr( aFilename.c_str() );
   std::string lStr( (std::istreambuf_iterator<char>(lFstr)) , std::istreambuf_iterator<char>() );
 
@@ -143,8 +135,8 @@ std::string GlobalVars::FromCommandline( int argc , char **argv )
   typedef double tD;
   typedef std::vector<double> tVD;
 
-  tD Cx , Cy , Z , sigL , sigH , pb , alpha , rmax;
-  tU sigN , Nr , Nt;
+  tD Cx , Cy , Z , sigLo , sigHi , pb , alpha , normalization , rLo , rHi , tLo , tHi;
+  tU Nsig , Nr , Nt;
   tVD SigKeys, SigVals;
   bool val( false );
   tS lInput;
@@ -158,9 +150,9 @@ std::string GlobalVars::FromCommandline( int argc , char **argv )
     ( "cfg",          po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ config_file( lDesc , aArg ); } )                        , "Config file" )
     ( "centre",       po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ Cx=StrToDist(aArg.at(0)); Cy=StrToDist(aArg.at(1)); } ) , "Centre of ROI as 'x y' pair" )
     ( "zoom",         po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ Z=StrToDist(aArg); } )                                  , "Dimension of ROI" )
-    ( "sigma-bins",   po::value<tU>(&sigN)                                                                                                                    , "Number of sigma bins" )
-    ( "sigma-low",    po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigL=StrToDist(aArg); } )                               , "Lower sigma integration bound" )
-    ( "sigma-high",   po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigH=StrToDist(aArg); } )                               , "High sigma integration bound" )
+    ( "sigma-bins",   po::value<tU>(&Nsig)                                                                                                                    , "Number of sigma bins" )
+    ( "sigma-low",    po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigLo=StrToDist(aArg); } )                              , "Lower sigma integration bound" )
+    ( "sigma-high",   po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigHi=StrToDist(aArg); } )                              , "High sigma integration bound" )
     ( "sigma-curve",  po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ for( auto& i : aArg ) { 
                                                                                                         std::vector<std::string> lStrs; 
                                                                                                         boost::split( lStrs , i , [](char c){return c==':';} ); 
@@ -168,10 +160,14 @@ std::string GlobalVars::FromCommandline( int argc , char **argv )
                                                                                                         SigVals.push_back( std::stoll( lStrs.at(1) ) ); 
                                                                                                       } 
                                                                                                     } )                                                       , "Parameterized sigma probability curve (list of colon-separated size-probability pairs)" )           
-    ( "bins",         po::value<tVU>()->composing()->multitoken()->notifier( [&]( const  tVU& aArg ){ Nr=aArg.at(0); Nt=aArg.at(1); } )                       , "Number of bins in r and t" )
+    ( "r-bins",       po::value<tU>(&Nr)                                                                                                                      , "Number of R bins" )
+    ( "r-low",        po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ rLo=StrToDist(aArg); } )                               , "Lower R bound" )
+    ( "r-high",       po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ rHi=StrToDist(aArg); } )                               , "High R bound" )
+    ( "t-bins",       po::value<tU>(&Nt)                                                                                                                      , "Number of T bins" )
+    ( "t-low",        po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ tLo=StrToDist(aArg); } )                               , "Lower T bound" )
+    ( "t-high",       po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ tHi=StrToDist(aArg); } )                               , "High T bound" )
     ( "pb",           po::value<tD>(&pb)                                                                                                                      , "pb parameter" )
     ( "alpha",        po::value<tD>(&alpha)                                                                                                                   , "alpha parameter" )
-    ( "maxr",         po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ rmax=StrToDist(aArg); } )                               , "maximum radius for clustering" )
     ( "validate,v",   po::bool_switch(&val)                                                                                                                   , "validate clusters" )
     ( "input-file,i", po::value<tS>(&lInput)                                                                                                                  , "input file")
   ;
@@ -182,13 +178,14 @@ std::string GlobalVars::FromCommandline( int argc , char **argv )
 
   SetCentre( Cx , Cy );   
   SetZoom( Z );
-  SetPbAlpha( pb , alpha );
-  SetMaxR( rmax );  
-  SetBins( Nr , Nt );
+  SetPb( pb );
+  SetAlpha( alpha );
+  SetRBins( Nr , rLo , rHi );
+  SetTBins( Nt , tLo, tHi );
   SetValidate( val );
 
   ROOT::Math::Interpolator lInterpolator( SigKeys , SigVals ); // Default to cubic spline interpolation
-  SetSigmaParameters( sigN , sigL , sigH , [&]( const double& aPt ){ return lInterpolator.Eval( aPt ); } );  
+  SetSigmaParameters( Nsig , sigLo , sigHi , [&]( const double& aPt ){ return lInterpolator.Eval( aPt ); } );  
 
 
 

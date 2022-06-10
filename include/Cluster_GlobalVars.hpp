@@ -95,23 +95,24 @@ public:
   //! \param aInterpolator Function-object to generate the probability of any given sigma
 	void SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator );
 
-  //! Setter for the maximum allowed R parameter
-  //! \param aMaxR The maximum allowed R parameter
-	void SetMaxR( const double& aMaxR );
-
-  //! Setter for the R and T bins for the RT scan
+  //! Setter for the R bins for the RT scan
   //! \param aRbins    The number of R bins to scan over
-  //! \param aTbins    The number of T bins to scan over
   //! \param aMinScanR The lowest value of R to scan
   //! \param aMaxScanR The largest value of R to scan
+	void SetRBins( const std::size_t& aRbins , const double& aMinScanR = 0.0 , const double& aMaxScanR = -1 );
+
+  //! \param aTbins    The number of T bins to scan over
   //! \param aMinScanT The lowest value of T to scan
   //! \param aMaxScanT The largest value of T to scan
-	void SetBins( const std::size_t& aRbins , const std::size_t& aTbins , const double& aMinScanR = 0.0 , const double& aMaxScanR = -1  , const double& aMinScanT = 0.0 , const double& aMaxScanT = -1 );
+  void SetTBins( const std::size_t& aTbins , const double& aMinScanT = 0.0 , const double& aMaxScanT = -1 );
 
-  //! Setter for the P_b and alpha parameters
+  //! Setter for the P_b parameter
   //! \param aPB    The P_b parameter
+	void SetPb( const double& aPB );
+
+  //! Setter for the alpha parameter
   //! \param aAlpha The alpha parameter
-	void SetPbAlpha( const double& aPB , const double& aAlpha );
+  void SetAlpha( const double& aAlpha );
   
   //! Set whether to validate clusterization
   //! \param aValidate Whether to validate clusterization
