@@ -26,7 +26,8 @@ public:
   //! Default Constructor
   Event();  
 
-  //! Destructor
+  //! Load event from data file
+  //! \param aFilename The file from which to load the event
   Event( const std::string& aFilename );
 
   //! Deleted copy constructor
@@ -75,6 +76,7 @@ class EventProxy
 {
 public:
   //! Default constructor
+  //! \param aEvent An event for which this is a lightweight proxy
   EventProxy( Event& aEvent );
 
   //! Deleted copy constructor
@@ -207,7 +209,10 @@ public:
 class Data
 {
 public:
-  //! Default constructor
+  //! Constructor
+  //! \param aX The x-position of the data-point in algorithm units
+  //! \param aY The y-position of the data-point in algorithm units
+  //! \param aS The sigma of the data-point in algorithm units
   Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS );
 
   //! Deleted copy constructor

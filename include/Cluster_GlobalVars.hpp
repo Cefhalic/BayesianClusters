@@ -149,61 +149,127 @@ public:
   //! \return The log of the probabilities of given sigma
 	inline const std::vector< double >& log_probability_sigma( ) const { return mLogProbabilitySigma; }
 
+  //! Getter for the i'th value of sigma
+  //! \param i The index of the value of sigma to get
+  //! \return The value of sigma_i
 	inline const double& sigmabins( const std::size_t& i ) const { return mSigmabins[i]; }
+  //! Getter for the i'th value of sigma squared
+  //! \param i The index of the value of sigma squared to get
+  //! \return The value of sigma_i squared
 	inline const double& sigmabins2( const std::size_t& i ) const { return mSigmabins2[i]; }
-
+  //! Getter for the probability of the i'th value of sigma
+  //! \param i The index of the value of sigma to get the probability for
+  //! \return The probability of sigma_i
 	inline const double& probability_sigma( const std::size_t& i ) const { return mProbabilitySigma[i]; }
+  //! Getter for the log-probability of the i'th value of sigma
+  //! \param i The index of the value of sigma to get the log-probability for
+  //! \return The log-probability of sigma_i
 	inline const double& log_probability_sigma( const std::size_t& i ) const { return mLogProbabilitySigma[i]; }
 
+  //! Getter for the maximum value of R
+  //! \return The maximum value of R
 	inline const double& maxR() const { return mMaxR; }
+  //! Getter for the maximum value of R squared
+  //! \return The maximum value of R squared
 	inline const double& maxR2() const { return mMaxR2; }
+  //! Getter for the maximum value of 2R
+  //! \return The maximum value of 2R
 	inline const double& max2R() const { return mMax2R; }
+  //! Getter for the maximum value of 2R squared
+  //! \return The maximum value of 2R squared
 	inline const double& max2R2() const { return mMax2R2; }
 
+  //! Getter for the lowest value of R to scan 
+  //! \return The lowest value of R to scan 
 	inline const double& minScanR() const { return mMinScanR; }
+  //! Getter for the highest value of R to scan 
+  //! \return The highest value of R to scan 
 	inline const double& maxScanR() const { return mMaxScanR; }
+  //! Getter for the lowest value of T to scan 
+  //! \return The lowest value of T to scan 
 	inline const double& minScanT() const { return mMinScanT; }
+  //! Getter for the highest value of T to scan 
+  //! \return The highest value of T to scan 
 	inline const double& maxScanT() const { return mMaxScanT; }
 
+  //! Getter for the spacing of value of R to scan 
+  //! \return The spacing of value of R to scan 
 	inline const double& dR() const { return mDR; }
+  //! Getter for the number of R values to scan
+  //! \return The number of R values to scan
 	inline const std::size_t& Rbins() const { return mRbins; }
+  //! Getter for the spacing of value of T to scan 
+  //! \return The spacing of value of T to scan 
 	inline const double& dT() const { return mDT; }
+  //! Getter for the number of T values to scan
+  //! \return The number of T values to scan
 	inline const std::size_t& Tbins() const { return mTbins; }
 
+  //! Logarithm of the P_b parameter  
+  //! \return Logarithm of the P_b parameter 
 	inline const double& logPb() const { return mLogPb; }
+  //! Logarithm of the ( 1 - P_b ) parameter  
+  //! \return Logarithm of the ( 1 - P_b ) parameter  
 	inline const double& logPbDagger() const { return mLogPbDagger; }
+
+  //! Getter for the alpha parameter  
+  //! \return The alpha parameter  
 	inline const double& alpha() const { return mAlpha; }
+  //! Getter for the logarithm of the alpha parameter  
+  //! \return The logarithm of the alpha parameter  
 	inline const double& logAlpha() const { return mLogAlpha; }
+  //! Getter for the logarithm of the gamma function of alpha parameter  
+  //! \return The logarithm of the gamma function of alpha parameter  
 	inline const double& logGammaAlpha() const { return mLogGammaAlpha; }
 
+  //! Getter for whether or not to run the validation on the clustering 
+  //! \return Whether or not to run the validation on the clustering 
 	inline const bool& validate() const { return mValidate; }
 
+
+  //! Utility function to convert a normalized algorithm distance to physical distance 
+  //! \param aAlgorithmUnits A normalized algorithm distance
+  //! \return A physical distances 
 	inline double toPhysicalUnits( const double& aAlgorithmUnits ) const 
 	{
 		return aAlgorithmUnits / mScale;
 	}
 
+  //! Utility function to convert physical distances to a normalized algorithm distances
+  //! \param aPhysicalUnits A physical distance
+  //! \return A normalized algorithm distances 
 	inline double toAlgorithmUnits( const double& aPhysicalUnits ) const
 	{
 	  return aPhysicalUnits * mScale;
 	}
 
-
+  //! Utility function to convert a normalized algorithm x-coordinate to a physical x-coordinate
+  //! \param aAlgorithmX A normalized x-coordinate
+  //! \return A physical x-coordinate 
 	inline double toPhysicalX( const double& aAlgorithmX ) const  
 	{
 		return toPhysicalUnits( aAlgorithmX ) + mPhysicalCentreX;
 	}
 
+  //! Utility function to convert a physical x-coordinate to a normalized algorithm x-coordinate
+  //! \param aPhysicalX A physical x-coordinate
+  //! \return A normalized x-coordinate 
 	inline double toAlgorithmX( const double& aPhysicalX ) const
 	{
 		return toAlgorithmUnits( aPhysicalX - mPhysicalCentreX );
 	}
 
+  //! Utility function to convert a normalized algorithm y-coordinate to a physical y-coordinate
+  //! \param aAlgorithmY A normalized y-coordinate
+  //! \return A physical y-coordinate 
 	inline double toPhysicalY( const double& aAlgorithmY ) const 
 	{
 		return toPhysicalUnits( aAlgorithmY ) + mPhysicalCentreY;
 	}
 
+  //! Utility function to convert a physical y-coordinate to a normalized algorithm y-coordinate
+  //! \param aPhysicalY A physical y-coordinate
+  //! \return A normalized y-coordinate 
 	inline double toAlgorithmY( const double& aPhysicalY ) const
 	{
 		return toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
@@ -272,6 +338,6 @@ private:
   //! Logarithm of the( 1- P_b ) parameter  
   double mLogPbDagger;
 
-  //! Run the validation on the clustering 
+  //! Whether or not to run the validation on the clustering 
 	bool mValidate;
 };
