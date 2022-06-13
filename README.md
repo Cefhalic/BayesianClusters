@@ -1,5 +1,8 @@
 # Bayesian Clusters
 
+## Prerequisites
+CERN ROOT: https://root.cern/
+
 ## To build the executable and generate the documentation
 ```
 make
