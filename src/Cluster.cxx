@@ -12,7 +12,7 @@
 #include <mutex>
   
 /* ===== Local utilities ===== */
-#include "ProgressBar.hpp"
+#include "Utilities/ProgressBar.hpp"
 
 
 std::mutex mtx; // mutex for critical section

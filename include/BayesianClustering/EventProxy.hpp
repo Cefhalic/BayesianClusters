@@ -49,7 +49,6 @@ public:
 
   //! Get the proxy for the Nth neighbour of this data-point
   //! \return A reference to the neighbour data-proxy
-  //! \param aEvent The event-proxy in which we are running
   //! \param aIndex The index of the neighbour we are looking for 
   inline DataProxy& GetData( const std::size_t& aIndex )
   {

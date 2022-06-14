@@ -5,8 +5,8 @@
 #include "BayesianClustering/Configuration.hpp"
 
 /* ===== Local utilities ===== */
-#include "ProgressBar.hpp"
-#include "Vectorize.hpp"
+#include "Utilities/ProgressBar.hpp"
+#include "Utilities/Vectorize.hpp"
 
 // /* ===== C++ ===== */
 #include <iostream>

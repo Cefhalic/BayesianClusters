@@ -1,7 +1,7 @@
 
 
 /* ===== Local utilities ===== */
-#include "ListComprehension.hpp"
+#include "Utilities/ListComprehension.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
 /* ===== For Root ===== */

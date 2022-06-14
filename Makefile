@@ -21,7 +21,7 @@ default: all
 
 clean: _cleanall
 _cleanall:
-	rm -rf obj doxygen ${DOCUMENTATION}
+	rm -rf obj doxygen ${EXECUTABLES} ${DOCUMENTATION}
 
 all: _all
 build: _all
