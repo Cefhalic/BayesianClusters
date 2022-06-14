@@ -103,12 +103,12 @@ void Event::LoadCSV( const std::string& aFilename )
   auto lSize = ftell(f); // get current file pointer
   fclose(f);
 
-  int lChunkSize = ceil( double(lSize) / (Concurrency+1) );
-  std::vector< std::vector< Data > > lData( Concurrency+1 );
+  const auto N = Concurrency + 1;
+  int lChunkSize = ceil( double(lSize) / N );
+  std::vector< std::vector< Data > > lData( N );
 
   ProgressBar2 lProgressBar( "Reading File" , lSize );
-  for( std::size_t i(0); i!=Concurrency ; ++i ) ThreadPool.at(i)->submit( [ & , i ](){ __LoadCSV__( aFilename , *this , lData[i] , i*lChunkSize , lChunkSize ); } );
-  WrappedThread::run_and_wait( [ & ](){ __LoadCSV__( aFilename , *this , lData[Concurrency] , Concurrency*lChunkSize , lChunkSize ); } );
+  [ & ]( const std::size_t& i ){ __LoadCSV__( aFilename , *this , lData[i] , i*lChunkSize , lChunkSize ); } && range( N );
 
   std::size_t lSize2( 0 );
   for( auto& i : lData ) lSize2 += i.size();
