@@ -5,7 +5,7 @@
 #include <functional>
 
 /* ===== Cluster sources ===== */
-#include "BayesianClustering/Configuration.hpp"
+// #include "BayesianClustering/Configuration.hpp"
 #include "BayesianClustering/Data.hpp"
 
 class EventProxy;
@@ -51,8 +51,5 @@ public:
 public:
   //! The collection of raw data points
   std::vector<Data> mData; 
-  
-  //! A single global copy of the global variables
-  static Configuration mParameters;
 };
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

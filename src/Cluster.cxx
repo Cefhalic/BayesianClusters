@@ -2,6 +2,7 @@
 #include "BayesianClustering/Cluster.hpp"
 #include "BayesianClustering/Event.hpp"
 #include "BayesianClustering/EventProxy.hpp"
+#include "BayesianClustering/Configuration.hpp"
 
 // /* ===== C++ ===== */
 #include <vector>
@@ -60,13 +61,13 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
   ProgressBar2 lBar( "| Cluster Scan. Andrew W. Rose. 2022 |" , 1 );
   std::cout << "+------------------------------------+" << std::endl;
-  Event::mParameters.FromCommandline( argc , argv );
+  Configuration::Instance.FromCommandline( argc , argv );
   std::cout << "+------------------------------------+" << std::endl;
 
   Event lEvent;  
 
 
-  const std::string& lFilename = Event::mParameters.outputFile();
+  const std::string& lFilename = Configuration::Instance.outputFile();
 
   if( lFilename.size() == 0 )
   {

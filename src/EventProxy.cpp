@@ -5,6 +5,7 @@
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/EventProxy.hpp"
 #include "BayesianClustering/Event.hpp"
+#include "BayesianClustering/Configuration.hpp"
 
 // /* ===== C++ ===== */
 #include <iostream>
@@ -92,24 +93,24 @@ void EventProxy::CheckClusterization( const double& R , const double& T )
 __attribute__((flatten))
 void EventProxy::ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset )
 {
-  double dR( aParallelization * Event::mParameters.dR() );
-  double R( Event::mParameters.minScanR() + ( aOffset * Event::mParameters.dR() ) ) , R2( 0 ) , twoR2( 0 ) , T( 0 );
+  double dR( aParallelization * Configuration::Instance.dR() );
+  double R( Configuration::Instance.minScanR() + ( aOffset * Configuration::Instance.dR() ) ) , R2( 0 ) , twoR2( 0 ) , T( 0 );
 
-  for( uint32_t i( aOffset ) ; i<Event::mParameters.Rbins() ; i+=aParallelization , R+=dR )
+  for( uint32_t i( aOffset ) ; i<Configuration::Instance.Rbins() ; i+=aParallelization , R+=dR )
   {
     R2 = R * R;
     twoR2 = 4.0 * R2;
-    T = Event::mParameters.maxScanT();
+    T = Configuration::Instance.maxScanT();
 
     mClusters.clear();
     for( auto& k : mData ) k.mCluster = NULL;
 
-    for( uint32_t j(0) ; j!=Event::mParameters.Tbins() ; ++j , T-=Event::mParameters.dT() )
+    for( uint32_t j(0) ; j!=Configuration::Instance.Tbins() ; ++j , T-=Configuration::Instance.dT() )
     {
       for( auto& k : mData ) k.mExclude = ( k.mData->mLocalizationScores[ i ] < T ) ;
       for( auto& k : mData ) k.Clusterize( twoR2 , T , *this );
       UpdateLogScore();
-      if( Event::mParameters.validate() ) CheckClusterization( R , T ) ;
+      if( Configuration::Instance.validate() ) CheckClusterization( R , T ) ;
       aCallback( *this , R , T );
     }
   }
@@ -133,11 +134,11 @@ void EventProxy::UpdateLogScore()
   }
 
   mBackgroundCount = mData.size() - mClusteredCount;
-  mLogP += ( mBackgroundCount * Event::mParameters.logPb() ) 
-         + ( mClusteredCount * Event::mParameters.logPbDagger() )
-         + ( Event::mParameters.logAlpha() * mClusterCount )
-         + Event::mParameters.logGammaAlpha()
-         - ROOT::Math::lgamma( Event::mParameters.alpha() + mClusteredCount );  
+  mLogP += ( mBackgroundCount * Configuration::Instance.logPb() ) 
+         + ( mClusteredCount * Configuration::Instance.logPbDagger() )
+         + ( Configuration::Instance.logAlpha() * mClusterCount )
+         + Configuration::Instance.logGammaAlpha()
+         - ROOT::Math::lgamma( Configuration::Instance.alpha() + mClusteredCount );  
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

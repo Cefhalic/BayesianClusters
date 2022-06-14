@@ -2,6 +2,7 @@
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Event.hpp"
 #include "BayesianClustering/EventProxy.hpp"
+#include "BayesianClustering/Configuration.hpp"
 
 /* ===== Local utilities ===== */
 #include "ProgressBar.hpp"
@@ -12,11 +13,11 @@
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Configuration Event::mParameters;
+Configuration Configuration::Instance;
 
 Event::Event()
 {
-  const std::string& lFilename = Event::mParameters.inputFile();
+  const std::string& lFilename = Configuration::Instance.inputFile();
   if( lFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
 
   LoadCSV( lFilename );
@@ -66,16 +67,16 @@ void __LoadCSV__( const std::string& aFilename , Event& aEvent , std::vector< Da
     if( *lPtr == EOF ) break;
     ReadUntil( ',' ); //"frame"
     ReadUntil( ',' ); //"x [nm]"
-    double x = Event::mParameters.toAlgorithmX( strtod( ch , &lPtr ) * nanometer );
+    double x = Configuration::Instance.toAlgorithmX( strtod( ch , &lPtr ) * nanometer );
     ReadUntil( ',' ); //"y [nm]"
-    double y = Event::mParameters.toAlgorithmY( strtod( ch , &lPtr ) * nanometer );      
+    double y = Configuration::Instance.toAlgorithmY( strtod( ch , &lPtr ) * nanometer );      
     ReadUntil( ',' ); //"sigma [nm]"      
     ReadUntil( ',' ); //"intensity [photon]"
     ReadUntil( ',' ); //"offset [photon]"
     ReadUntil( ',' ); //"bkgstd [photon]"
     ReadUntil( ',' ); //"chi2"
     ReadUntil( '\n' ); //"uncertainty_xy [nm]"
-    double s = Event::mParameters.toAlgorithmUnits( strtod( ch , &lPtr ) * nanometer );      
+    double s = Configuration::Instance.toAlgorithmUnits( strtod( ch , &lPtr ) * nanometer );      
 
     if( fabs(x) < 1 and fabs(y) < 1 ) aData.emplace_back( x , y , s );
   }
@@ -125,7 +126,7 @@ void Event::WriteCSV( const std::string& aFilename )
 
   ProgressBar lProgressBar( "Writing File" , mData.size() );
   for( auto& i : mData ){
-    fprintf( f , ",,%f,%f,,,,,,%f\n" , Event::mParameters.toPhysicalX(i.x)/nanometer , Event::mParameters.toPhysicalY(i.y)/nanometer , Event::mParameters.toPhysicalUnits(i.s)/nanometer );
+    fprintf( f , ",,%f,%f,,,,,,%f\n" , Configuration::Instance.toPhysicalX(i.x)/nanometer , Configuration::Instance.toPhysicalY(i.y)/nanometer , Configuration::Instance.toPhysicalUnits(i.s)/nanometer );
     lProgressBar++;
   }
 

@@ -5,7 +5,7 @@
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Cluster.hpp"
 #include "BayesianClustering/Data.hpp"
-#include "BayesianClustering/Event.hpp"
+#include "BayesianClustering/Configuration.hpp"
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -53,18 +53,18 @@ double Cluster::Parameter::log_score() const
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Cluster::Cluster(): mParams( Event::mParameters.sigmacount() ),
+Cluster::Cluster(): mParams( Configuration::Instance.sigmacount() ),
 mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
 mParent( NULL )
 {}
 
-Cluster::Cluster( const Data& aData ): mParams( Event::mParameters.sigmacount() ),
+Cluster::Cluster( const Data& aData ): mParams( Configuration::Instance.sigmacount() ),
 mClusterSize( 1 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
 mParent( NULL )
 { 
   const auto s2 = aData.s * aData.s;
   auto lIt( mParams.begin() ) ;
-  auto lSig2It( Event::mParameters.sigmabins2().begin() );
+  auto lSig2It( Configuration::Instance.sigmabins2().begin() );
 
   for( ; lIt != mParams.end() ; ++lIt , ++lSig2It )
   {
@@ -85,16 +85,16 @@ void Cluster::UpdateLogScore()
   if( mClusterSize <= mLastClusterSize ) return; // We were not bigger than the previous size when we were evaluated - score is still valid
   mLastClusterSize = mClusterSize;
 
-  thread_local static std::vector< double > MuIntegral( Event::mParameters.sigmacount() , 1.0 );
+  thread_local static std::vector< double > MuIntegral( Configuration::Instance.sigmacount() , 1.0 );
 
-  // double constant( mParams[0].log_score() + Event::mParameters.log_probability_sigma( 0 ) );
-  // for( std::size_t i(1) ; i!=Event::mParameters.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Event::mParameters.log_probability_sigma( i ) - constant );
-  for( std::size_t i(0) ; i!=Event::mParameters.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Event::mParameters.log_probability_sigma( i ) );
+  // double constant( mParams[0].log_score() + Configuration::Instance.log_probability_sigma( 0 ) );
+  // for( std::size_t i(1) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) - constant );
+  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) );
 
-  thread_local static ROOT::Math::Interpolator lInt( Event::mParameters.sigmacount() , ROOT::Math::Interpolation::kLINEAR );
-  lInt.SetData( Event::mParameters.sigmabins() , MuIntegral );
+  thread_local static ROOT::Math::Interpolator lInt( Configuration::Instance.sigmacount() , ROOT::Math::Interpolation::kLINEAR );
+  lInt.SetData( Configuration::Instance.sigmabins() , MuIntegral );
 
-  static const double Lower( Event::mParameters.sigmabins(0) ) , Upper( Event::mParameters.sigmabins(Event::mParameters.sigmacount()-1) );
+  static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
 }

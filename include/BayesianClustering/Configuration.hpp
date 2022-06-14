@@ -5,7 +5,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
-
+#include <functional>
 
 //! Define a constant for converting nanometers to meters
 constexpr double nanometer  = 1e-9;
@@ -286,6 +286,10 @@ public:
 	{
 		return toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
 	}
+
+public:
+  //! A single global copy of the global variables
+  static Configuration Instance;
 
 private:
   //! The scale parameter
