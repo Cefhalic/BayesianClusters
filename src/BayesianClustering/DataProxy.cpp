@@ -12,15 +12,15 @@ mData( &aData ),
 mCluster( NULL )
 {}
 
-void DataProxy::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventProxy& aEvent ) // We are at the top-level
+void DataProxy::Clusterize( const PRECISION& a2R2 , EventProxy& aEvent ) // We are at the top-level
 {
   if( mCluster || mExclude ) return;
 
   aEvent.mClusters.emplace_back();
-  Clusterize( a2R2 , aT , aEvent , &aEvent.mClusters.back() );
+  Clusterize( a2R2 , aEvent , &aEvent.mClusters.back() );
 }
 
-void DataProxy::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventProxy& aEvent , Cluster* aCluster )
+void DataProxy::Clusterize( const PRECISION& a2R2 , EventProxy& aEvent , Cluster* aCluster )
 {
   if( mCluster )
   {
@@ -40,7 +40,7 @@ void DataProxy::Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventP
     for( auto& i : mData->mNeighbours )
     {
       if( i.first > a2R2 ) break;
-      aEvent.GetData( i.second ).Clusterize( a2R2 , aT , aEvent , aCluster );
+      aEvent.GetData( i.second ).Clusterize( a2R2 , aEvent , aCluster );
     }  
   }
 }

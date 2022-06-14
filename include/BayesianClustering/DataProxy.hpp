@@ -37,16 +37,14 @@ public:
 
   //! Entry point clusterization function - a new cluster will be created
   //! \param a2R2   The clusterization radius
-  //! \param aT     The clusterization threshold
   //! \param aEvent The event-proxy in which we are running
-  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventProxy& aEvent );
+  void Clusterize( const PRECISION& a2R2 , EventProxy& aEvent );
   
   //! Recursive clusterization function
   //! \param a2R2     The clusterization radius
-  //! \param aT       The clusterization threshold
   //! \param aEvent   The event-proxy in which we are running  
   //! \param aCluster The cluster we are building
-  void Clusterize( const PRECISION& a2R2 , const PRECISION& aT , EventProxy& aEvent , Cluster* aCluster );
+  void Clusterize( const PRECISION& a2R2 , EventProxy& aEvent , Cluster* aCluster );
   
   //! Get a pointer to this data-proxy's ultimate parent cluster (or null if unclustered
   //! \return A pointer to this data-proxy's ultimate parent cluster  

@@ -108,7 +108,7 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
     for( uint32_t j(0) ; j!=Configuration::Instance.Tbins() ; ++j , T-=Configuration::Instance.dT() )
     {
       for( auto& k : mData ) k.mExclude = ( k.mData->mLocalizationScores[ i ] < T ) ;
-      for( auto& k : mData ) k.Clusterize( twoR2 , T , *this );
+      for( auto& k : mData ) k.Clusterize( twoR2 , *this );
       UpdateLogScore();
       if( Configuration::Instance.validate() ) CheckClusterization( R , T ) ;
       aCallback( *this , R , T );
