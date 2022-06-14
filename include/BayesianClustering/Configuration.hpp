@@ -1,15 +1,10 @@
 #pragma once
 
 /* ===== C++ ===== */
-#include <functional>
 #include <map>
 #include <vector>
 #include <sstream>
 #include <string>
-
-/* ===== BOOST libraries ===== */
-#include "boost/program_options.hpp"
-namespace po = boost::program_options;
 
 
 //! Define a constant for converting nanometers to meters
@@ -73,11 +68,11 @@ inline long double StrToDist( const std::string& aStr )
 
 
 //! Class for storing the configuration parameters
-class GlobalVars
+class Configuration
 {
 public:
   //! Default constructor
-	GlobalVars();
+	Configuration();
 
   //! Setter for the centre of the scan window
   //! \param aPhysicalCentreX The x-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)

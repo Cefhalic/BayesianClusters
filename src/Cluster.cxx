@@ -1,10 +1,13 @@
 /* ===== Cluster sources ===== */
-#include "Cluster_Data.hpp"
+#include "BayesianClustering/Cluster.hpp"
+#include "BayesianClustering/Event.hpp"
+#include "BayesianClustering/EventProxy.hpp"
 
 // /* ===== C++ ===== */
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <mutex>
   
 /* ===== Local utilities ===== */

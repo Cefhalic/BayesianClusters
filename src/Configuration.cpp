@@ -2,7 +2,7 @@
 
 /* ===== Local utilities ===== */
 #include "ListComprehension.hpp"
-#include "Cluster_GlobalVars.hpp"
+#include "BayesianClustering/Configuration.hpp"
 
 /* ===== For Root ===== */
 #include "Math/SpecFunc.h" 
@@ -15,9 +15,10 @@
 
 /* ===== BOOST libraries ===== */
 #include "boost/algorithm/string.hpp"
+#include "boost/program_options.hpp"
+namespace po = boost::program_options;
 
-
-GlobalVars::GlobalVars() :
+Configuration::Configuration() :
 	mScale(-1) , mScale2(-1),
 	mSigmacount(-1), mSigmaspacing(-1),
 	mMaxR(-1), mMaxR2(-1), mMax2R(-1), mMax2R2(-1),
@@ -31,21 +32,21 @@ GlobalVars::GlobalVars() :
 {}
 
 
-void GlobalVars::SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY )
+void Configuration::SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY )
 {
 	std::cout << "Centre: x=" << aPhysicalCentreX << ", y=" << aPhysicalCentreY << std::endl;
   mPhysicalCentreX = aPhysicalCentreX;
   mPhysicalCentreY = aPhysicalCentreY;
 }
 
-void GlobalVars::SetZoom( const double& aScale )
+void Configuration::SetZoom( const double& aScale )
 {
 	std::cout << "Zoom: " << aScale << std::endl;
 	mScale = 2.0 / aScale;
 	mScale2 = mScale * mScale;
 }
 
-void GlobalVars::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
+void Configuration::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
 {
 	if( mScale < 0 ) throw std::runtime_error( "Scale must be set before setting Sigma parameters" );
 
@@ -63,7 +64,7 @@ void GlobalVars::SetSigmaParameters( const std::size_t& aSigmacount , const doub
 	mSigmaspacing = toAlgorithmUnits( lSigmaspacing );
 }
 
-void GlobalVars::SetRBins( const std::size_t& aRbins , const double& aMinScanR , const double& aMaxScanR )
+void Configuration::SetRBins( const std::size_t& aRbins , const double& aMinScanR , const double& aMaxScanR )
 {
 	mRbins = aRbins;
 	mMinScanR = toAlgorithmUnits( aMinScanR );
@@ -78,7 +79,7 @@ void GlobalVars::SetRBins( const std::size_t& aRbins , const double& aMinScanR ,
 	mMax2R2 = mMax2R * mMax2R;	
 }
 
-void GlobalVars::SetTBins( const std::size_t& aTbins , const double& aMinScanT , const double& aMaxScanT )
+void Configuration::SetTBins( const std::size_t& aTbins , const double& aMinScanT , const double& aMaxScanT )
 {
 	mTbins = aTbins;
 	mMinScanT = toAlgorithmUnits( aMinScanT );
@@ -88,14 +89,14 @@ void GlobalVars::SetTBins( const std::size_t& aTbins , const double& aMinScanT ,
 	std::cout << "T-bins: " << aTbins << " bins from " << aMinScanT << " to " << aMaxScanT << " in steps of " << toPhysicalUnits( mDT ) << std::endl;
 }
 
-void GlobalVars::SetPb( const double& aPB )
+void Configuration::SetPb( const double& aPB )
 {
 	std::cout << "pb: " << aPB << std::endl;
 	mLogPb = log( aPB );
 	mLogPbDagger = log( 1-aPB );
 }
 
-void GlobalVars::SetAlpha( const double& aAlpha )
+void Configuration::SetAlpha( const double& aAlpha )
 {
 	std::cout << "alpha: " << aAlpha << std::endl;
 	mAlpha = aAlpha;
@@ -103,7 +104,7 @@ void GlobalVars::SetAlpha( const double& aAlpha )
 	mLogGammaAlpha = ROOT::Math::lgamma( aAlpha );
 }
 
-void GlobalVars::SetValidate( const bool& aValidate )
+void Configuration::SetValidate( const bool& aValidate )
 {
 	std::cout << "validate: " << aValidate << std::endl;
 
@@ -111,14 +112,14 @@ void GlobalVars::SetValidate( const bool& aValidate )
 }
 
 
-void GlobalVars::SetInputFile( const std::string& aFileName )
+void Configuration::SetInputFile( const std::string& aFileName )
 { 
   std::cout << "input file: " << aFileName << std::endl;
 
   mInputFile = aFileName;
 }
 
-void GlobalVars::SetOutputFile( const std::string& aFileName )
+void Configuration::SetOutputFile( const std::string& aFileName )
 { 
   std::cout << "output file: " << aFileName << std::endl;
 
@@ -142,7 +143,7 @@ void config_file( const po::options_description& aDesc , const std::string& aFil
 
 
 
-void GlobalVars::FromCommandline( int argc , char **argv )
+void Configuration::FromCommandline( int argc , char **argv )
 {
   typedef std::string tS;
   typedef std::vector<std::string> tVS;
