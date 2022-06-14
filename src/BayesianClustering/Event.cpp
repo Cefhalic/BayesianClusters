@@ -21,7 +21,6 @@ Event::Event()
   if( lFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
 
   LoadCSV( lFilename );
-  Preprocess();  
 }
 
 void Event::Preprocess()
@@ -33,6 +32,8 @@ void Event::Preprocess()
 
 void Event::ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback )
 {
+  Preprocess();  
+    
   const auto N = Concurrency + 1;
   std::vector< EventProxy > lEventProxys;
   lEventProxys.reserve( N );

@@ -19,7 +19,8 @@
 namespace po = boost::program_options;
 
 Configuration::Configuration() :
-	mScale(-1) , mScale2(-1),
+	mScale(1) , mScale2(1),
+  mPhysicalCentreX(0), mPhysicalCentreY(0),
 	mSigmacount(-1), mSigmaspacing(-1),
 	mMaxR(-1), mMaxR2(-1), mMax2R(-1), mMax2R2(-1),
 	mMinScanR(-1), mMaxScanR(-1), mMinScanT(-1), mMaxScanT(-1),
@@ -91,14 +92,14 @@ void Configuration::SetTBins( const std::size_t& aTbins , const double& aMinScan
 
 void Configuration::SetPb( const double& aPB )
 {
-	std::cout << "pb: " << aPB << std::endl;
+	std::cout << "Pb: " << aPB << std::endl;
 	mLogPb = log( aPB );
 	mLogPbDagger = log( 1-aPB );
 }
 
 void Configuration::SetAlpha( const double& aAlpha )
 {
-	std::cout << "alpha: " << aAlpha << std::endl;
+	std::cout << "Alpha: " << aAlpha << std::endl;
 	mAlpha = aAlpha;
 	mLogAlpha = log( aAlpha );
 	mLogGammaAlpha = ROOT::Math::lgamma( aAlpha );
@@ -106,7 +107,7 @@ void Configuration::SetAlpha( const double& aAlpha )
 
 void Configuration::SetValidate( const bool& aValidate )
 {
-	std::cout << "validate: " << aValidate << std::endl;
+	if( aValidate ) std::cout << "Validate: TRUE" << std::endl;
 
 	mValidate = aValidate;
 }
@@ -114,14 +115,14 @@ void Configuration::SetValidate( const bool& aValidate )
 
 void Configuration::SetInputFile( const std::string& aFileName )
 { 
-  std::cout << "input file: " << aFileName << std::endl;
+  std::cout << "Input file: " << aFileName << std::endl;
 
   mInputFile = aFileName;
 }
 
 void Configuration::SetOutputFile( const std::string& aFileName )
 { 
-  std::cout << "output file: " << aFileName << std::endl;
+  std::cout << "Output file: " << aFileName << std::endl;
 
   mOutputFile = aFileName;
 }
@@ -152,11 +153,9 @@ void Configuration::FromCommandline( int argc , char **argv )
   typedef double tD;
   typedef std::vector<double> tVD;
 
-  tD Cx , Cy , Z , sigLo , sigHi , pb , alpha , normalization , rLo , rHi , tLo , tHi;
-  tU Nsig , Nr , Nt;
+  tD sigLo , sigHi , rLo , rHi , tLo , tHi;
+  tU Nsig(0) , Nr(0) , Nt(0);
   tVD SigKeys, SigVals;
-  bool val( false );
-  tS input , output;
 
   po::positional_options_description lPositional;
   lPositional.add( "input-file" , 1 );
@@ -165,8 +164,8 @@ void Configuration::FromCommandline( int argc , char **argv )
   lDesc.add_options()
     ( "help",         po::bool_switch()                          ->notifier( [&]( const bool& aArg ){ if( aArg ) { std::cout << lDesc << std::endl; exit(0); } } ) , "produce help message" )
     ( "cfg",          po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ config_file( lDesc , aArg ); } )                        , "Config file" )
-    ( "centre",       po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ Cx=StrToDist(aArg.at(0)); Cy=StrToDist(aArg.at(1)); } ) , "Centre of ROI as 'x y' pair" )
-    ( "zoom",         po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ Z=StrToDist(aArg); } )                                  , "Dimension of ROI" )
+    ( "centre",       po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetCentre( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Centre of ROI as 'x y' pair" )
+    ( "zoom",         po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ SetZoom( StrToDist(aArg) ); } )                                  , "Dimension of ROI" )
     ( "sigma-bins",   po::value<tU>(&Nsig)                                                                                                                    , "Number of sigma bins" )
     ( "sigma-low",    po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigLo=StrToDist(aArg); } )                              , "Lower sigma integration bound" )
     ( "sigma-high",   po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigHi=StrToDist(aArg); } )                              , "High sigma integration bound" )
@@ -183,28 +182,24 @@ void Configuration::FromCommandline( int argc , char **argv )
     ( "t-bins",       po::value<tU>(&Nt)                                                                                                                      , "Number of T bins" )
     ( "t-low",        po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ tLo=StrToDist(aArg); } )                               , "Lower T bound" )
     ( "t-high",       po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ tHi=StrToDist(aArg); } )                               , "High T bound" )
-    ( "pb",           po::value<tD>(&pb)                                                                                                                      , "pb parameter" )
-    ( "alpha",        po::value<tD>(&alpha)                                                                                                                   , "alpha parameter" )
-    ( "validate,v",   po::bool_switch(&val)                                                                                                                   , "validate clusters" )
-    ( "input-file,i", po::value<tS>(&input)                                                                                                                   , "input file")
-    ( "output-file,o", po::value<tS>(&output)                                                                                                                 , "output file")
+    ( "pb",           po::value<tD>()                             ->notifier( [&]( const   tD& aArg ){ SetPb(aArg); } )                                       , "pb parameter" )
+    ( "alpha",        po::value<tD>()                             ->notifier( [&]( const   tD& aArg ){ SetAlpha(aArg); } )                                    , "alpha parameter" )
+    ( "validate,v",   po::bool_switch()                           ->notifier( [&]( const bool& aArg ){ SetValidate( aArg ); } )                               , "validate clusters" )
+    ( "input-file,i", po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ SetInputFile(aArg); } )                                , "input file")
+    ( "output-file,o", po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ SetOutputFile(aArg); } )                               , "output file")
   ;
 
   po::variables_map lVm;
   po::store( po::command_line_parser( argc , argv ).options( lDesc ).positional( lPositional ).run() , lVm );
   po::notify( lVm );    
+ 
+  if( Nr ) SetRBins( Nr , rLo , rHi );
+  if( Nt ) SetTBins( Nt , tLo, tHi );
 
-  SetCentre( Cx , Cy );   
-  SetZoom( Z );
-  SetPb( pb );
-  SetAlpha( alpha );
-  SetRBins( Nr , rLo , rHi );
-  SetTBins( Nt , tLo, tHi );
-  SetValidate( val );
-  SetInputFile( input );
-  SetOutputFile( output );
-
-  ROOT::Math::Interpolator lInterpolator( SigKeys , SigVals ); // Default to cubic spline interpolation
-  SetSigmaParameters( Nsig , sigLo , sigHi , [&]( const double& aPt ){ return lInterpolator.Eval( aPt ); } );  
+  if( Nsig )
+  {
+    ROOT::Math::Interpolator lInterpolator( SigKeys , SigVals ); // Default to cubic spline interpolation
+    SetSigmaParameters( Nsig , sigLo , sigHi , [&]( const double& aPt ){ return lInterpolator.Eval( aPt ); } );  
+  }
 
 }
