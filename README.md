@@ -26,3 +26,13 @@ or
 ./Cluster.exe --cfg config.txt -i 1_un_red.csv -o ScanResults.xml
 ```
 Please note - the file can have any name you please, but the extension must be `.xml` or `.json` and is case sensitive.
+
+## To run the event display
+To show the whole data set
+```
+./Display.exe -i 1_un_red.csv
+```
+To show only the data in the specified region of interest
+```
+./Display.exe --cfg config.txt -i 1_un_red.csv
+```
