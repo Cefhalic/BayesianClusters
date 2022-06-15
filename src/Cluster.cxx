@@ -22,7 +22,7 @@ std::mutex mtx; // mutex for critical section
 void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT , std::stringstream& aOutput )
 {
   mtx.lock();
-  aOutput << "  <Scan R='" << aR << "' T='" << aT << "' Score='" << aEvent.mLogP << " NumClusteredPts='" << aEvent.mClusteredCount << "' NumBackgroundPts='" << aEvent.mBackgroundCount << "'>\n";
+  aOutput << "  <Scan R='" << aR << "' T='" << aT << "' Score='" << aEvent.mLogP << "' NumClusteredPts='" << aEvent.mClusteredCount << "' NumBackgroundPts='" << aEvent.mBackgroundCount << "'>\n";
 
   for( auto& i : aEvent.mClusters )
   {

@@ -122,7 +122,7 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
 void EventProxy::UpdateLogScore()
 {
   mClusterCount = mClusteredCount = 0;
-  mLogP = 0.0;
+  double lLogPl = 0.0;
 
   for( auto& i: mClusters )
   {
@@ -130,15 +130,17 @@ void EventProxy::UpdateLogScore()
     i.UpdateLogScore();
     mClusterCount += 1;
     mClusteredCount += i.mClusterSize;
-    mLogP += ROOT::Math::lgamma( i.mClusterSize );
+    lLogPl += ROOT::Math::lgamma( i.mClusterSize );
   }
 
   mBackgroundCount = mData.size() - mClusteredCount;
-  mLogP += ( mBackgroundCount * Configuration::Instance.logPb() ) 
+  lLogPl += ( mBackgroundCount * Configuration::Instance.logPb() ) 
          + ( mClusteredCount * Configuration::Instance.logPbDagger() )
          + ( Configuration::Instance.logAlpha() * mClusterCount )
          + Configuration::Instance.logGammaAlpha()
          - ROOT::Math::lgamma( Configuration::Instance.alpha() + mClusteredCount );  
+
+  mLogP = 0.0; // To be implemented...
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
