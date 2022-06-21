@@ -17,6 +17,7 @@ typename std::enable_if< not std::is_same<U, void>::value, std::vector< U > >::t
 operator| ( tExpr&& aExpr , tContainer&& aContainer )
 {
   std::vector< U > lRet;
+  lRet.reserve( aContainer.size() );
   std::transform( aContainer.begin() , aContainer.end() , std::back_inserter(lRet) , aExpr );
   return lRet;
 }
