@@ -173,7 +173,7 @@ void Configuration::FromCommandline( int argc , char **argv )
                                                                                                         std::vector<std::string> lStrs; 
                                                                                                         boost::split( lStrs , i , [](char c){return c==':';} ); 
                                                                                                         SigKeys.push_back( StrToDist( lStrs.at(0) ) ); 
-                                                                                                        SigVals.push_back( std::stoll( lStrs.at(1) ) ); 
+                                                                                                        SigVals.push_back( std::stod( lStrs.at(1) ) ); 
                                                                                                       } 
                                                                                                     } )                                                       , "Parameterized sigma probability curve (list of colon-separated size-probability pairs)" )           
     ( "r-bins",       po::value<tU>(&Nr)                                                                                                                      , "Number of R bins" )
