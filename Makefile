@@ -15,20 +15,29 @@ DOCUMENTATION = documentation/OptimizingTheMaths.pdf
 
 DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${EXECUTABLE_OBJECT_FILES}, $(dir ${filePath})))
 
-.PHONY: all _all clean _cleanall
+.PHONY: clean all help cpp doxygen docs
 
-default: all
+default: cpp
 
-clean: _cleanall
-_cleanall:
+clean:
 	rm -rf obj doxygen ${EXECUTABLES} ${DOCUMENTATION}
 
-all: _all
-build: _all
-buildall: _all
-# _all: ${LIBRARY_FILE} ${EXECUTABLES}
-_all: ${DOXYGEN} ${EXECUTABLES}
-	#${DOCUMENTATION}
+all : cpp doxygen docs 
+
+help:
+	@echo -e "\nMakefile for the Bayesian clustering project.\nUsage:"
+	@echo "  - make                - Build code"
+	@echo "  - make help           - Display this help message"
+	@echo "  - make clean          - Tidy all build products"
+	@echo "  - make all            - Build code, generate doxygen documentation and produce PDFs of latex sources"
+	@echo "  - make cpp            - Build code "
+	@echo "  - make doxygen        - Generate doxygen documentation"
+	@echo "  - make docs           - Produce PDFs of latex sources"
+	@echo
+
+cpp: ${EXECUTABLES}
+doxygen: ${DOXYGEN} 
+docs: ${DOCUMENTATION}
 
 FLAGS = -g -std=c++11 -march=native -O3 -lm `root-config --glibs --cflags --libs` -lMathMore -flto -MMD -MP -lboost_program_options
 
