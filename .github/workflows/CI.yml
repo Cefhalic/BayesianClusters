@@ -4,7 +4,14 @@ jobs:
   gen-docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - run: sudo apt-get install doxygen -y
-      - run: make doxygen
-
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Install Doxgen
+        run: sudo apt-get install doxygen -y
+      - name: Produce documentation
+        run: make doxygen
+      - name: Archive doxygen
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation
+          path: doxygen/html
