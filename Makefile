@@ -17,6 +17,7 @@ DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${EXECUTABLE_OBJ
 
 .PHONY: clean all help cpp doxygen docs verbose
 
+verbose: cpp
 default: cpp
 
 clean:
@@ -30,7 +31,8 @@ help:
 	@echo "  - make help           - Display this help message"
 	@echo "  - make clean          - Tidy all build products"
 	@echo "  - make all            - Build code, generate doxygen documentation and produce PDFs of latex sources"
-	@echo "  - make cpp            - Build code "
+	@echo "  - make cpp            - Build code"
+	@echo "  - make verbose        - Build code, echoing the full command"
 	@echo "  - make doxygen        - Generate doxygen documentation"
 	@echo "  - make docs           - Produce PDFs of latex sources"
 	@echo
@@ -61,19 +63,19 @@ else
 
 .SECONDEXPANSION:
 obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o)
-	@echo "Building Object Files: g++ -c ... $< -o $@"
+	@echo "Building Object Files | g++ -c ... $< -o $@"
 	@g++ -c ${FLAGS} -Iinclude -fPIC $< -o $@
 
 .SECONDEXPANSION:
 obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o)
-	@echo "Building Object Files: g++ -c ... $< -o $@"
+	@echo "Building Object Files | g++ -c ... $< -o $@"
 	@g++ -c ${FLAGS} -Iinclude -fPIC $< -o $@
 
 -include $(LIBRARY_OBJECT_FILES:.o=.d)
 -include $(EXECUTABLE_OBJECT_FILES:.o=.d)
 
 ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
-	@echo "Building Executable:   g++ ... -o $@"
+	@echo "Building Executable   | g++ ... -o $@"
 	@g++ $^ ${FLAGS} -o $@
 
 endif
@@ -87,7 +89,7 @@ endif
 # 	g++ $< -L. -lClusterize ${FLAGS} -o $@
 
 ${DIRECTORIES}:
-	@echo "Making directory:      mkdir -p $@"
+	@echo "Making directory      | mkdir -p $@"
 	@mkdir -p $@
 
 ${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
