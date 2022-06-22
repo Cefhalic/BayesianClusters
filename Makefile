@@ -27,7 +27,8 @@ all: _all
 build: _all
 buildall: _all
 # _all: ${LIBRARY_FILE} ${EXECUTABLES}
-_all: ${DOCUMENTATION} ${DOXYGEN} ${EXECUTABLES}
+_all: ${DOXYGEN} ${EXECUTABLES}
+	#${DOCUMENTATION}
 
 FLAGS = -g -std=c++11 -march=native -O3 -lm `root-config --glibs --cflags --libs` -lMathMore -flto -MMD -MP -lboost_program_options
 
