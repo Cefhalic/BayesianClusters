@@ -1,8 +1,10 @@
-name: learn-github-actions
+name: Generate-docs
 on: [push]
 jobs:
-  check-bats-version:
+  gen-docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - run: sudo apt-get install doxygen -y
       - run: make
+
