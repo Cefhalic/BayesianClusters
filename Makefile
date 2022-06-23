@@ -10,7 +10,7 @@ EXECUTABLE_SOURCES = $(sort $(wildcard src/*.cxx) )
 EXECUTABLE_OBJECT_FILES = $(patsubst src/%.cxx,obj/bin/%.o,${EXECUTABLE_SOURCES})
 EXECUTABLES = $(patsubst src/%.cxx,%.exe,${EXECUTABLE_SOURCES})
 
-DOXYGEN = documentation/Software\ Manual.pdf
+DOXYGEN = documentation/SoftwareManual.pdf
 DOCUMENTATION = documentation/OptimizingTheMaths.pdf
 
 DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${EXECUTABLE_OBJECT_FILES}, $(dir ${filePath})))
@@ -96,7 +96,7 @@ ${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
 	@echo "Generating Doxygen Documentation: doxygen Doxyfile ---> $@"
 	@doxygen Doxyfile
 	@make -C .doxygen/latex
-	@cp .doxygen/latex/refman.pdf "$@"
+	@cp .doxygen/latex/refman.pdf $@
 
 ${DOCUMENTATION}:
 	@echo "Generating Maths Documentation: pdflatex ... documentation/OptimizingTheMaths ---> documentation/OptimizingTheMaths.pdf"
