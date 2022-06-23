@@ -10,14 +10,13 @@ jobs:
         run: |
           sudo apt-get install doxygen -y
           sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-latex-extra 
-# xtab multirow sectsty tocloft
       - name: Produce documentation
         run: |
           make doxygen
           cd doxygen/latex
           make
-      - name: Archive doxygen
-        uses: actions/upload-artifact@v3
+      - name: Publish
+        uses: EndBug/add-and-commit@v9
         with:
-          name: documentation
-          path: doxygen/latex/refman.pdf
+          message: 'Publish the documentation'
+          add: 'doxygen/latex/refman.pdf'
