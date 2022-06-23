@@ -13,10 +13,10 @@ jobs:
       - name: Produce documentation
         run: |
           make doxygen
-          cd doxygen/latex
-          make
+          make -C doxygen/latex
+          cp doxygen/latex/refman.pdf .
       - name: Publish
         uses: EndBug/add-and-commit@v9
         with:
-          message: 'Publish the documentation'
-          add: 'doxygen/latex/refman.pdf'
+          message: 'Publish documentation produced by the CI'
+          add: 'refman.pdf'
