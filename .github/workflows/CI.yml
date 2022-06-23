@@ -9,9 +9,7 @@ jobs:
       - name: Install Doxgen and PDFlatex
         run: sudo apt-get install graphviz doxygen texlive-latex-base texlive-fonts-recommended texlive-latex-extra 
       - name: Run doxygen
-        run: |
-          ls
-          make doxygen
+        run:  make doxygen
       - name: Publish
         uses: EndBug/add-and-commit@v9
         with:
