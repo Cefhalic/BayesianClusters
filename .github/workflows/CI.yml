@@ -10,7 +10,8 @@ jobs:
         run: |
           sudo apt-get install doxygen -y
           sudo apt-get install texlive-base
-          sudo tlmgr install xtab multirow sectsty tocloft
+          tlmgr init-usertree
+          tlmgr install xtab multirow sectsty tocloft
       - name: Produce documentation
         run: |
           make doxygen
