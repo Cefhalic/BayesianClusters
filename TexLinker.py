@@ -29,8 +29,7 @@ for (dirpath, dirnames, filenames) in os.walk( '.doxygen/latex/' ):
 					if not m is None : 
 						filename =  FindFile( m.group(2).replace( "\\-" , "" ) )
 						filename = "{}/{}/{}#L{}".format( URL , branch , filename[2:] ,  m.group(1) )
-						line = "\\href{{{}}}{{{}}}".format( filename , m.group(0) )
-						print( line )
+						line = "{} \\href{{{}}}{{[Github]}}".format( m.group(0) , filename )
 					file2.write( line )
 		
 			os.rename( "temp.tex" , file )
