@@ -9,9 +9,8 @@ jobs:
       - name: Install Doxgen and PDFlatex
         run: |
           sudo apt-get install doxygen -y
-          sudo apt-get install texlive-base
-          tlmgr init-usertree
-          tlmgr install xtab multirow sectsty tocloft
+          sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-latex-extra 
+# xtab multirow sectsty tocloft
       - name: Produce documentation
         run: |
           make doxygen
