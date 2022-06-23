@@ -9,7 +9,8 @@ jobs:
       - name: Install Doxgen and PDFlatex
         run: |
           sudo apt-get install doxygen -y
-          sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra texlive-xtab texlive-multirow texlive-sectsty texlive-tocloft -y
+          sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra tlmgr
+          tlmgr install xtab multirow sectsty tocloft
       - name: Produce documentation
         run: |
           make doxygen
