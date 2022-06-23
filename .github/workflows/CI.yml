@@ -14,4 +14,4 @@ jobs:
         uses: EndBug/add-and-commit@v9
         with:
           message: 'Publish documentation produced by the CI'
-          add: 'documentation/Software Manual.pdf'
+          add: 'documentation/Software\ Manual.pdf'
