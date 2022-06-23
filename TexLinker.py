@@ -28,7 +28,6 @@ for (dirpath, dirnames, filenames) in os.walk( '.doxygen/latex/' ):
 					m = Pattern.search( line )
 					if not m is None : 
 						filename =  FindFile( m.group(2).replace( "\\-" , "" ) )
-						print( filename )
 						filename = "{}/{}/{}#L{}".format( URL , branch , filename[2:] ,  m.group(1) )
 						line = "{} \\href{{{}}}{{[Github]}}".format( m.group(0) , filename )
 					file2.write( line )

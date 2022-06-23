@@ -95,9 +95,11 @@ ${DIRECTORIES}:
 ${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
 	@echo "Generating Doxygen Documentation: doxygen Doxyfile ---> $@"
 	@doxygen Doxyfile
-	@python TexLinker.py "https://github.com/Cefhalic/BayesianClusters/blob/" `git rev-parse --abbrev-ref HEAD`
 	@make -C .doxygen/latex
 	@cp .doxygen/latex/refman.pdf $@
+
+#	@python TexLinker.py "https://github.com/Cefhalic/BayesianClusters/blob/" `git rev-parse --abbrev-ref HEAD`
+
 
 ${DOCUMENTATION}:
 	@echo "Generating Maths Documentation: pdflatex ... documentation/OptimizingTheMaths ---> documentation/OptimizingTheMaths.pdf"
