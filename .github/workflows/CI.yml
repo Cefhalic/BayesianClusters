@@ -7,11 +7,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install Doxgen
-        run: sudo apt-get install doxygen -y
+        run: sudo apt-get install doxygen texlive-xtab texlive-multirow texlive-sectsty texlive-tocloft -y
       - name: Produce documentation
         run: make doxygen
+             cd doxygen/latex
+             make
       - name: Archive doxygen
         uses: actions/upload-artifact@v3
         with:
           name: documentation
-          path: doxygen/html
+          path: doxygen/latex/refman.pdf
