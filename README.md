@@ -33,7 +33,9 @@ Prerequisites:
 
 To build the doxygen documentation: `make doxygen`
 
-The doxygen documentation is then at `doxygen/html/index.html`
+The doxygen documentation is then at `documentation/SoftwareManual.pdf`.
+
+**However, most of the time you should never need to, as the documentation is also built as a CI pipeline and published [here](https://github.com/Cefhalic/BayesianClusters/raw/CI_test/documentation/SoftwareManual.pdf).**
 
 ### To build the maths documentation 
 
