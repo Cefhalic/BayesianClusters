@@ -1,3 +1,5 @@
 .doxygen
+obj
 *.aux
 *.log
+*.exe
