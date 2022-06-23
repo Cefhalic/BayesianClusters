@@ -7,15 +7,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install Doxgen and PDFlatex
-        run: sudo apt-get install doxygen texlive-latex-base texlive-fonts-recommended texlive-latex-extra 
+        run: sudo apt-get install graphviz doxygen texlive-latex-base texlive-fonts-recommended texlive-latex-extra 
       - name: Run doxygen
         run: make doxygen
-      - name: Produce documentation
-        run: |
-          make -C doxygen/latex
-          cp doxygen/latex/refman.pdf .
       - name: Publish
         uses: EndBug/add-and-commit@v9
         with:
           message: 'Publish documentation produced by the CI'
-          add: 'refman.pdf'
+          add: 'documentation/Software Manual.pdf'
