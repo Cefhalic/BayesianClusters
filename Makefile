@@ -17,8 +17,8 @@ DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${EXECUTABLE_OBJ
 
 .PHONY: clean all help cpp doxygen docs verbose
 
-verbose: cpp
 default: cpp
+verbose: cpp
 
 clean:
 	rm -rf obj doxygen ${EXECUTABLES} ${DOCUMENTATION}
