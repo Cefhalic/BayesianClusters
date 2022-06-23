@@ -1,3 +1,3 @@
 #pragma once
 
-#define PRECISION float
+#define PRECISION double

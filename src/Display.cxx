@@ -23,7 +23,7 @@ void DrawPoints( const Event& aEvent )
   auto x( &Data::x | aEvent.mData ) , y( &Data::y | aEvent.mData );
 
 
-  float x0( 9e99 ) , x1( -9e99 ) , y0( 9e99 ) , y1( -9e99 );
+  PRECISION x0( 9e99 ) , x1( -9e99 ) , y0( 9e99 ) , y1( -9e99 );
   for( auto& i : x )
   {
     x0 = std::min( x0 , i );
