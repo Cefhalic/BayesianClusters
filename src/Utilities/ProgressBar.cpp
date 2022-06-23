@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "ProgressBar.hpp"
+#include "Utilities/ProgressBar.hpp"
 
 ProgressBar::ProgressBar( const std::string& aLabel , const uint32_t& aMax ) : mBlockSize( aMax / 100.0 ) , mNextThreshold( mBlockSize ) , mCount( 0 ) ,
 mStart( std::chrono::high_resolution_clock::now() )

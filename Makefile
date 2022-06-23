@@ -15,28 +15,38 @@ DOCUMENTATION = documentation/OptimizingTheMaths.pdf
 
 DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${EXECUTABLE_OBJECT_FILES}, $(dir ${filePath})))
 
-.PHONY: all _all clean _cleanall
+.PHONY: clean all help cpp doxygen docs verbose
 
-default: all
+default: cpp
+verbose: cpp
 
-clean: _cleanall
-_cleanall:
-	rm -rf obj doxygen ${DOCUMENTATION}
+clean:
+	rm -rf obj doxygen ${EXECUTABLES} ${DOCUMENTATION}
 
-all: _all
-build: _all
-buildall: _all
-# _all: ${LIBRARY_FILE} ${EXECUTABLES}
-_all: ${DOCUMENTATION} ${DOXYGEN} ${EXECUTABLES}
+all : cpp doxygen docs 
+
+help:
+	@echo "\nMakefile for the Bayesian clustering project.\nUsage:"
+	@echo "  - make                - Build code"
+	@echo "  - make help           - Display this help message"
+	@echo "  - make clean          - Tidy all build products"
+	@echo "  - make all            - Build code, generate doxygen documentation and produce PDFs of latex sources"
+	@echo "  - make cpp            - Build code"
+	@echo "  - make verbose        - Build code, echoing the full command"
+	@echo "  - make doxygen        - Generate doxygen documentation"
+	@echo "  - make docs           - Produce PDFs of latex sources"
+	@echo
+
+cpp: ${EXECUTABLES}
+doxygen: ${DOXYGEN} 
+docs: ${DOCUMENTATION}
 
 FLAGS = -g -std=c++11 -march=native -O3 -lm `root-config --glibs --cflags --libs` -lMathMore -flto -MMD -MP -lboost_program_options
 
-${DIRECTORIES}:
-	mkdir -p $@
+ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
 
 .SECONDEXPANSION:
 obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o)
-	@echo -e "*************************************************************************************************************************************\n* Building Object Files\n*************************************************************************************************************************************"
 	g++ -c ${FLAGS} -Iinclude -fPIC $< -o $@
 
 .SECONDEXPANSION:
@@ -46,22 +56,47 @@ obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o)
 -include $(LIBRARY_OBJECT_FILES:.o=.d)
 -include $(EXECUTABLE_OBJECT_FILES:.o=.d)
 
+${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
+	g++ $^ ${FLAGS} -o $@
+
+else
+
+.SECONDEXPANSION:
+obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o)
+	@echo "Building Object Files | g++ -c ... $< -o $@"
+	@g++ -c ${FLAGS} -Iinclude -fPIC $< -o $@
+
+.SECONDEXPANSION:
+obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o)
+	@echo "Building Object Files | g++ -c ... $< -o $@"
+	@g++ -c ${FLAGS} -Iinclude -fPIC $< -o $@
+
+-include $(LIBRARY_OBJECT_FILES:.o=.d)
+-include $(EXECUTABLE_OBJECT_FILES:.o=.d)
+
+${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
+	@echo "Building Executable   | g++ ... -o $@"
+	@g++ $^ ${FLAGS} -o $@
+
+endif
+
+
+
 # ${LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
 # 	g++ -shared $^ ${FLAGS} -o $@
 
 # ${EXECUTABLES}: %.exe: obj/bin/%.o 
 # 	g++ $< -L. -lClusterize ${FLAGS} -o $@
 
-
-${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
-	@echo -e "*************************************************************************************************************************************\n* Building Executable\n*************************************************************************************************************************************"
-	g++ $^ ${FLAGS} -o $@
+${DIRECTORIES}:
+	@echo "Making directory      | mkdir -p $@"
+	@mkdir -p $@
 
 ${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
-	@echo -e "*************************************************************************************************************************************\n* Generating Doxygen Documentation\n*************************************************************************************************************************************"
-	doxygen Doxyfile
+	@echo "Generating Doxygen Documentation: doxygen Doxyfile"
+	@doxygen Doxyfile
 
 ${DOCUMENTATION}:
-	@echo -e "*************************************************************************************************************************************\n* Generating Maths Documentation\n*************************************************************************************************************************************"
-	pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
-	pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
+	@echo "Generating Maths Documentation: pdflatex ... ./documentation/OptimizingTheMaths"
+	@pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
+	@pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths

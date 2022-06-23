@@ -1,7 +1,7 @@
 
-#include "ListComprehension.hpp"
+#include "Utilities/ListComprehension.hpp"
 
-#include "Vectorize.hpp"
+#include "Utilities/Vectorize.hpp"
 
 
 WrappedThread::WrappedThread(): mMask( uint64_t(0x1) << sInstanceCounter++ ) ,
@@ -40,7 +40,7 @@ void WrappedThread::Runner()
   while (true)
   {
     std::unique_lock<std::mutex> lLock(mMutex);
-    mConditionVariable.wait( lLock, [this]() { return ( sBusy & mMask ) || mTerminate; });
+    mConditionVariable.wait( lLock, [this]() { return ( sBusy & mMask ) or mTerminate; });
     if( mTerminate ) return;
     // if( !( sBusy & mMask ) ) continue;
     (mFunc)();

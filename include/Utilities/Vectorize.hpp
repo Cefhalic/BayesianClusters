@@ -109,7 +109,7 @@ inline void operator|| ( tExpr&& aExpr , tContainer&& aContainer )
 template< typename tContainer , typename tExpr, typename tContainerType = typename std::remove_reference<tContainer>::type::value_type >
 inline void operator&& ( tExpr&& aExpr , tContainer&& aContainer )
 {
-  const std::size_t lChunksize( ceil( double( aContainer.size() ) / Concurrency ) );
+  const std::size_t lChunksize( ceil( double( aContainer.size() ) / ( Concurrency + 1 ) ) );
   auto Thread( ThreadPool.begin() );
 
   auto A( aContainer.begin() ) , B( aContainer.begin() + lChunksize );

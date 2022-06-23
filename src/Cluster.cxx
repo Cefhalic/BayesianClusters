@@ -1,14 +1,18 @@
 /* ===== Cluster sources ===== */
-#include "Cluster_Data.hpp"
+#include "BayesianClustering/Cluster.hpp"
+#include "BayesianClustering/Event.hpp"
+#include "BayesianClustering/EventProxy.hpp"
+#include "BayesianClustering/Configuration.hpp"
 
 // /* ===== C++ ===== */
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <mutex>
   
 /* ===== Local utilities ===== */
-#include "ProgressBar.hpp"
+#include "Utilities/ProgressBar.hpp"
 
 
 std::mutex mtx; // mutex for critical section
@@ -18,7 +22,7 @@ std::mutex mtx; // mutex for critical section
 void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT , std::stringstream& aOutput )
 {
   mtx.lock();
-  aOutput << "  <Scan R='" << aR << "' T='" << aT << "' Score='" << aEvent.mLogP << " NumClusteredPts='" << aEvent.mClusteredCount << "' NumBackgroundPts='" << aEvent.mBackgroundCount << "'>\n";
+  aOutput << "  <Scan R='" << aR << "' T='" << aT << "' Score='" << aEvent.mLogP << "' NumClusteredPts='" << aEvent.mClusteredCount << "' NumBackgroundPts='" << aEvent.mBackgroundCount << "'>\n";
 
   for( auto& i : aEvent.mClusters )
   {
@@ -57,13 +61,13 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
   ProgressBar2 lBar( "| Cluster Scan. Andrew W. Rose. 2022 |" , 1 );
   std::cout << "+------------------------------------+" << std::endl;
-  Event::mParameters.FromCommandline( argc , argv );
+  Configuration::Instance.FromCommandline( argc , argv );
   std::cout << "+------------------------------------+" << std::endl;
 
   Event lEvent;  
 
 
-  const std::string& lFilename = Event::mParameters.outputFile();
+  const std::string& lFilename = Configuration::Instance.outputFile();
 
   if( lFilename.size() == 0 )
   {
