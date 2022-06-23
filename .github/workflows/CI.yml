@@ -7,12 +7,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install Doxgen and PDFlatex
-        run: sudo apt-get install doxygen -y
-             sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra texlive-xtab texlive-multirow texlive-sectsty texlive-tocloft -y
+        run: 
+          sudo apt-get install doxygen -y
+          sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra texlive-xtab texlive-multirow texlive-sectsty texlive-tocloft -y
       - name: Produce documentation
-        run: make doxygen
-             cd doxygen/latex
-             make
+        run: 
+          make doxygen
+          cd doxygen/latex
+          make
       - name: Archive doxygen
         uses: actions/upload-artifact@v3
         with:
