@@ -53,6 +53,8 @@ public:
   //! Update log-probability after a scan
   void UpdateLogScore();
 
+  void LogScore();
+
   //! Get the proxy for the Nth neighbour of this data-point
   //! \return A reference to the neighbour data-proxy
   //! \param aIndex The index of the neighbour we are looking for 

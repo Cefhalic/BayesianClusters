@@ -118,8 +118,6 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
   for( auto& k : mData ) k.mCluster = NULL; // Clear cluster pointers which will be invalidated when we leave the function
 }
 
-
-
 void EventProxy::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
 {
   auto twoR2 = 4.0 * R * R;
@@ -139,12 +137,31 @@ void EventProxy::Clusterize( const double& R , const double& T , const std::func
 }
 
 
+
+void EventProxy::LogScore();
+//we operate on the mData objects
+// for each data point, get the parent cluster
+// update the parent cluster - we aim to construct the mean central point
+    Cluster* parent;
+    Data* datapoint;
+    
+  for (auto& i : mData){
+    //i is of type data proxy
+    parent = i.GetCluster();
+    datapoint = i.mData; //will this be confusing?
+
+    //we want to get the x and y position of each and then operate on them
+    parent-> //mean position = blah
+
+  }
+
+
 void EventProxy::UpdateLogScore()
 {
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0;
 
-  for( auto& i: mClusters )
+  for( auto& i: mClusters ) // here we operate on each of the identified clusters
   {
     if( i.mClusterSize == 0 ) continue;
     i.UpdateLogScore();

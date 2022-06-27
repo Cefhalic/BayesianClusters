@@ -10,22 +10,26 @@
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Cluster::Parameter::Parameter() : 
-A(0.0) , Bx(0.0) , By(0.0) , C(0.0) , logF(0.0)
+/*A(0.0) , Bx(0.0) , By(0.0) , C(0.0) , logF(0.0), */
+nTilde(0.0), nuBarX(0.0), nuBarY(0.0)
 {}
     
 Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& aOther )
 {
-  A += aOther.A;
-  Bx += aOther.Bx;
-  By += aOther.By;
-  C += aOther.C;
-  logF += aOther.logF;
+  // A += aOther.A;
+  // Bx += aOther.Bx;
+  // By += aOther.By;
+  // C += aOther.C;
+  // logF += aOther.logF;
+  nTilde += aOther.nTilde
+  nuBarX += aOther.nuBarX
+  nuBarY += aOther.nuBarY
   return *this;
 }
 
 inline double CDF( const double& aArg )
 {
-  // Above or below ~8 are indistinguishable from 0 and 1 respectively
+  // Above 8 or below -8 are indistinguishable from 0 and 1 respectively
   // if( aArg > 8.0 ) return 1.0;
   // if( aArg < -8.0 ) return 0.0;
   return  ROOT::Math::normal_cdf( aArg );
@@ -63,17 +67,24 @@ mClusterSize( 1 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) ,
 mParent( NULL )
 { 
   const auto s2 = aData.s * aData.s;
+
+  //pull cluster point from aData here 
+
   auto lIt( mParams.begin() ) ;
   auto lSig2It( Configuration::Instance.sigmabins2().begin() );
 
   for( ; lIt != mParams.end() ; ++lIt , ++lSig2It )
   {
     double w = 1.0 / ( s2 + *lSig2It );
-    lIt->A = w;
-    lIt->Bx = (w * aData.x);
-    lIt->By = (w * aData.y);
-    lIt->C = (w * aData.r2);
-    lIt->logF = PRECISION( log( w ) );
+    // lIt->A = w;
+    // lIt->Bx = (w * aData.x);
+    // lIt->By = (w * aData.y);
+    // lIt->C = (w * aData.r2);
+    // lIt->logF = PRECISION( log( w ) );
+
+    lIt->nTilde = w;
+    lIt->nuBarX = w * aData.x;
+    lIt->nuBarY = w * aData.y;
   }
 }
 
@@ -97,6 +108,10 @@ void Cluster::UpdateLogScore()
   static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
+}
+
+void Cluster::EvalLogScore(){
+  //here we need 
 }
 
 Cluster& Cluster::operator+= ( const Cluster& aOther )

@@ -28,18 +28,25 @@ public:
     
     //! Convert the parameters to a log-probability
     //! \return the log-probability of this set of cluster parameters
+    // TODO: rewrie this
     double log_score() const;
     
-    //! Parameter A defined in the math
-    PRECISION A;
-    //! Parameter Bx defined in the math
-    PRECISION Bx;
-    //! Parameter By defined in the math
-    PRECISION By;
-    //! Parameter C defined in the math
-    PRECISION C;
-    //! Parameter logF defined in the math
-    PRECISION logF;
+    // //! Parameter A defined in the math
+    // PRECISION A;
+    // //! Parameter Bx defined in the math
+    // PRECISION Bx;
+    // //! Parameter By defined in the math
+    // PRECISION By;
+    // //! Parameter C defined in the math
+    // PRECISION C;
+    // //! Parameter logF defined in the math
+    // PRECISION logF;
+
+    //nTilde as defined in the paper
+    PRECISION nTilde;
+
+    PRECISION nuBarX;
+    PRECISION nuBarY;
   }; 
 
   //! Default constructor
@@ -60,6 +67,9 @@ public:
 
   //! Update log-probability after a scan
   void UpdateLogScore();
+
+  // rewriting the above function
+  void EvalLogScore();
 
 public:
   //! The collection of parameters, each corresponding to a different sigma hypothesis 
