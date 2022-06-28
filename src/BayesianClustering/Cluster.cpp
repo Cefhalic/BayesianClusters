@@ -11,7 +11,7 @@
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Cluster::Parameter::Parameter() : 
 /*A(0.0) , Bx(0.0) , By(0.0) , C(0.0) , logF(0.0), */
-nTilde(0.0), nuBarX(0.0), nuBarY(0.0)
+nTilde(0.0), nuBarX(0.0), nuBarY(0.0), S2(0.0), wProduct(1.0)
 {}
     
 Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& aOther )
@@ -21,9 +21,10 @@ Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& a
   // By += aOther.By;
   // C += aOther.C;
   // logF += aOther.logF;
-  nTilde += aOther.nTilde
-  nuBarX += aOther.nuBarX
-  nuBarY += aOther.nuBarY
+  nTilde += aOther.nTilde;
+  nuBarX += aOther.nuBarX;
+  nuBarY += aOther.nuBarY;
+  wProduct *= aOther.wProduct
   return *this;
 }
 
@@ -38,18 +39,18 @@ inline double CDF( const double& aArg )
 __attribute__((flatten))
 double Cluster::Parameter::log_score() const
 {
-  auto sqrt_A( sqrt( A ) ) , inv_A( 1.0 / A );
-  auto Dx( Bx * inv_A ) , Dy( By * inv_A );
-  auto E( C - ( Bx * Dx ) - ( By * Dy ) );
+  // auto sqrt_A( sqrt( A ) ) , inv_A( 1.0 / A );
+  // auto Dx( Bx * inv_A ) , Dy( By * inv_A );
+  // auto E( C - ( Bx * Dx ) - ( By * Dy ) );
 
-  double log_sum = logF - double( log( A ) ) + ( 0.5 * E );
+  // double log_sum = logF - double( log( A ) ) + ( 0.5 * E );
 
-  // We place explicit bounds checks to prevent calls to expensive functions
-  auto Gx = CDF( sqrt_A * (1.0-Dx) ) - CDF( sqrt_A * (-1.0-Dx) );
-  if( Gx != 1.0 ) log_sum += log( Gx );
-  auto Gy = CDF( sqrt_A * (1.0-Dy) ) - CDF( sqrt_A * (-1.0-Dy) );
-  if( Gy != 1.0 ) log_sum += log( Gy );
-
+  // // We place explicit bounds checks to prevent calls to expensive functions
+  // auto Gx = CDF( sqrt_A * (1.0-Dx) ) - CDF( sqrt_A * (-1.0-Dx) );
+  // if( Gx != 1.0 ) log_sum += log( Gx );
+  // auto Gy = CDF( sqrt_A * (1.0-Dy) ) - CDF( sqrt_A * (-1.0-Dy) );
+  // if( Gy != 1.0 ) log_sum += log( Gy );
+  double log_sum(1);
   return log_sum;
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -81,7 +82,7 @@ mParent( NULL )
     // lIt->By = (w * aData.y);
     // lIt->C = (w * aData.r2);
     // lIt->logF = PRECISION( log( w ) );
-
+    lIt->wProduct = w; //we want to keep track of this for calculating the integral
     lIt->nTilde = w;
     lIt->nuBarX = w * aData.x;
     lIt->nuBarY = w * aData.y;
@@ -110,9 +111,6 @@ void Cluster::UpdateLogScore()
   mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
 }
 
-void Cluster::EvalLogScore(){
-  //here we need 
-}
 
 Cluster& Cluster::operator+= ( const Cluster& aOther )
 {

@@ -138,28 +138,85 @@ void EventProxy::Clusterize( const double& R , const double& T , const std::func
 
 
 
-void EventProxy::LogScore();
-//we operate on the mData objects
-// for each data point, get the parent cluster
-// update the parent cluster - we aim to construct the mean central point
-    Cluster* parent;
-    Data* datapoint;
+// void EventProxy::LogScore(){
+// //we operate on the mData objects
+// // for each data point, get the parent cluster
+// // update the parent cluster - we aim to construct the mean central point
+//     Cluster* parent;
+//     Data* datapoint;
     
-  for (auto& i : mData){
-    //i is of type data proxy
-    parent = i.GetCluster();
-    datapoint = i.mData; //will this be confusing?
+//   for (auto& i : mData){
+//     //i is of type data proxy
+//     parent = i.GetCluster();
+//     datapoint = i.mData; //will this be confusing?
 
-    //we want to get the x and y position of each and then operate on them
-    parent-> //mean position = blah
+//     //we want to get the x and y position of each and then operate on them
+//     parent->nuBarX /= parent->nTilde //I want to divide the stored value of nuBar by nTilde
+//     parent->nuBarY /= parent->nTilde 
 
-  }
+//     //next build S2
+//     //we need w_i for each point 
+//   }
+// }
+
+inline double CDF( const double& aArg )
+{
+  // Above or below ~8 are indistinguishable from 0 and 1 respectively
+  if( aArg > 8.0 ) return 1.0;
+  if( aArg < -8.0 ) return 0.0;
+  return  ROOT::Math::normal_cdf( aArg );
+}
 
 
 void EventProxy::UpdateLogScore()
 {
+  //  iterate over all of the clusters, calculate the mean values
+    
+  for( auto& i: mClusters ){
+    //for each of the sigma paras in the cluster
+    for (auto& j : i.mParams){
+      j.nuBarX /= j.nTilde;
+      j.nuBarY /= j.nTilde;
+    }
+  }
+  //iterate over dPoints here, update cluster S2
+  Cluster* parent;
+  Data* datapoint;
+  double x, y;
+
+  for (auto& i : mData){
+    parent = i.GetCluster();
+    datapoint = i.mData; //i is of type DataProxy, with member variable mData, which is of type Data*
+
+    if (!parent) continue; //continue if no parent
+
+    //get the coord centres
+    x = datapoint->x;
+    y = datapoint->y;
+    auto s = datapoint->s;
+    auto s2 = s * s; //bad naming! please redo
+    double weightedCentre, weightedCentreX, weightedCentreY;
+
+    //update S2 for each sigma hypothesis
+    //we need to recalculate w here i think 
+
+    auto lIt(parent->mParams.begin());
+    auto lSig2It( Configuration::Instance.sigmabins2().begin() );
+    for ( ; lIt != parent->mParams.end() ; ++lIt, ++lSig2It){
+      //we need to add on w_i here - which comes with each point in the cluster
+      double w = 1.0 / (s2 + *lSig2It);
+
+      weightedCentreX = lIt -> nuBarX - x;
+      weightedCentreY = lIt -> nuBarY - y;
+      weightedCentre = weightedCentreX*weightedCentreX + weightedCentreY*weightedCentreY;
+      lIt->S2 += w*weightedCentre;
+    }
+  }
+
+  //we should be ready to calculate p(nu, sigma)
+
   mClusterCount = mClusteredCount = 0;
-  double lLogPl = 0.0;
+  double lLogPl = 0.0; //this is what i label p(nu, sigma)
 
   for( auto& i: mClusters ) // here we operate on each of the identified clusters
   {

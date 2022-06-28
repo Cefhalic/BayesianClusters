@@ -45,8 +45,12 @@ public:
     //nTilde as defined in the paper
     PRECISION nTilde;
 
+    PRECISION wProduct;
+
     PRECISION nuBarX;
-    PRECISION nuBarY;
+    PRECISION nuBarY; 
+
+    PRECISION S2;
   }; 
 
   //! Default constructor
@@ -68,8 +72,6 @@ public:
   //! Update log-probability after a scan
   void UpdateLogScore();
 
-  // rewriting the above function
-  void EvalLogScore();
 
 public:
   //! The collection of parameters, each corresponding to a different sigma hypothesis 
