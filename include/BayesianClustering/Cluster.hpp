@@ -51,6 +51,8 @@ public:
     PRECISION nuBarY; 
 
     PRECISION S2;
+
+    PRECISION pNuSigma;
   }; 
 
   //! Default constructor

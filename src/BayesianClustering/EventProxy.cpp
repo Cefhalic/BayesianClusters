@@ -217,14 +217,35 @@ void EventProxy::UpdateLogScore()
 
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0; //this is what i label p(nu, sigma)
+  // std::vector< double > lMuIntegral( Configuration::Instance.sigmacount()); //should we put this in the cluster class?
+  // double cdfArgumentX, cdfArgumentY;
+  double lNTilde, lSqrtNTilde, lMuIntegral;
+  static constexpr double pi = atan(1)*4;
+
+  // std::size_t lClusterSize;
 
   for( auto& i: mClusters ) // here we operate on each of the identified clusters
   {
     if( i.mClusterSize == 0 ) continue;
-    i.UpdateLogScore();
-    mClusterCount += 1;
-    mClusteredCount += i.mClusterSize;
-    lLogPl += ROOT::Math::lgamma( i.mClusterSize );
+    
+    for (auto& j : i.mParams){
+      lNTilde = j.nTilde;
+      lSqrtNTilde = sqrt(lNTilde); //an include is needed for this
+
+      lMuIntegral = (2 * pi) //FIX THIS - not a vecotr!
+                    *(CDF(lSqrtNTilde * (1 - j.nuBarX)) -
+                      CDF(lSqrtNTilde * (-1 - j.nuBarX)))
+                    *(CDF(lSqrtNTilde * (1 - j.nuBarY)) -
+                      CDF(lSqrtNTilde * (-1 - j.nuBarY)));
+      j.pNuSigma = (1/4.0) *  exp(j.S2 / 2) 
+                    *pow(2*pi, i.mClusterSize)
+                    *j.wProduct
+                    *lMuIntegral;
+      //now what?
+      //we need to do numerical integration now. 
+      
+
+    }
   }
 
   mBackgroundCount = mData.size() - mClusteredCount;

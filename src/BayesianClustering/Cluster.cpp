@@ -11,7 +11,7 @@
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Cluster::Parameter::Parameter() : 
 /*A(0.0) , Bx(0.0) , By(0.0) , C(0.0) , logF(0.0), */
-nTilde(0.0), nuBarX(0.0), nuBarY(0.0), S2(0.0), wProduct(1.0)
+nTilde(0.0), nuBarX(0.0), nuBarY(0.0), S2(0.0), wProduct(1.0), pNuSigma(0.0)
 {}
     
 Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& aOther )
