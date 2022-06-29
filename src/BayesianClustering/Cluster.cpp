@@ -84,7 +84,7 @@ mParent( NULL )
 
   for( ; lIt != mParams.end() ; ++lIt , ++lSig2It )
   {
-    double w = 1.0 / ( s2 + *lSig2It );
+    double w = 0.01 / ( s2 + *lSig2It );
     // lIt->A = w;
     // lIt->Bx = (w * aData.x);
     // lIt->By = (w * aData.y);
@@ -119,10 +119,6 @@ void Cluster::UpdateLogScore()
   static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
-   
-
-
-
 }
 
 
