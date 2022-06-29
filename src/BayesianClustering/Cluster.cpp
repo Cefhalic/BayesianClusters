@@ -24,7 +24,7 @@ Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& a
   nTilde += aOther.nTilde;
   nuBarX += aOther.nuBarX;
   nuBarY += aOther.nuBarY;
-  wProduct *= aOther.wProduct
+  wProduct *= aOther.wProduct;
   return *this;
 }
 
@@ -39,18 +39,26 @@ inline double CDF( const double& aArg )
 __attribute__((flatten))
 double Cluster::Parameter::log_score() const
 {
-  // auto sqrt_A( sqrt( A ) ) , inv_A( 1.0 / A );
-  // auto Dx( Bx * inv_A ) , Dy( By * inv_A );
-  // auto E( C - ( Bx * Dx ) - ( By * Dy ) );
+  const double pi = atan(1)*4;
+  const double log2pi = log( 2*pi );
 
-  // double log_sum = logF - double( log( A ) ) + ( 0.5 * E );
+  //here we have access to all the params in this particular instance
+  double log_sum;
+  auto lInvNTilde = 1.0 / nTilde;
+  auto lSqrtNTilde = sqrt(nTilde);
+  double lLogMuIntegral; //calculate this first
 
-  // // We place explicit bounds checks to prevent calls to expensive functions
-  // auto Gx = CDF( sqrt_A * (1.0-Dx) ) - CDF( sqrt_A * (-1.0-Dx) );
-  // if( Gx != 1.0 ) log_sum += log( Gx );
-  // auto Gy = CDF( sqrt_A * (1.0-Dy) ) - CDF( sqrt_A * (-1.0-Dy) );
-  // if( Gy != 1.0 ) log_sum += log( Gy );
-  double log_sum(1);
+  lLogMuIntegral = log(2 * pi * lInvNTilde)
+                  +log((CDF(lSqrtNTilde * (1 - nuBarX)) -
+                      CDF(lSqrtNTilde * (-1 - nuBarX))))
+                  +log(CDF(lSqrtNTilde * (1 - nuBarY)) -
+                      CDF(lSqrtNTilde * (-1 - nuBarY)));
+  
+  log_sum = (-2) * log(2.0)  //log(1/4)
+            +(-nTilde) * log2pi
+            + log(wProduct)    //could this be calculated earlier?
+            -S2 / 2.0
+            +lLogMuIntegral;
   return log_sum;
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -90,6 +98,8 @@ mParent( NULL )
 }
 
 void Cluster::UpdateLogScore()
+
+//this goes over the cluster params, call log_score on the para -- do not change
 {
   static constexpr double pi = atan(1)*4;
   static constexpr double log2pi = log( 2*pi );
@@ -109,6 +119,10 @@ void Cluster::UpdateLogScore()
   static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
+   
+
+
+
 }
 
 

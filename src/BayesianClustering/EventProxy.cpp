@@ -159,13 +159,13 @@ void EventProxy::Clusterize( const double& R , const double& T , const std::func
 //   }
 // }
 
-inline double CDF( const double& aArg )
-{
-  // Above or below ~8 are indistinguishable from 0 and 1 respectively
-  if( aArg > 8.0 ) return 1.0;
-  if( aArg < -8.0 ) return 0.0;
-  return  ROOT::Math::normal_cdf( aArg );
-}
+// inline double CDF( const double& aArg )
+// {
+//   // Above or below ~8 are indistinguishable from 0 and 1 respectively
+//   if( aArg > 8.0 ) return 1.0;
+//   if( aArg < -8.0 ) return 0.0;
+//   return  ROOT::Math::normal_cdf( aArg );
+// }
 
 
 void EventProxy::UpdateLogScore()
@@ -195,7 +195,7 @@ void EventProxy::UpdateLogScore()
     y = datapoint->y;
     auto s = datapoint->s;
     auto s2 = s * s; //bad naming! please redo
-    double weightedCentre, weightedCentreX, weightedCentreY;
+    double weightedCentre, weightedCentreX, weightedCentreY; 
 
     //update S2 for each sigma hypothesis
     //we need to recalculate w here i think 
@@ -204,7 +204,7 @@ void EventProxy::UpdateLogScore()
     auto lSig2It( Configuration::Instance.sigmabins2().begin() );
     for ( ; lIt != parent->mParams.end() ; ++lIt, ++lSig2It){
       //we need to add on w_i here - which comes with each point in the cluster
-      double w = 1.0 / (s2 + *lSig2It);
+      double w = 1.0 / (s2 + *lSig2It); //these are found in the protoclusters, inside datapoint
 
       weightedCentreX = lIt -> nuBarX - x;
       weightedCentreY = lIt -> nuBarY - y;
@@ -213,7 +213,9 @@ void EventProxy::UpdateLogScore()
     }
   }
 
-  //we should be ready to calculate p(nu, sigma)
+  // from here, call Cluster::UpdateLogScore
+
+  //we should be ready to calculate p(nu, sigma), mLogScore 
 
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0; //this is what i label p(nu, sigma)
@@ -225,28 +227,16 @@ void EventProxy::UpdateLogScore()
   // std::size_t lClusterSize;
 
   for( auto& i: mClusters ) // here we operate on each of the identified clusters
+  // call i.updatelogscore here and put all this code into it
   {
     if( i.mClusterSize == 0 ) continue;
     
-    for (auto& j : i.mParams){
-      lNTilde = j.nTilde;
-      lSqrtNTilde = sqrt(lNTilde); //an include is needed for this
-
-      lMuIntegral = (2 * pi) //FIX THIS - not a vecotr!
-                    *(CDF(lSqrtNTilde * (1 - j.nuBarX)) -
-                      CDF(lSqrtNTilde * (-1 - j.nuBarX)))
-                    *(CDF(lSqrtNTilde * (1 - j.nuBarY)) -
-                      CDF(lSqrtNTilde * (-1 - j.nuBarY)));
-      j.pNuSigma = (1/4.0) *  exp(j.S2 / 2) 
-                    *pow(2*pi, i.mClusterSize)
-                    *j.wProduct
-                    *lMuIntegral;
-      //now what?
-      //we need to do numerical integration now. 
+    // for (auto& j : i.mParams){
+    i.UpdateLogScore();
       
-
+    //update mLogScpre of the cluster
     }
-  }
+  
 
   mBackgroundCount = mData.size() - mClusteredCount;
   lLogPl += ( mBackgroundCount * Configuration::Instance.logPb() ) 
