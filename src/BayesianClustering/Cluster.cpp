@@ -25,7 +25,7 @@ Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& a
 
 inline double CDF( const double& aArg )
 {
-  // Above or below ~8 are indistinguishable from 0 and 1 respectively
+  // Above 8 or below -8 are indistinguishable from 0 and 1 respectively
   // if( aArg > 8.0 ) return 1.0;
   // if( aArg < -8.0 ) return 0.0;
   return  ROOT::Math::normal_cdf( aArg );
@@ -86,17 +86,26 @@ void Cluster::UpdateLogScore()
   mLastClusterSize = mClusterSize;
 
   thread_local static std::vector< double > MuIntegral( Configuration::Instance.sigmacount() , 1.0 );
-
+  thread_local static std::vector< double > integralArguments( Configuration::Instance.sigmacount() , 1.0 );
+  double largestArg(1.0);
   // double constant( mParams[0].log_score() + Configuration::Instance.log_probability_sigma( 0 ) );
   // for( std::size_t i(1) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) - constant );
-  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) );
+  double tempArg;
+  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) {
+    tempArg =  mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i );
+    if (tempArg > largestArg) largestArg = tempArg;
+
+    integralArguments[i] = tempArg;
+  }
+  //pass again to set the MuIntegral Correctly
+  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg);
 
   thread_local static ROOT::Math::Interpolator lInt( Configuration::Instance.sigmacount() , ROOT::Math::Interpolation::kLINEAR );
   lInt.SetData( Configuration::Instance.sigmabins() , MuIntegral );
 
   static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
-  mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
+  mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + largestArg - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
 }
 
 Cluster& Cluster::operator+= ( const Cluster& aOther )
