@@ -98,8 +98,6 @@ mParent( NULL )
 }
 
 void Cluster::UpdateLogScore()
-
-//this goes over the cluster params, call log_score on the para -- do not change
 {
   static constexpr double pi = atan(1)*4;
   static constexpr double log2pi = log( 2*pi );
@@ -108,17 +106,25 @@ void Cluster::UpdateLogScore()
   mLastClusterSize = mClusterSize;
 
   thread_local static std::vector< double > MuIntegral( Configuration::Instance.sigmacount() , 1.0 );
-
+  thread_local static std::vector< double > integralArguments( Configuration::Instance.sigmacount() , 1.0 );
+  double largestArg(1.0);
   // double constant( mParams[0].log_score() + Configuration::Instance.log_probability_sigma( 0 ) );
   // for( std::size_t i(1) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) - constant );
-  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) );
+  double tempArg;
+  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) {
+    tempArg =  mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i );
+    if (tempArg > largestArg) largestArg = tempArg;
+    integralArguments[i] = tempArg;
+  }
+  //pass again to set the MuIntegral Correctly
+  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg);
 
   thread_local static ROOT::Math::Interpolator lInt( Configuration::Instance.sigmacount() , ROOT::Math::Interpolation::kLINEAR );
   lInt.SetData( Configuration::Instance.sigmabins() , MuIntegral );
 
   static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
-  mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
+  mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + largestArg - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
 }
 
 
