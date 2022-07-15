@@ -143,7 +143,7 @@ void EventProxy::UpdateLogScore()
 {
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0;
-
+  double mLogP = 0.0;
   for( auto& i: mClusters )
   {
     if( i.mClusterSize == 0 ) continue;
@@ -151,6 +151,7 @@ void EventProxy::UpdateLogScore()
     mClusterCount += 1;
     mClusteredCount += i.mClusterSize;
     lLogPl += ROOT::Math::lgamma( i.mClusterSize );
+    mLogP += i.mClusterScore;
   }
 
   mBackgroundCount = mData.size() - mClusteredCount;
@@ -160,7 +161,7 @@ void EventProxy::UpdateLogScore()
          + Configuration::Instance.logGammaAlpha()
          - ROOT::Math::lgamma( Configuration::Instance.alpha() + mClusteredCount );  
 
-  mLogP = 0.0; // To be implemented...
+  mLogP += -log(4.0) * mBackgroundCount + lLogPl; //taking background density to be just the area of the ROI
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
