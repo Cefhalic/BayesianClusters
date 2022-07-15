@@ -45,7 +45,7 @@ public:
     //nTilde as defined in the paper
     PRECISION nTilde;
 
-    PRECISION wProduct;
+    PRECISION logWProduct;
 
     PRECISION nuBarX;
     PRECISION nuBarY; 

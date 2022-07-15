@@ -7,11 +7,13 @@
 #include "BayesianClustering/Data.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
+#include <sstream>
+#include <iostream>
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Cluster::Parameter::Parameter() : 
 /*A(0.0) , Bx(0.0) , By(0.0) , C(0.0) , logF(0.0), */
-nTilde(0.0), nuBarX(0.0), nuBarY(0.0), S2(0.0), wProduct(1.0), pNuSigma(0.0)
+nTilde(0.0), nuBarX(0.0), nuBarY(0.0), S2(0.0), logWProduct(0.0)//, pNuSigma(0.0)
 {}
     
 Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& aOther )
@@ -24,7 +26,7 @@ Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& a
   nTilde += aOther.nTilde;
   nuBarX += aOther.nuBarX;
   nuBarY += aOther.nuBarY;
-  wProduct *= aOther.wProduct;
+  logWProduct += aOther.logWProduct;
   return *this;
 }
 
@@ -54,9 +56,10 @@ double Cluster::Parameter::log_score() const
                   +log(CDF(lSqrtNTilde * (1 - nuBarY)) -
                       CDF(lSqrtNTilde * (-1 - nuBarY)));
   
+
   log_sum = (-2) * log(2.0)  //log(1/4)
             +(-nTilde) * log2pi
-            + log(wProduct)    //could this be calculated earlier?
+            + logWProduct    //could this be calculated earlier?
             -S2 / 2.0
             +lLogMuIntegral;
   return log_sum;
@@ -84,13 +87,13 @@ mParent( NULL )
 
   for( ; lIt != mParams.end() ; ++lIt , ++lSig2It )
   {
-    double w = 0.01 / ( s2 + *lSig2It );
+    double w = 1.0 / ( s2 + *lSig2It );
     // lIt->A = w;
     // lIt->Bx = (w * aData.x);
     // lIt->By = (w * aData.y);
     // lIt->C = (w * aData.r2);
     // lIt->logF = PRECISION( log( w ) );
-    lIt->wProduct = w; //we want to keep track of this for calculating the integral
+    lIt->logWProduct = log(w); //we want to keep track of this for calculating the integral
     lIt->nTilde = w;
     lIt->nuBarX = w * aData.x;
     lIt->nuBarY = w * aData.y;
@@ -107,8 +110,8 @@ void Cluster::UpdateLogScore()
 
   thread_local static std::vector< double > MuIntegral( Configuration::Instance.sigmacount() , 1.0 );
   thread_local static std::vector< double > integralArguments( Configuration::Instance.sigmacount() , 1.0 );
-  double largestArg(1.0);
-  // double constant( mParams[0].log_score() + Configuration::Instance.log_probability_sigma( 0 ) );
+  // double largestArg(1.0);
+  double largestArg( mParams[0].log_score() + Configuration::Instance.log_probability_sigma( 0 ) );
   // for( std::size_t i(1) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) - constant );
   double tempArg;
   for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) {
@@ -117,7 +120,7 @@ void Cluster::UpdateLogScore()
     integralArguments[i] = tempArg;
   }
   //pass again to set the MuIntegral Correctly
-  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg);
+  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg); //adjusts the argument of exponential to be normal scale
 
   thread_local static ROOT::Math::Interpolator lInt( Configuration::Instance.sigmacount() , ROOT::Math::Interpolation::kLINEAR );
   lInt.SetData( Configuration::Instance.sigmabins() , MuIntegral );
