@@ -234,7 +234,8 @@ void EventProxy::UpdateLogScore()
     
     // for (auto& j : i.mParams){
     i.UpdateLogScore();
-      
+    mClusterCount += 1;
+    mClusteredCount += i.mClusterSize;
     mLogP += i.mClusterScore;
     }
   
