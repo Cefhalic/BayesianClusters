@@ -248,7 +248,7 @@ void EventProxy::UpdateLogScore()
 
    // To be implemented...
 
-  mLogP += -log(2.0) * mBackgroundCount + lLogPl;
+  mLogP += -log(4.0) * mBackgroundCount + lLogPl; //taking background density to be just the area of the ROI
 
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
