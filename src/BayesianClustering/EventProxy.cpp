@@ -219,6 +219,7 @@ void EventProxy::UpdateLogScore()
 
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0; //this is what i label p(nu, sigma)
+  mLogP = 0.0;
   // std::vector< double > lMuIntegral( Configuration::Instance.sigmacount()); //should we put this in the cluster class?
   // double cdfArgumentX, cdfArgumentY;
   double lNTilde, lSqrtNTilde, lMuIntegral;
@@ -234,7 +235,7 @@ void EventProxy::UpdateLogScore()
     // for (auto& j : i.mParams){
     i.UpdateLogScore();
       
-    //update mLogScpre of the cluster
+    mLogP += i.mClusterScore;
     }
   
 
@@ -245,7 +246,10 @@ void EventProxy::UpdateLogScore()
          + Configuration::Instance.logGammaAlpha()
          - ROOT::Math::lgamma( Configuration::Instance.alpha() + mClusteredCount );  
 
-  mLogP = 0.0; // To be implemented...
+   // To be implemented...
+
+  mLogP += -log(2.0) * mBackgroundCount + lLogPl;
+
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
