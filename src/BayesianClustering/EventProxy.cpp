@@ -118,6 +118,7 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
   for( auto& k : mData ) k.mCluster = NULL; // Clear cluster pointers which will be invalidated when we leave the function
 }
 
+
 void EventProxy::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
 {
   auto twoR2 = 4.0 * R * R;
@@ -166,6 +167,7 @@ void EventProxy::Clusterize( const double& R , const double& T , const std::func
 //   if( aArg < -8.0 ) return 0.0;
 //   return  ROOT::Math::normal_cdf( aArg );
 // }
+
 
 
 void EventProxy::UpdateLogScore()
