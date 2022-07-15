@@ -50,16 +50,16 @@ double Cluster::Parameter::log_score() const
   auto lSqrtNTilde = sqrt(nTilde);
   double lLogMuIntegral; //calculate this first
 
-  lLogMuIntegral = log(2 * pi * lInvNTilde)
+  lLogMuIntegral = log2pi + log(lInvNTilde) 
                   +log((CDF(lSqrtNTilde * (1 - nuBarX)) -
                       CDF(lSqrtNTilde * (-1 - nuBarX))))
                   +log(CDF(lSqrtNTilde * (1 - nuBarY)) -
                       CDF(lSqrtNTilde * (-1 - nuBarY)));
   
 
-  log_sum = (-2) * log(2.0)  //log(1/4)
-            +(-nTilde) * log2pi
-            + logWProduct    //could this be calculated earlier?
+  log_sum = //log(0.25)  //log(1/4)
+            //+(-nTilde) * log2pi this was done incorrectly, going to add when we're one level up
+            logWProduct    //could this be calculated earlier?
             -S2 / 2.0
             +lLogMuIntegral;
   return log_sum;
@@ -111,11 +111,11 @@ void Cluster::UpdateLogScore()
   thread_local static std::vector< double > MuIntegral( Configuration::Instance.sigmacount() , 1.0 );
   thread_local static std::vector< double > integralArguments( Configuration::Instance.sigmacount() , 1.0 );
   // double largestArg(1.0);
-  double largestArg( mParams[0].log_score() + Configuration::Instance.log_probability_sigma( 0 ) );
+  double largestArg( -9E99 ); //init to -9E99
   // for( std::size_t i(1) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) - constant );
   double tempArg;
   for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) {
-    tempArg =  mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i );
+    tempArg =  mParams[i].log_score()  + Configuration::Instance.log_probability_sigma( i );
     if (tempArg > largestArg) largestArg = tempArg;
     integralArguments[i] = tempArg;
   }
@@ -128,6 +128,8 @@ void Cluster::UpdateLogScore()
   static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + largestArg - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
+
+  mClusterScore += log(0.25) -(mClusterSize * log2pi); // this is from p(nu | sigma) in the paper, adding here since constant of integration
 }
 
 
