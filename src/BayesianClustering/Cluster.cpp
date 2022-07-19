@@ -129,7 +129,7 @@ void Cluster::UpdateLogScore()
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + largestArg - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
 
-  mClusterScore += log(0.25) -(mClusterSize * log2pi); // this is from p(nu | sigma) in the paper, adding here since constant of integration
+  mClusterScore += log(0.25) -(mClusterSize * log2pi); // this is from p(nu | sigma) in the paper, adding here since we don't need it at the integration stage
 }
 
 
