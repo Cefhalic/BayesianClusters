@@ -224,7 +224,7 @@ void EventProxy::UpdateLogScore()
   mLogP = 0.0;
   // std::vector< double > lMuIntegral( Configuration::Instance.sigmacount()); //should we put this in the cluster class?
   // double cdfArgumentX, cdfArgumentY;
-  double lNTilde, lSqrtNTilde, lMuIntegral;
+  // double lNTilde, lSqrtNTilde, lMuIntegral;
   static constexpr double pi = atan(1)*4;
 
   // std::size_t lClusterSize;
