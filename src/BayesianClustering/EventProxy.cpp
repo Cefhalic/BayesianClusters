@@ -239,6 +239,7 @@ void EventProxy::UpdateLogScore()
     mClusterCount += 1;
     mClusteredCount += i.mClusterSize;
     mLogP += i.mClusterScore;
+    lLogPl += ROOT::Math::lgamma( i.mClusterSize ); //this was omitted before - why?
     }
   
 
