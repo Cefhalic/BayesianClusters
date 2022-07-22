@@ -38,7 +38,7 @@ double Cluster::Parameter::log_score() const
   auto Dx( Bx * inv_A ) , Dy( By * inv_A );
   auto E( C - ( Bx * Dx ) - ( By * Dy ) );
 
-  double log_sum = logF - double( log( A ) ) + ( 0.5 * E );
+  double log_sum = logF - double( log( A ) ) - ( 0.5 * E );
 
   // We place explicit bounds checks to prevent calls to expensive functions
   auto Gx = CDF( sqrt_A * (1.0-Dx) ) - CDF( sqrt_A * (-1.0-Dx) );
