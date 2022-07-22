@@ -18,6 +18,11 @@ nTilde(0.0), nuBarX(0.0), nuBarY(0.0), S2(0.0), logWProduct(0.0)//, pNuSigma(0.0
     
 Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& aOther )
 {
+  // A += aOther.A;
+  // Bx += aOther.Bx;
+  // By += aOther.By;
+  // C += aOther.C;
+  // logF += aOther.logF;
   nTilde += aOther.nTilde;
   nuBarX += aOther.nuBarX;
   nuBarY += aOther.nuBarY;
@@ -39,26 +44,24 @@ double Cluster::Parameter::log_score() const
   const double pi = atan(1)*4;
   const double log2pi = log( 2*pi );
 
-
+  //here we have access to all the params in this particular instance
   double log_sum;
   auto lInvNTilde = 1.0 / nTilde;
   auto lSqrtNTilde = sqrt(nTilde);
   double lLogMuIntegral; //calculate this first
-  double lNubarX = nuBarX / nTilde;
-  double lNubarY = nuBarY / nTilde;
 
   lLogMuIntegral = log2pi + log(lInvNTilde) 
-                  +log((CDF(lSqrtNTilde * (1 - lNubarX)) -
-                      CDF(lSqrtNTilde * (-1 - lNubarX))))
-                  +log(CDF(lSqrtNTilde * (1 - lNubarY)) -
-                      CDF(lSqrtNTilde * (-1 - lNubarY)));
+                  +log((CDF(lSqrtNTilde * (1 - nuBarX)) -
+                      CDF(lSqrtNTilde * (-1 - nuBarX))))
+                  +log(CDF(lSqrtNTilde * (1 - nuBarY)) -
+                      CDF(lSqrtNTilde * (-1 - nuBarY)));
+  
 
   log_sum = //log(0.25)  //log(1/4)
             //+(-nTilde) * log2pi this was done incorrectly, going to add when we're one level up
             logWProduct    //could this be calculated earlier?
             -S2 / 2.0
             +lLogMuIntegral;
-
   return log_sum;
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

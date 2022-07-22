@@ -172,6 +172,15 @@ void EventProxy::Clusterize( const double& R , const double& T , const std::func
 
 void EventProxy::UpdateLogScore()
 {
+  //  iterate over all of the clusters, calculate the mean values
+    
+  for( auto& i: mClusters ){
+    //for each of the sigma paras in the cluster
+    for (auto& j : i.mParams){
+      j.nuBarX /= j.nTilde;
+      j.nuBarY /= j.nTilde;
+    }
+  }
   //iterate over dPoints here, update cluster S2
   Cluster* parent;
   Data* datapoint;
@@ -199,8 +208,8 @@ void EventProxy::UpdateLogScore()
       //we need to add on w_i here - which comes with each point in the cluster
       double w = 1.0 / (s2 + *lSig2It); //these are found in the protoclusters, inside datapoint
 
-      weightedCentreX = (lIt -> nuBarX) / (lIt ->nTilde) - x;
-      weightedCentreY = (lIt -> nuBarY) / (lIt ->nTilde) - y;
+      weightedCentreX = lIt -> nuBarX - x;
+      weightedCentreY = lIt -> nuBarY - y;
       weightedCentre = weightedCentreX*weightedCentreX + weightedCentreY*weightedCentreY;
       lIt->S2 += w*weightedCentre;
     }
@@ -215,7 +224,7 @@ void EventProxy::UpdateLogScore()
   mLogP = 0.0;
   // std::vector< double > lMuIntegral( Configuration::Instance.sigmacount()); //should we put this in the cluster class?
   // double cdfArgumentX, cdfArgumentY;
-  // double lNTilde, lSqrtNTilde, lMuIntegral;
+  double lNTilde, lSqrtNTilde, lMuIntegral;
   static constexpr double pi = atan(1)*4;
 
   // std::size_t lClusterSize;
@@ -230,7 +239,6 @@ void EventProxy::UpdateLogScore()
     mClusterCount += 1;
     mClusteredCount += i.mClusterSize;
     mLogP += i.mClusterScore;
-    lLogPl += ROOT::Math::lgamma( i.mClusterSize ); //this was omitted before - why?
     }
   
 
