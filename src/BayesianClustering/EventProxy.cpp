@@ -172,15 +172,6 @@ void EventProxy::Clusterize( const double& R , const double& T , const std::func
 
 void EventProxy::UpdateLogScore()
 {
-  //  iterate over all of the clusters, calculate the mean values
-    
-  for( auto& i: mClusters ){
-    //for each of the sigma paras in the cluster
-    for (auto& j : i.mParams){
-      j.nuBarX /= j.nTilde;
-      j.nuBarY /= j.nTilde;
-    }
-  }
   //iterate over dPoints here, update cluster S2
   Cluster* parent;
   Data* datapoint;
@@ -208,8 +199,8 @@ void EventProxy::UpdateLogScore()
       //we need to add on w_i here - which comes with each point in the cluster
       double w = 1.0 / (s2 + *lSig2It); //these are found in the protoclusters, inside datapoint
 
-      weightedCentreX = lIt -> nuBarX - x;
-      weightedCentreY = lIt -> nuBarY - y;
+      weightedCentreX = (lIt -> nuBarX) / (lIt ->nTilde) - x;
+      weightedCentreY = (lIt -> nuBarY) / (lIt ->nTilde) - y;
       weightedCentre = weightedCentreX*weightedCentreX + weightedCentreY*weightedCentreY;
       lIt->S2 += w*weightedCentre;
     }
