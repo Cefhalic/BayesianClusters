@@ -106,6 +106,7 @@ void Cluster::UpdateLogScore()
   static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + largestArg - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
+  mClusterScore += log(0.25) -(mClusterSize * log2pi);
 }
 
 Cluster& Cluster::operator+= ( const Cluster& aOther )
