@@ -143,7 +143,7 @@ void EventProxy::UpdateLogScore()
 {
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0;
-  double mLogP = 0.0;
+  // double mLogP = 0.0;
   for( auto& i: mClusters ) // here we operate on each of the identified clusters
   // call i.updatelogscore here and put all this code into it
   {

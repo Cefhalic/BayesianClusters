@@ -87,7 +87,7 @@ void Cluster::UpdateLogScore()
 
   thread_local static std::vector< double > MuIntegral( Configuration::Instance.sigmacount() , 1.0 );
   thread_local static std::vector< double > integralArguments( Configuration::Instance.sigmacount() , 1.0 );
-  double largestArg(1.0);
+  double largestArg(-9E99);
   // double constant( mParams[0].log_score() + Configuration::Instance.log_probability_sigma( 0 ) );
   // for( std::size_t i(1) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) - constant );
   double tempArg;
