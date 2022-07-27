@@ -43,7 +43,13 @@ public:
   //! \param aParallelization The stride with which we will iterate across RT parameters
   //! \param aOffset          The starting point for the strides as we iterate across RT parameters
   void ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback , const uint8_t& aParallelization = 1 , const uint8_t& aOffset = 0 );
-  
+
+  //! Run clusterization for a specific choice of R and T
+  //! \param R The R parameter for clusterization
+  //! \param T The T parameter for clusterization
+  //! \param aCallback A callback for the clusterization results
+  void Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback );
+
   //! Update log-probability after a scan
   void UpdateLogScore();
 
@@ -73,5 +79,9 @@ public:
   
   //! The log-probability density associated with the last scan
   double mLogP;
+
+private:
+  const Event& mEvent;
+
 };
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
