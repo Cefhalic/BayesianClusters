@@ -143,13 +143,12 @@ void EventProxy::UpdateLogScore()
 {
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0;
-  // double mLogP = 0.0;
+  double mLogP = 0.0;
   for( auto& i: mClusters ) // here we operate on each of the identified clusters
   // call i.updatelogscore here and put all this code into it
   {
     if( i.mClusterSize == 0 ) continue;
     
-    // for (auto& j : i.mParams){
     i.UpdateLogScore();
     mClusterCount += 1;
     mClusteredCount += i.mClusterSize;
@@ -164,8 +163,6 @@ void EventProxy::UpdateLogScore()
          + ( Configuration::Instance.logAlpha() * mClusterCount )
          + Configuration::Instance.logGammaAlpha()
          - ROOT::Math::lgamma( Configuration::Instance.alpha() + mClusteredCount );  
-
-   // To be implemented...
 
   mLogP += (-log(4.0) * mBackgroundCount) + lLogPl;
 }
