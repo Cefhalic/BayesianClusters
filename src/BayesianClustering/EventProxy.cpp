@@ -91,7 +91,7 @@ void EventProxy::CheckClusterization( const double& R , const double& T )
 }
 
 __attribute__((flatten))
-void EventProxy::ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset )
+void EventProxy::ScanRT( const std::function< void( const EventProxy& , const double& , const double& , std::vector<uint32_t>  ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset )
 {
   double dR( aParallelization * Configuration::Instance.dR() );
   double R( Configuration::Instance.minScanR() + ( aOffset * Configuration::Instance.dR() ) ) , twoR2( 0 ) , T( 0 );
@@ -104,13 +104,19 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
     mClusters.clear();
     for( auto& k : mData ) k.mCluster = NULL;
 
+    std::vector<uint32_t> lCurrentIJ;
+
     for( uint32_t j(0) ; j!=Configuration::Instance.Tbins() ; ++j , T-=Configuration::Instance.dT() )
     {
       for( auto& k : mData ) k.mExclude = ( k.mData->mLocalizationScores[ i ] < T ) ;
       for( auto& k : mData ) k.Clusterize( twoR2 , *this );
       UpdateLogScore();
       if( Configuration::Instance.validate() ) CheckClusterization( R , T ) ;
-      aCallback( *this , R , T );
+
+      //place to store current ij
+      lCurrentIJ[0] = i;
+      lCurrentIJ[1] = j;
+      aCallback( *this , R , T, lCurrentIJ );
     }
   }
 

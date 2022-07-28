@@ -80,8 +80,16 @@ public:
   //! The log-probability density associated with the last scan
   double mLogP;
 
+<<<<<<< HEAD
 private:
   const Event& mEvent;
 
+=======
+  // //max score we see in this event wrapper
+  // double mMaxRTScore;
+
+  // //the coords at which we find it 
+  // std::vector<uint32_t> mMaxScorePosition;
+>>>>>>> comitting to this branch
 };
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
