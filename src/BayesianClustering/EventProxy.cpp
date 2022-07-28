@@ -135,6 +135,7 @@ void EventProxy::Clusterize( const double& R , const double& T , const std::func
 
   UpdateLogScore();
   aCallback( *this );
+
 }
 
 

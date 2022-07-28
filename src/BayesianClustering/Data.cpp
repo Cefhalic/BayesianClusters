@@ -64,7 +64,13 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
   mProtoCluster = new Cluster( *this );
 
   // -------------------------------------------------------------------------------------
+}
 
+
+__attribute__((flatten))
+void Data::PreprocessLocalizationScores( std::vector<Data>& aData )
+{
+  static constexpr double pi = atan(1)*4;
   const double lLocalizationConstant( 4.0 / ( pi * ( aData.size() - 1 ) ) ); 
   const PRECISION eX( 1 - fabs( x ) ) , eY( 1 - fabs( y ) );
 
@@ -98,7 +104,6 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
     mLocalizationScores.push_back( lLocalizationScore );
   }
 }
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 PRECISION Data::CalculateLocalizationScore( const std::vector<Data>& aData , const double& R ) const
@@ -127,3 +132,4 @@ PRECISION Data::CalculateLocalizationScore( const std::vector<Data>& aData , con
 
 }
 
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

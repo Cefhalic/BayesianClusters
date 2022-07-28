@@ -21,7 +21,6 @@ Event::Event()
   if( lFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
 
   LoadCSV( lFilename );
-  Preprocess();    
 }
 
 void Event::Preprocess()
@@ -32,7 +31,14 @@ void Event::Preprocess()
 }
 
 void Event::ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback )
-{  
+{
+  Preprocess();    
+
+  {
+    ProgressBar2 lProgressBar( "Populating localization scores" , mData.size() );
+    [&]( const std::size_t& i ){ mData.at( i ).PreprocessLocalizationScores( mData ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
+  }
+
   const auto N = Concurrency + 1;
   std::vector< EventProxy > lEventProxys;
   lEventProxys.reserve( N );
@@ -43,6 +49,8 @@ void Event::ScanRT( const std::function< void( const EventProxy& , const double&
 
 void Event::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
 {
+  Preprocess();    
+
   EventProxy lProxy( *this );
   ProgressBar2 lProgressBar( "Clusterize"  , 0 );
   lProxy.Clusterize( R ,  T , aCallback );
