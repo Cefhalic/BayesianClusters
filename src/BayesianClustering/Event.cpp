@@ -21,6 +21,7 @@ Event::Event()
   if( lFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
 
   LoadCSV( lFilename );
+  Preprocess();    
 }
 
 void Event::Preprocess()
@@ -31,15 +32,20 @@ void Event::Preprocess()
 }
 
 void Event::ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback )
-{
-  Preprocess();  
-    
+{  
   const auto N = Concurrency + 1;
   std::vector< EventProxy > lEventProxys;
   lEventProxys.reserve( N );
   for( int i(0) ; i!=N ; ++i ) lEventProxys.emplace_back( *this );
   ProgressBar2 lProgressBar( "Scan over RT"  , 0 );
   [&]( const std::size_t& i ){ lEventProxys.at(i).ScanRT( aCallback , N , i ); } || range( N );
+}
+
+void Event::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
+{
+  EventProxy lProxy( *this );
+  ProgressBar2 lProgressBar( "Clusterize"  , 0 );
+  lProxy.Clusterize( R ,  T , aCallback );
 }
 
 /* ===== Function for loading a chunk of data from CSV file ===== */

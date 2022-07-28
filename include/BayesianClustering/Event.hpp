@@ -40,6 +40,12 @@ public:
   //! \param aCallback A callback for each RT-scan result
   void ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback );
 
+  //! Run clusterization for a specific choice of R and T
+  //! \param R The R parameter for clusterization
+  //! \param T The T parameter for clusterization
+  //! \param aCallback A callback for the clusterization results
+  void Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback );
+  
   //! Load an event from given file
   //! \param aFilename The name of the file to load 
   void LoadCSV( const std::string& aFilename );
