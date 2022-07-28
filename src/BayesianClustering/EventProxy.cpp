@@ -104,7 +104,7 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
     mClusters.clear();
     for( auto& k : mData ) k.mCluster = NULL;
 
-    std::vector<uint32_t> lCurrentIJ;
+    std::vector<uint32_t> lCurrentIJ(2, 0);
 
     for( uint32_t j(0) ; j!=Configuration::Instance.Tbins() ; ++j , T-=Configuration::Instance.dT() )
     {
@@ -116,6 +116,9 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
       //place to store current ij
       lCurrentIJ[0] = i;
       lCurrentIJ[1] = j;
+      // std::cout << "made it here" << std::endl;
+      // abort();
+
       aCallback( *this , R , T, lCurrentIJ );
     }
   }

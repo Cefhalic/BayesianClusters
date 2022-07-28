@@ -30,15 +30,15 @@ void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT
     if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
   }
   
-  // double lLogP = aEvent.mLogP;
-  // //score setting stuff
-  // if (lLogP > aMaxRTScore){
-  //   aMaxScorePosition = aCurrentIJ;
-  //   aMaxRTScore = lLogP;
-  // }
+  double lLogP = aEvent.mLogP;
+  //score setting stuff
+  if (lLogP > aMaxRTScore){
+    aMaxScorePosition = aCurrentIJ;
+    aMaxRTScore = lLogP;
+  }
 
-  // uint32_t p = aCurrentIJ[0], q = aCurrentIJ[1];
-  // aRTScores[p][q] = lLogP;
+  uint32_t p = aCurrentIJ[0], q = aCurrentIJ[1];
+  aRTScores[p][q] = lLogP;
 
   aOutput << "  ] },\n";
   mtx.unlock();  
@@ -56,22 +56,47 @@ void JsonCallback( const EventProxy& aEvent , const double& aR , const double& a
     if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
   }
   
-  // double lLogP = aEvent.mLogP;
-  // //score setting stuff
-  // if (lLogP > aMaxRTScore){
-  //   aMaxScorePosition = aCurrentIJ;
-  //   aMaxRTScore = lLogP;
-  // }
+  double lLogP = aEvent.mLogP;
+  //score setting stuff
+  if (lLogP > aMaxRTScore){
+    aMaxScorePosition = aCurrentIJ;
+    aMaxRTScore = lLogP;
+  }
 
-  // uint32_t p = aCurrentIJ[0], q = aCurrentIJ[1];
-  // aRTScores[p][q] = lLogP;
+  uint32_t p = aCurrentIJ[0], q = aCurrentIJ[1];
+  aRTScores[p][q] = lLogP;
 
   aOutput << "  ] },\n";
   mtx.unlock();  
 }
 
+//just prints the best R, T at the end
+std::vector<double> bestRT(std::vector<uint32_t>& aMaxScorePosition, std::vector<std::vector<double>>& aRTScores){
+  int i = aMaxScorePosition[0], j = aMaxScorePosition[1];
+  if ((i < 2) or (j < 2)) return {1.0, 1.0};
+  if ((i > Configuration::Instance.Rbins() - 3 ) or (j > Configuration::Instance.Tbins() - 3)) return {1.0, 1.0};
 
+  // double lRIndex(0), lTIndex(0);
+  double lRValue(0), lTValue(0);
+  double lRValueSum(0), lTValueSum(0);
+  for(int index(-2); index < 3 ; ++index ){
+    if(index == 0) continue;
+    lRValueSum += aRTScores[i + index][j];
+    lTValueSum += aRTScores[i][j + index];
+    lRValue += (index + i) * aRTScores[i + index][j];
+    lTValue += (index + i) * aRTScores[i][j + index];
+  }
 
+  double lRIndex = double(lRValue / lRValueSum);
+  double lTIndex = double (lTValue /  lTValueSum);
+
+  int lR = int(lRIndex), lT = int(lTIndex);
+
+  double outputR = Configuration::Instance.minScanR() + (lR * Configuration::Instance.dR());
+  double outputT = Configuration::Instance.minScanT() + (lT * Configuration::Instance.dT());
+
+  return {Configuration::Instance.toPhysicalUnits(outputR), Configuration::Instance.toPhysicalUnits(outputT)};
+}
 
 
 
@@ -119,6 +144,11 @@ int main(int argc, char **argv)
     throw std::runtime_error( "No handler for specified output-file" );
   }
 
+  std::cout << "max score was: " << lMaxRTScore << std::endl;
+  std::cout << "at position (" << lMaxScorePosition[0] << ", " << lMaxScorePosition[1] << ")"<< std::endl;
+  std::vector<double> a(2);
+  a = bestRT(lMaxScorePosition, lRTScores);
+  std::cout << a[0] << " " << a[1] << std::endl;
   std::cout << "+------------------------------------+" << std::endl;
 
 }
