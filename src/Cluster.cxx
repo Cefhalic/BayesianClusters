@@ -112,8 +112,8 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
 
   Event lEvent;  
-  std::vector<std::vector<double>> lRTScores(Configuration::Instance.Rbins()
-                                  ,std::vector<double>(Configuration::Instance.Tbins()/*, 1*/));
+  std::vector<std::vector<double>> lRTScores(Configuration::Instance.Rbins(),
+                                            std::vector<double>(Configuration::Instance.Tbins()/*, 1*/));
   std::vector<uint32_t> lMaxScorePosition(2,0);
   double lMaxRTScore = -9E99;
   //the above will store our scores - it needs to end up in the callback
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
   else if( lFilename.size() > 4 and lFilename.substr(lFilename.size() - 4) == ".xml" )
   {
     std::stringstream lOutput;
-    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::vector<uint32_t> aCurrentIJ ){ JsonCallback( aEvent , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
+    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::vector<uint32_t> aCurrentIJ ){ XmlCallback( aEvent , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
     std::ofstream lOutFile( lFilename );
     lOutFile << "<Results>\n" << lOutput.str() << "</Results>\n";
   }
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
   std::cout << "at position (" << lMaxScorePosition[0] << ", " << lMaxScorePosition[1] << ")"<< std::endl;
   std::vector<double> a(2);
   a = bestRT(lMaxScorePosition, lRTScores);
-  std::cout << a[0] << " " << a[1] << std::endl;
+  std::cout << "best R value is: " << a[0] << " and the best T value is: " << a[1] << std::endl;
   std::cout << "+------------------------------------+" << std::endl;
 
 }

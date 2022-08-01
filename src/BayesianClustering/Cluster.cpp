@@ -10,7 +10,8 @@
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Cluster::Parameter::Parameter() : 
-A(0.0) , Bx(0.0) , By(0.0) , C(0.0) , logF(0.0)
+A(0.0) , Bx(0.0) , By(0.0) , C(0.0) , logF(0.0),
+S2(0.0)
 {}
     
 Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& aOther )
@@ -29,6 +30,30 @@ inline double CDF( const double& aArg )
   // if( aArg > 8.0 ) return 1.0;
   // if( aArg < -8.0 ) return 0.0;
   return  ROOT::Math::normal_cdf( aArg );
+}
+
+double Cluster::Parameter::alt_log_score() const
+{
+  const double pi = atan(1)*4;
+  const double log2pi = log( 2*pi );
+
+  double log_sum;
+  auto inv_A( 1.0 / A ); // "A" is equivalent to nTilde
+  auto sqrt_A( sqrt( A ) ); 
+  double lLogMuIntegral;
+  double lNubarX = Bx * inv_A; //NuBarX is Bx, nTilde is A
+  double lNubarY = By * inv_A;
+
+  lLogMuIntegral = log2pi + log(inv_A) 
+                  +log((CDF(sqrt_A * (1 - lNubarX)) -
+                      CDF(sqrt_A * (-1 - lNubarX))))
+                  +log(CDF(sqrt_A * (1 - lNubarY)) -
+                      CDF(sqrt_A * (-1 - lNubarY)));
+
+  log_sum = logF
+            -S2 / 2.0 
+            +lLogMuIntegral;
+  return log_sum;
 }
 
 __attribute__((flatten))
@@ -88,13 +113,10 @@ void Cluster::UpdateLogScore()
   thread_local static std::vector< double > MuIntegral( Configuration::Instance.sigmacount() , 1.0 );
   thread_local static std::vector< double > integralArguments( Configuration::Instance.sigmacount() , 1.0 );
   double largestArg(-9E99);
-  // double constant( mParams[0].log_score() + Configuration::Instance.log_probability_sigma( 0 ) );
-  // for( std::size_t i(1) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) - constant );
   double tempArg;
   for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) {
     tempArg =  mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i );
     if (tempArg > largestArg) largestArg = tempArg;
-
     integralArguments[i] = tempArg;
   }
   //pass again to set the MuIntegral Correctly
@@ -111,10 +133,6 @@ void Cluster::UpdateLogScore()
 
 Cluster& Cluster::operator+= ( const Cluster& aOther )
 {
-  // if( &aOther == this ) throw std::runtime_error( "Error #1" );
-  // if( aOther.mClusterSize == 0 ) throw std::runtime_error( "Error #2" );
-  // if( aOther.mParent ) throw std::runtime_error( "Error #3" );
-
   auto lIt( mParams.begin() );
   auto lIt2( aOther.mParams.begin() );
 

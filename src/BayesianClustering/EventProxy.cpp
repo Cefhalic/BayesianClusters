@@ -111,14 +111,15 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
       for( auto& k : mData ) k.mExclude = ( k.mData->mLocalizationScores[ i ] < T ) ;
       for( auto& k : mData ) k.Clusterize( twoR2 , *this );
       UpdateLogScore();
-      if( Configuration::Instance.validate() ) CheckClusterization( R , T ) ;
+      if( Configuration::Instance.validate() ){
+        CheckClusterization( R , T ) ;
+        ValidateLogScore();
+        }
 
       //place to store current ij
       lCurrentIJ[0] = i;
       lCurrentIJ[1] = j;
-      // std::cout << "made it here" << std::endl;
-      // abort();
-
+ 
       aCallback( *this , R , T, lCurrentIJ );
     }
   }
@@ -126,7 +127,6 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
   mClusters.clear();
   for( auto& k : mData ) k.mCluster = NULL; // Clear cluster pointers which will be invalidated when we leave the function
 }
-
 
 
 void EventProxy::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
@@ -148,13 +148,76 @@ void EventProxy::Clusterize( const double& R , const double& T , const std::func
 }
 
 
+void EventProxy::ValidateLogScore()
+{
+  for ( auto& i : mClusters)
+  {
+    if (i.mClusterSize == 0 ) continue;
+    for (auto& j : i.mParams)
+    {
+      j.weightedCentreX = j.Bx / j.A;
+      j.weightedCentreY = j.By / j.A;
+    }
+  }
+  //iterate over dPoints here, update cluster S2
+  Cluster* parent;
+  Data* datapoint;
+  double x, y;
+
+  for (auto& i : mData){
+    parent = i.GetCluster();
+    datapoint = i.mData; //i is of type DataProxy, with member variable mData, which is of type Data*
+
+    if (!parent) continue; //continue if no parent
+
+    //get the coord centres
+    x = datapoint->x;
+    y = datapoint->y;
+    auto s = datapoint->s;
+    auto s2 = s * s; //bad naming! please redo
+    double weightedCentre, weightedCentreX, weightedCentreY; 
+
+    //update S2 for each sigma hypothesis
+    //we need to recalculate w here i think 
+    
+    auto lIt(parent->mParams.begin());
+    auto lSig2It( Configuration::Instance.sigmabins2().begin() );
+    for ( ; lIt != parent->mParams.end() ; ++lIt, ++lSig2It){
+      //we need to add on w_i here - which comes with each point in the cluster
+      double w = 1.0 / (s2 + *lSig2It); //these are found in the protoclusters, inside datapoint
+      // weightedCentreX = lIt -> nuBarX - x;
+      // weightedCentreY = lIt -> nuBarY - y;
+      weightedCentreX = (lIt -> weightedCentreX) - x;
+      weightedCentreY = (lIt -> weightedCentreY) - y;
+      weightedCentre = weightedCentreX*weightedCentreX + weightedCentreY*weightedCentreY;
+      lIt->S2 += w*weightedCentre; 
+  }
+}
+  //NEXT - we perform an alternate log_score 
+  //and compare it with the usual log_score
+
+  double fastLogScore, valLogScore;
+  for (auto& i : mClusters)
+  {
+    if (i.mClusterSize == 0) continue;
+    for( std::size_t j(0) ; j!=Configuration::Instance.sigmacount() ; ++j )
+    {
+      fastLogScore = i.mParams[j].log_score();
+      valLogScore = i.mParams[j].alt_log_score();
+      std::cout << "here" << std::endl;
+      if (abs(fastLogScore - valLogScore) > 0.001) throw std::runtime_error("logscore check failed");
+    }
+  }
+
+}
+
+
 void EventProxy::UpdateLogScore()
 {
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0;
   mLogP = 0.0;
   for( auto& i: mClusters ) // here we operate on each of the identified clusters
-  // call i.updatelogscore here and put all this code into it
   {
     if( i.mClusterSize == 0 ) continue;
     
