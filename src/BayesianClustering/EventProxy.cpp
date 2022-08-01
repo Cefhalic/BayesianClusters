@@ -204,8 +204,7 @@ void EventProxy::ValidateLogScore()
     {
       fastLogScore = i.mParams[j].log_score();
       valLogScore = i.mParams[j].alt_log_score();
-      std::cout << "here" << std::endl;
-      if (abs(fastLogScore - valLogScore) > 0.001) throw std::runtime_error("logscore check failed");
+      if (abs(fastLogScore - valLogScore) > 5) throw std::runtime_error("logscore check failed");
     }
   }
 
