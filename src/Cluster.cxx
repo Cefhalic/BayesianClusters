@@ -78,17 +78,17 @@ std::vector<double> bestRT(std::vector<uint32_t>& aMaxScorePosition, std::vector
 
   // double lRIndex(0), lTIndex(0);
   double lRValue(0), lTValue(0);
-  double lRValueSum(0), lTValueSum(0);
-  for(int index(-2); index < 3 ; ++index ){
-    if(index == 0) continue;
-    lRValueSum += aRTScores[i + index][j];
-    lTValueSum += aRTScores[i][j + index];
-    lRValue += (index + i) * aRTScores[i + index][j];
-    lTValue += (index + i) * aRTScores[i][j + index];
-  }
+  double lValueSum(0);
+  for(int I(-2); I < 3 ; ++I ){
+   for(int J(-2); J < 3 ; ++J ){
+    auto lVal = aRTScores[i + I][j + J];
+    lValueSum += lVal;
+    lRValue += (i+I) * lVal;
+    lTValue += (j+J) * lVal;
+  }}
 
-  double lRIndex = double(lRValue / lRValueSum);
-  double lTIndex = double (lTValue /  lTValueSum);
+  double lRIndex = lRValue / lValueSum;
+  double lTIndex = lTValue /  lValueSum;
 
   int lR = int(lRIndex), lT = int(lTIndex);
 
