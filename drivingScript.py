@@ -2,17 +2,6 @@ import fileinput
 import sys, os, shutil
 import numpy as np
 import subprocess
-import signal
-
-# break_sig = False
-
-# def handler(signum, frame):
-#   print( "Ctrl-c was pressed. Terminating ASAP.", flush=True)
-#   global break_sig
-#   break_sig = True
-
-# signal.signal(signal.SIGINT, handler)
-
 
 class Box:
     def __init__(self, n, e, s, w, scaleFactor = 250):
@@ -184,8 +173,12 @@ if __name__ == '__main__':
         print('supply a thunderstorm csv, and a config file to modify')
         exit()
     #read it
+    print('-'*50)
+    print('reading', fName)
     image = reader(fName)
 
+    print('-'*50)
+    print('looking for ROIs')
     #blur and thresh
     image = blurAndThresh(image)
 
@@ -213,7 +206,7 @@ if __name__ == '__main__':
         shutil.copyfile(configFile, lFName) 
         #write the centre, zoom to this file
         writeLine(lFName, scanArea)      
-
+        print('-'*50)
         print('running a scan')
         cmdLineArg = f'{PATH}/Cluster.exe -i {PATH}/1_un_red.csv --cfg {lFName} -o {outfile}'
         # print('running', cmdLineArg)
@@ -231,5 +224,10 @@ if __name__ == '__main__':
                 print('killing process', process.pid)
                 process.kill()
             break
+        print('finished most recent process')
+        print('-'*50)
+    for process in processes: 
+        print('killing process', process.pid)
+        process.kill()
     print('exit')
     
