@@ -295,6 +295,10 @@ public:
 		return toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
 	}
 
+  double getCentreX() const {return mPhysicalCentreX;}
+  double getCentreY() const {return mPhysicalCentreY;}
+  double getZoom() const {return 2.0 / mScale;}
+
 public:
   //! A single global copy of the global variables
   static Configuration Instance;

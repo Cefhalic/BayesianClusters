@@ -23,12 +23,13 @@ void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT
                   std::vector<std::vector<double>>& aRTScores, std::vector<uint32_t>& aMaxScorePosition, double& aMaxRTScore )
 {
   mtx.lock();
-  aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << ", Clusters:[\n";
+  // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << ", Clusters:[\n";
+  aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << "}\n";
 
-  for( auto& i : aEvent.mClusters )
-  {
-    if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
-  }
+  // for( auto& i : aEvent.mClusters )
+  // {
+  //   if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
+  // }
   
   double lLogP = aEvent.mLogP;
   //score setting stuff
@@ -40,7 +41,7 @@ void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT
   uint32_t p = aCurrentIJ[0], q = aCurrentIJ[1];
   aRTScores[p][q] = lLogP;
 
-  aOutput << "  ] },\n";
+  // aOutput << "   },\n";
   mtx.unlock();  
 }
 
@@ -49,12 +50,13 @@ void JsonCallback( const EventProxy& aEvent , const double& aR , const double& a
                   std::vector<std::vector<double>>& aRTScores, std::vector<uint32_t>& aMaxScorePosition, double& aMaxRTScore )
 {
   mtx.lock();
-  aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << ", Clusters:[\n";
+  // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << ", Clusters:[\n";
+  aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << "}\n";
 
-  for( auto& i : aEvent.mClusters )
-  {
-    if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
-  }
+  // for( auto& i : aEvent.mClusters )
+  // {
+  //   if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
+  // }
   
   double lLogP = aEvent.mLogP;
   //score setting stuff
@@ -66,7 +68,7 @@ void JsonCallback( const EventProxy& aEvent , const double& aR , const double& a
   uint32_t p = aCurrentIJ[0], q = aCurrentIJ[1];
   aRTScores[p][q] = lLogP;
 
-  aOutput << "  ] },\n";
+  // aOutput << "   },\n";
   mtx.unlock();  
 }
 
@@ -146,9 +148,16 @@ int main(int argc, char **argv)
 
   std::cout << "max score was: " << lMaxRTScore << std::endl;
   std::cout << "at position (" << lMaxScorePosition[0] << ", " << lMaxScorePosition[1] << ")"<< std::endl;
+  std::cout << "out of a possible " << Configuration::Instance.Rbins() << " R Bins"
+  << " and " << Configuration::Instance.Tbins() << " T Bins" << std::endl;
   std::vector<double> a(2);
   a = bestRT(lMaxScorePosition, lRTScores);
   std::cout << "best R value is: " << a[0] << " and the best T value is: " << a[1] << std::endl;
+  // std::cout << "writing the R, T values to cmd line " << std::endl;
+
+  // std::cout << "best R value is: " << a[0] << " and the best T value is: " << a[1] << std::endl;
+  std::cout << "scan centre was " << Configuration::Instance.getCentreX() << ", " << Configuration::Instance.getCentreY() 
+  << " zoom was: " << Configuration::Instance.getZoom() << std::endl;
   std::cout << "+------------------------------------+" << std::endl;
 
 }
