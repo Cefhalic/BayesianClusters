@@ -129,6 +129,14 @@ void Event::LoadCSV( const std::string& aFilename )
     std::inplace_merge ( mData.begin() , mData.begin()+lSize2 , mData.end() );  
   }
 
+  // // Validate the in-place merge
+  // PRECISION last = -1;
+  // for( auto& i : mData )
+  // {
+  //   if( i.r < last ) throw std::runtime_error( "Out of order!" );
+  //   last = i.r;
+  // }
+
   std::cout << "Read " << mData.size() << " points" << std::endl;
 }
 
