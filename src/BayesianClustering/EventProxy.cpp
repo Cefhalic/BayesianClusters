@@ -12,7 +12,7 @@
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 EventProxy::EventProxy( Event& aEvent ) :
-  mBackgroundCount( 0 )
+  mBackgroundCount( 0 ) , mEvent( aEvent )
 {
   mClusters.reserve( aEvent.mData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
   mData.reserve( aEvent.mData.size() );
@@ -94,12 +94,11 @@ __attribute__((flatten))
 void EventProxy::ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset )
 {
   double dR( aParallelization * Configuration::Instance.dR() );
-  double R( Configuration::Instance.minScanR() + ( aOffset * Configuration::Instance.dR() ) ) , R2( 0 ) , twoR2( 0 ) , T( 0 );
+  double R( Configuration::Instance.minScanR() + ( aOffset * Configuration::Instance.dR() ) ) , twoR2( 0 ) , T( 0 );
 
   for( uint32_t i( aOffset ) ; i<Configuration::Instance.Rbins() ; i+=aParallelization , R+=dR )
   {
-    R2 = R * R;
-    twoR2 = 4.0 * R2;
+    twoR2 = 4.0 * R * R;
     T = Configuration::Instance.maxScanT();
 
     mClusters.clear();
@@ -118,6 +117,27 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
   mClusters.clear();
   for( auto& k : mData ) k.mCluster = NULL; // Clear cluster pointers which will be invalidated when we leave the function
 }
+
+
+
+void EventProxy::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
+{
+  auto twoR2 = 4.0 * R * R;
+
+  mClusters.clear();
+  for( auto& k : mData )
+  { 
+    k.mCluster = NULL;
+    k.mExclude = ( k.mData->CalculateLocalizationScore( mEvent.mData , R ) < T ) ;
+  }
+
+  for( auto& k : mData ) k.Clusterize( twoR2 , *this );
+
+  UpdateLogScore();
+  aCallback( *this );
+
+}
+
 
 void EventProxy::UpdateLogScore()
 {

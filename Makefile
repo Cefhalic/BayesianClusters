@@ -10,7 +10,7 @@ EXECUTABLE_SOURCES = $(sort $(wildcard src/*.cxx) )
 EXECUTABLE_OBJECT_FILES = $(patsubst src/%.cxx,obj/bin/%.o,${EXECUTABLE_SOURCES})
 EXECUTABLES = $(patsubst src/%.cxx,%.exe,${EXECUTABLE_SOURCES})
 
-DOXYGEN = doxygen/html/index.html
+DOXYGEN = documentation/SoftwareManual.pdf
 DOCUMENTATION = documentation/OptimizingTheMaths.pdf
 
 DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${EXECUTABLE_OBJECT_FILES}, $(dir ${filePath})))
@@ -21,7 +21,7 @@ default: cpp
 verbose: cpp
 
 clean:
-	rm -rf obj doxygen ${EXECUTABLES} ${DOCUMENTATION}
+	rm -rf obj .doxygen ${EXECUTABLES} ${DOCUMENTATION} ${DOXYGEN}
 
 all : cpp doxygen docs 
 
@@ -93,10 +93,15 @@ ${DIRECTORIES}:
 	@mkdir -p $@
 
 ${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
-	@echo "Generating Doxygen Documentation: doxygen Doxyfile"
+	@echo "Generating Doxygen Documentation: doxygen Doxyfile ---> $@"
 	@doxygen Doxyfile
+	@make -C .doxygen/latex
+	@cp .doxygen/latex/refman.pdf $@
+
+#	@python TexLinker.py "https://github.com/Cefhalic/BayesianClusters/blob/" `git rev-parse --abbrev-ref HEAD`
+
 
 ${DOCUMENTATION}:
-	@echo "Generating Maths Documentation: pdflatex ... ./documentation/OptimizingTheMaths"
+	@echo "Generating Maths Documentation: pdflatex ... documentation/OptimizingTheMaths ---> documentation/OptimizingTheMaths.pdf"
 	@pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
 	@pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths

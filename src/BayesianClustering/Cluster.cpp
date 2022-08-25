@@ -26,8 +26,8 @@ Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& a
 inline double CDF( const double& aArg )
 {
   // Above or below ~8 are indistinguishable from 0 and 1 respectively
-  if( aArg > 8.0 ) return 1.0;
-  if( aArg < 8.0 ) return 0.0;
+  // if( aArg > 8.0 ) return 1.0;
+  // if( aArg < -8.0 ) return 0.0;
   return  ROOT::Math::normal_cdf( aArg );
 }
 

@@ -75,6 +75,11 @@ public:
   //! \param aIndex The index of the current data-point
   void Preprocess( std::vector<Data>& aData , const std::size_t& aIndex );
 
+  void PreprocessLocalizationScores( std::vector<Data>& aData );
+
+
+  PRECISION CalculateLocalizationScore( const std::vector<Data>& aData , const double& R ) const;
+
 public:
   //! The x-position of the data-point
   PRECISION x;

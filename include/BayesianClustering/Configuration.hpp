@@ -239,6 +239,14 @@ public:
   inline const std::string& outputFile() const { return mOutputFile; }
 
 
+  //! Getter for the R value for a clusterization pass
+  //! \return The R value for a clusterization pass
+  inline const double& ClusterR() const { return mClusterR; }
+  //! Getter for the T value for a clusterization pass
+  //! \return The T value for a clusterization pass
+  inline const double& ClusterT() const { return mClusterT; }
+
+
   //! Utility function to convert a normalized algorithm distance to physical distance 
   //! \param aAlgorithmUnits A normalized algorithm distance
   //! \return A physical distances 
@@ -363,4 +371,8 @@ private:
   //! The output file 
   std::string mOutputFile;
 
+  //! The value of R for clustering
+  double mClusterR;
+  //! The value of T for clustering
+  double mClusterT;
 };

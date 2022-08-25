@@ -64,7 +64,13 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
   mProtoCluster = new Cluster( *this );
 
   // -------------------------------------------------------------------------------------
+}
 
+
+__attribute__((flatten))
+void Data::PreprocessLocalizationScores( std::vector<Data>& aData )
+{
+  static constexpr double pi = atan(1)*4;
   const double lLocalizationConstant( 4.0 / ( pi * ( aData.size() - 1 ) ) ); 
   const PRECISION eX( 1 - fabs( x ) ) , eY( 1 - fabs( y ) );
 
@@ -98,6 +104,32 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
     mLocalizationScores.push_back( lLocalizationScore );
   }
 }
+
+
+PRECISION Data::CalculateLocalizationScore( const std::vector<Data>& aData , const double& R ) const
+{
+  static constexpr double pi = atan(1)*4;  
+  auto R2 = R * R;
+
+  const double lLocalizationConstant( 4.0 / ( pi * ( aData.size() - 1 ) ) ); 
+  const PRECISION eX( 1 - fabs( x ) ) , eY( 1 - fabs( y ) );
+
+  PRECISION lLocalizationSum( 0 ) , lDist( 0 ) , lWeight( 0 );
+
+  for( auto lNeighbourit( mNeighbours.begin() ) ; lNeighbourit != mNeighbours.end() ; ++lNeighbourit )
+  { 
+    if( lNeighbourit->first > R2 ) break;
+    lDist = sqrt( lNeighbourit->first );
+
+    // Noticeably faster polynomial approximation of the edge-correction
+    lWeight = 1.0;
+    if( eX < lDist )  lWeight *= ( 1 + pow( acos( eX/lDist ) * (2/pi) , 4 ) );
+    if( eY < lDist )  lWeight *= ( 1 + pow( acos( eY/lDist ) * (2/pi) , 4 ) );
+    lLocalizationSum += lWeight;
+  }
+
+  return sqrt( lLocalizationConstant * lLocalizationSum );
+
+}
+
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-

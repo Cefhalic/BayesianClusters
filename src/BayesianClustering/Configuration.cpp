@@ -29,7 +29,8 @@ Configuration::Configuration() :
 	mLogPb(-1), mLogPbDagger(-1), 
 	mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
 	mValidate(false),
-  mInputFile(""), mOutputFile("")
+  mInputFile(""), mOutputFile(""),
+  mClusterR( -1 ), mClusterT(-1)
 {}
 
 
@@ -187,6 +188,9 @@ void Configuration::FromCommandline( int argc , char **argv )
     ( "validate,v",   po::bool_switch()                           ->notifier( [&]( const bool& aArg ){ SetValidate( aArg ); } )                               , "validate clusters" )
     ( "input-file,i", po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ SetInputFile(aArg); } )                                , "input file")
     ( "output-file,o", po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ SetOutputFile(aArg); } )                               , "output file")
+
+    ( "r",             po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ mClusterR=toAlgorithmUnits( StrToDist(aArg) ); } )     , "R for clustering" )
+    ( "t",             po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ mClusterT=toAlgorithmUnits( StrToDist(aArg) ); } )     , "T for clustering" )
   ;
 
   po::variables_map lVm;

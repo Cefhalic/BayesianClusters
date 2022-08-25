@@ -65,3 +65,30 @@ void Display( Functors&&... aFunctors )
   rc->Connect("CloseWindow()", "TApplication", gApplication, "Terminate()");
   app.Run();
 }
+
+
+
+template< typename ... Functors >
+void ToFile( const std::string& aFilename , Functors&&... aFunctors )
+{
+  gROOT->Reset ( ) ; // re−initialize ROOT
+  gROOT->SetBatch( kTRUE );
+  gROOT->SetStyle ( "Plain" ) ; // set empty TStyle ( nicer on paper )
+  gStyle->SetOptStat ( 0 ) ; // print statistics on plots , ( 0 ) for no output
+  gStyle->SetPalette ( 1 ) ; // set nicer colors than default
+  // gStyle->SetOptTitle ( 0 ) ; // suppress title box
+  gStyle->SetTitleSize( 0.025 , "t" );
+  gStyle->SetTitleSize( 0.025 , "xyz" );
+
+  constexpr std::size_t cnt( sizeof...(Functors) );
+
+  TCanvas* c = new TCanvas( "c" , "" , 0 , 0 , 16000 , 8000 );
+
+  std::size_t i = ceil( sqrt( cnt ) );
+  std::size_t j = ceil( double(cnt) / i );
+
+  c->Divide( i , j );
+  DisplayHelper( c , 1 , std::forward<Functors>( aFunctors)... );
+
+  c->SaveAs( aFilename.c_str() );
+}

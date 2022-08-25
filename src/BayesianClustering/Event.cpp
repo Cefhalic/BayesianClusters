@@ -32,14 +32,28 @@ void Event::Preprocess()
 
 void Event::ScanRT( const std::function< void( const EventProxy& , const double& , const double& ) >& aCallback )
 {
-  Preprocess();  
-    
+  Preprocess();    
+
+  {
+    ProgressBar2 lProgressBar( "Populating localization scores" , mData.size() );
+    [&]( const std::size_t& i ){ mData.at( i ).PreprocessLocalizationScores( mData ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
+  }
+
   const auto N = Concurrency + 1;
   std::vector< EventProxy > lEventProxys;
   lEventProxys.reserve( N );
   for( int i(0) ; i!=N ; ++i ) lEventProxys.emplace_back( *this );
   ProgressBar2 lProgressBar( "Scan over RT"  , 0 );
   [&]( const std::size_t& i ){ lEventProxys.at(i).ScanRT( aCallback , N , i ); } || range( N );
+}
+
+void Event::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
+{
+  Preprocess();    
+
+  EventProxy lProxy( *this );
+  ProgressBar2 lProgressBar( "Clusterize"  , 0 );
+  lProxy.Clusterize( R ,  T , aCallback );
 }
 
 /* ===== Function for loading a chunk of data from CSV file ===== */
@@ -114,6 +128,14 @@ void Event::LoadCSV( const std::string& aFilename )
     i.erase( i.begin() , i.end() );
     std::inplace_merge ( mData.begin() , mData.begin()+lSize2 , mData.end() );  
   }
+
+  // // Validate the in-place merge
+  // PRECISION last = -1;
+  // for( auto& i : mData )
+  // {
+  //   if( i.r < last ) throw std::runtime_error( "Out of order!" );
+  //   last = i.r;
+  // }
 
   std::cout << "Read " << mData.size() << " points" << std::endl;
 }

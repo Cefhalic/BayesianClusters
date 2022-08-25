@@ -37,12 +37,13 @@ void DrawPoints( const Event& aEvent )
   }
 
   // gPad -> SetMargin( 0.01 , 0.15 , 0.01 , 0.01 );
-  TGraph* lGraph0 = new TGraph( x.size() , x.data() , y.data() );
-  lGraph0 -> SetTitle("Data points");
-  auto FormatAxis = [&]( TAxis* aAxis ){ aAxis->SetLimits(x0,x1); aAxis->SetRangeUser(y0,y1); aAxis->SetLabelSize(0.025); aAxis->SetTickLength(0); };
-  FormatAxis( lGraph0->GetXaxis() );
-  FormatAxis( lGraph0->GetYaxis() );
-  lGraph0->Draw( "a p" );
+  TGraph* lGraph = new TGraph( x.size() , x.data() , y.data() );
+  lGraph -> SetTitle("Data points");
+  auto lAxis = lGraph->GetXaxis();
+  lAxis->SetLimits(x0,x1); lAxis->SetRangeUser(x0,x1); lAxis->SetLabelSize(0.025); lAxis->SetTickLength(0);
+  lAxis = lGraph->GetYaxis();
+  lAxis->SetLimits(y0,y1); lAxis->SetRangeUser(y0,y1); lAxis->SetLabelSize(0.025); lAxis->SetTickLength(0);
+  lGraph->Draw( "a p" );
 }
 
 
