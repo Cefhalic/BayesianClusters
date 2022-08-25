@@ -75,8 +75,7 @@ private:
 };
 
 //! Utility variable for the concurrency
-//! \todo The factor of -1 is legacy and should probably be cleaned up through-out the code
-const std::size_t Concurrency( std::thread::hardware_concurrency() - 1 );
+extern std::size_t Nthreads;
 
 //! The pool of all wrapped threads
 extern std::vector< std::unique_ptr< WrappedThread > > ThreadPool;
@@ -92,12 +91,11 @@ template< typename tContainer , typename tExpr, typename tContainerType = typena
 inline void operator|| ( tExpr&& aExpr , tContainer&& aContainer )
 {
   // Previously the main thread did nothing but loop
-  // Now we increase the step-size by one (changing Concurrency to N in the inner loop), so each thread handles less
+  // Now we increase the step-size by one (changing Nthreads - 1 to N in the inner loop), so each thread handles less
   // And handle the remaining entries in the master thread, before entering a loop to check that the children have finished
   auto Thread( ThreadPool.begin() );
-  const auto N = Concurrency + 1;
-  for( std::size_t offset(0) ; offset!=Concurrency ; ++offset , ++Thread ) (**Thread).submit( [ aExpr , &aContainer , offset , &N ](){ for( auto i( aContainer.begin() + offset) ; i<aContainer.end() ; i+=N ) aExpr( *i ); } );
-  WrappedThread::run_and_wait( [ aExpr , &aContainer , &N ](){ for( auto i( aContainer.begin() + Concurrency ) ; i<aContainer.end() ; i+=N ) aExpr( *i ); } );
+  for( std::size_t offset(0) ; offset!=Nthreads - 1 ; ++offset , ++Thread ) (**Thread).submit( [ aExpr , &aContainer , offset ](){ for( auto i( aContainer.begin() + offset) ; i<aContainer.end() ; i+=Nthreads ) aExpr( *i ); } );
+  WrappedThread::run_and_wait( [ aExpr , &aContainer ](){ for( auto i( aContainer.begin() + Nthreads - 1 ) ; i<aContainer.end() ; i+=Nthreads ) aExpr( *i ); } );
 }
 
 //! Syntactic sugar to allow you to block parallelize via operator
@@ -109,7 +107,7 @@ inline void operator|| ( tExpr&& aExpr , tContainer&& aContainer )
 template< typename tContainer , typename tExpr, typename tContainerType = typename std::remove_reference<tContainer>::type::value_type >
 inline void operator&& ( tExpr&& aExpr , tContainer&& aContainer )
 {
-  const std::size_t lChunksize( ceil( double( aContainer.size() ) / ( Concurrency + 1 ) ) );
+  const std::size_t lChunksize( ceil( double( aContainer.size() ) / ( Nthreads ) ) );
   auto Thread( ThreadPool.begin() );
 
   auto A( aContainer.begin() ) , B( aContainer.begin() + lChunksize );

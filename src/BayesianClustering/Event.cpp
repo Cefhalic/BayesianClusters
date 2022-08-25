@@ -39,12 +39,11 @@ void Event::ScanRT( const std::function< void( const EventProxy& , const double&
     [&]( const std::size_t& i ){ mData.at( i ).PreprocessLocalizationScores( mData ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
   }
 
-  const auto N = Concurrency + 1;
   std::vector< EventProxy > lEventProxys;
-  lEventProxys.reserve( N );
-  for( int i(0) ; i!=N ; ++i ) lEventProxys.emplace_back( *this );
+  lEventProxys.reserve( Nthreads );
+  for( int i(0) ; i!=Nthreads ; ++i ) lEventProxys.emplace_back( *this );
   ProgressBar2 lProgressBar( "Scan over RT"  , 0 );
-  [&]( const std::size_t& i ){ lEventProxys.at(i).ScanRT( aCallback , N , i ); } || range( N );
+  [&]( const std::size_t& i ){ lEventProxys.at(i).ScanRT( aCallback , Nthreads , i ); } || range( Nthreads );
 }
 
 void Event::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
@@ -109,12 +108,11 @@ void Event::LoadCSV( const std::string& aFilename )
   auto lSize = ftell(f); // get current file pointer
   fclose(f);
 
-  const auto N = Concurrency + 1;
-  int lChunkSize = ceil( double(lSize) / N );
-  std::vector< std::vector< Data > > lData( N );
+  int lChunkSize = ceil( double(lSize) / Nthreads );
+  std::vector< std::vector< Data > > lData( Nthreads );
 
   ProgressBar2 lProgressBar( "Reading File" , lSize );
-  [ & ]( const std::size_t& i ){ __LoadCSV__( aFilename , *this , lData[i] , i*lChunkSize , lChunkSize ); } && range( N );
+  [ & ]( const std::size_t& i ){ __LoadCSV__( aFilename , *this , lData[i] , i*lChunkSize , lChunkSize ); } && range( Nthreads );
 
   std::size_t lSize2( 0 );
   for( auto& i : lData ) lSize2 += i.size();
