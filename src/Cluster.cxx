@@ -123,7 +123,7 @@ int main(int argc, char **argv)
     Configuration::Instance.ClusterR() , 
     Configuration::Instance.ClusterT() , 
     [&]( const EventProxy& aEvent ){ ToFile( "Points.png" , [&](){ DrawPoints( aEvent ); } ); } 
-  ); // Null callback
+  ); 
 
   // const std::string& lFilename = Configuration::Instance.outputFile();
 
