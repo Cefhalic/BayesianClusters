@@ -41,7 +41,7 @@ cpp: ${EXECUTABLES}
 doxygen: ${DOXYGEN} 
 docs: ${DOCUMENTATION}
 
-FLAGS = -g -std=c++11 -march=native -O3 -lm `root-config --glibs --cflags --libs` -lMathMore -flto -MMD -MP -lboost_program_options
+FLAGS = -I/usr/local/include -L/usr/local/lib -g -std=c++11 -march=native -O3 -lm `root-config --glibs --cflags --libs` -lMathMore -MMD -MP -lboost_program_options
 
 ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
 

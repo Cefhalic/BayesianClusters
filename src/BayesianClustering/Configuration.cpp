@@ -2,6 +2,7 @@
 
 /* ===== Local utilities ===== */
 #include "Utilities/ListComprehension.hpp"
+#include "Utilities/Vectorize.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
 /* ===== For Root ===== */
@@ -153,6 +154,7 @@ void Configuration::FromCommandline( int argc , char **argv )
   typedef std::vector<unsigned> tVU;
   typedef double tD;
   typedef std::vector<double> tVD;
+  typedef std::size_t tZ;
 
   tD sigLo , sigHi , rLo , rHi , tLo , tHi;
   tU Nsig(0) , Nr(0) , Nt(0);
@@ -189,8 +191,9 @@ void Configuration::FromCommandline( int argc , char **argv )
     ( "input-file,i", po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ SetInputFile(aArg); } )                                , "input file")
     ( "output-file,o", po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ SetOutputFile(aArg); } )                               , "output file")
 
-    ( "r",             po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ mClusterR=toAlgorithmUnits( StrToDist(aArg) ); } )     , "R for clustering" )
-    ( "t",             po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ mClusterT=toAlgorithmUnits( StrToDist(aArg) ); } )     , "T for clustering" )
+    ( "r",            po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ mClusterR=toAlgorithmUnits( StrToDist(aArg) ); } )     , "R for clustering" )
+    ( "t",            po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ mClusterT=toAlgorithmUnits( StrToDist(aArg) ); } )     , "T for clustering" )
+    ( "threads",      po::value<tZ>( &Nthreads )                                                                                                              , "Number of threads to use (default is value given by std::threads::hardware_concurrency())" )
   ;
 
   po::variables_map lVm;
