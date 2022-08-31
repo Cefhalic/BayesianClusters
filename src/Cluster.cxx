@@ -121,9 +121,6 @@ int main(int argc, char **argv)
 
   if( ( Configuration::Instance.ClusterR() < 0 ) or ( Configuration::Instance.ClusterT() < 0 ) ) throw std::runtime_error( "Must specify r and t" );
 
-
-
-
   const std::string& lFilename = Configuration::Instance.outputFile();
 
   if( lFilename.size() == 0 )
@@ -139,7 +136,7 @@ int main(int argc, char **argv)
     lEvent.Clusterize( 
       Configuration::Instance.ClusterR() , 
       Configuration::Instance.ClusterT() , 
-      [&]( const EventProxy& aEvent ){ ToFile( "Points.png" , [&](){ DrawPoints( aEvent ); } ); } 
+      [&]( const EventProxy& aEvent ){ ToFile( lFilename , [&](){ DrawPoints( aEvent ); } ); } 
     ); 
   }
 
