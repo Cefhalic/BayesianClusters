@@ -69,12 +69,15 @@ void DrawPoints( const EventProxy& aProxy )
   { 
     Data* lData( i.mData );
     lClusters[ i.mCluster ? i.mCluster->GetParent() : NULL ].push_back( lData );
+//    lClusters[ NULL ].push_back( lData );
 
     x0 = std::min( x0 , lData->x );
     x1 = std::max( x1 , lData->x );
     y0 = std::min( y0 , lData->y );
     y1 = std::max( y1 , lData->y );
   }
+
+  std::cout << "Clusters = " << lClusters.size() << std::endl;
 
   auto lGraph = DrawGraphs( lClusters[NULL] , 1 );
   lGraph->SetTitle("Data points");
@@ -119,37 +122,26 @@ int main(int argc, char **argv)
   if( ( Configuration::Instance.ClusterR() < 0 ) or ( Configuration::Instance.ClusterT() < 0 ) ) throw std::runtime_error( "Must specify r and t" );
 
 
-  lEvent.Clusterize( 
-    Configuration::Instance.ClusterR() , 
-    Configuration::Instance.ClusterT() , 
-    [&]( const EventProxy& aEvent ){ ToFile( "Points.png" , [&](){ DrawPoints( aEvent ); } ); } 
-  ); 
 
-  // const std::string& lFilename = Configuration::Instance.outputFile();
 
-  // if( lFilename.size() == 0 )
-  // {
-  //   std::cout << "Warning: Running scan without callback" << std::endl;
-  //   lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT ){} ); // Null callback
-  // }
-  // else if( lFilename.size() > 4 and lFilename.substr(lFilename.size() - 4) == ".xml" )
-  // {
-  //   std::stringstream lOutput;
-  //   lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT ){ XmlCallback( aEvent , aR , aT , lOutput ); } );
-  //   std::ofstream lOutFile( lFilename );
-  //   lOutFile << "<Results>\n" << lOutput.str() << "</Results>\n";
-  // }
-  // else if( lFilename.size() > 5 and lFilename.substr(lFilename.size() - 5) == ".json" )
-  // {
-  //   std::stringstream lOutput;
-  //   lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT ){ JsonCallback( aEvent , aR , aT , lOutput ); } );
-  //   std::ofstream lOutFile( lFilename );
-  //   lOutFile << "{\nResults:[\n" << lOutput.str() << "]\n}";
-  // }
-  // else
-  // {
-  //   throw std::runtime_error( "No handler for specified output-file" );
-  // }
+  const std::string& lFilename = Configuration::Instance.outputFile();
+
+  if( lFilename.size() == 0 )
+  {
+    lEvent.Clusterize( 
+      Configuration::Instance.ClusterR() , 
+      Configuration::Instance.ClusterT() , 
+      [&]( const EventProxy& aEvent ){ Display( [&](){ DrawPoints( aEvent ); } ); } 
+    ); 
+  }
+  else
+  {
+    lEvent.Clusterize( 
+      Configuration::Instance.ClusterR() , 
+      Configuration::Instance.ClusterT() , 
+      [&]( const EventProxy& aEvent ){ ToFile( "Points.png" , [&](){ DrawPoints( aEvent ); } ); } 
+    ); 
+  }
 
   std::cout << "+------------------------------------+" << std::endl;
 
