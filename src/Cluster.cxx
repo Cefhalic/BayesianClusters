@@ -95,7 +95,7 @@ std::vector<double> bestRT(std::vector<uint32_t>& aMaxScorePosition, std::vector
   int lR = int(lRIndex), lT = int(lTIndex);
 
   double outputR = Configuration::Instance.minScanR() + (lR * Configuration::Instance.dR());
-  double outputT = Configuration::Instance.minScanT() + (lT * Configuration::Instance.dT());
+  double outputT = Configuration::Instance.maxScanT() - (lT * Configuration::Instance.dT());
 
   return {Configuration::Instance.toPhysicalUnits(outputR), Configuration::Instance.toPhysicalUnits(outputT)};
 }
