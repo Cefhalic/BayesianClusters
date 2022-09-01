@@ -153,11 +153,5 @@ int main(int argc, char **argv)
   std::vector<double> a(2);
   a = bestRT(lMaxScorePosition, lRTScores);
   std::cout << "best R value is: " << a[0] << " and the best T value is: " << a[1] << std::endl;
-  // std::cout << "writing the R, T values to cmd line " << std::endl;
-
-  // std::cout << "best R value is: " << a[0] << " and the best T value is: " << a[1] << std::endl;
-  std::cout << "scan centre was " << Configuration::Instance.getCentreX() << ", " << Configuration::Instance.getCentreY() 
-  << " zoom was: " << Configuration::Instance.getZoom() << std::endl;
-  std::cout << "+------------------------------------+" << std::endl;
 
 }

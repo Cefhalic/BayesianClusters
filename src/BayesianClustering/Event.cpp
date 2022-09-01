@@ -84,14 +84,15 @@ void __LoadCSV__( const std::string& aFilename , Event& aEvent , std::vector< Da
     double x = Configuration::Instance.toAlgorithmX( strtod( ch , &lPtr ) * nanometer );
     ReadUntil( ',' ); //"y [nm]"
     double y = Configuration::Instance.toAlgorithmY( strtod( ch , &lPtr ) * nanometer );      
-    ReadUntil( ',' ); //"sigma [nm]"      
+    ReadUntil( ',' ); //"sigma [nm]"   
+    double sigma = strtod( ch , &lPtr );
     ReadUntil( ',' ); //"intensity [photon]"
     ReadUntil( ',' ); //"offset [photon]"
     ReadUntil( ',' ); //"bkgstd [photon]"
     ReadUntil( ',' ); //"chi2"
     ReadUntil( '\n' ); //"uncertainty_xy [nm]"
     double s = Configuration::Instance.toAlgorithmUnits( strtod( ch , &lPtr ) * nanometer );      
-
+    if ( ( sigma < 100 ) or ( sigma  > 300) ) continue;
     if( fabs(x) < 1 and fabs(y) < 1 ) aData.emplace_back( x , y , s );
   }
   
