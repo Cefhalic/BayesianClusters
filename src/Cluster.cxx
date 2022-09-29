@@ -19,8 +19,8 @@ std::mutex mtx; // mutex for critical section
 
 
 
-void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT, std::vector<uint32_t>& aCurrentIJ , std::stringstream& aOutput, 
-                  std::vector<std::vector<double>>& aRTScores, std::vector<uint32_t>& aMaxScorePosition, double& aMaxRTScore )
+void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int>& aCurrentIJ , std::stringstream& aOutput, 
+                  std::vector<std::vector<double>>& aRTScores, std::pair<int,int>& aMaxScorePosition, double& aMaxRTScore )
 {
   mtx.lock();
   // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << ", Clusters:[\n";
@@ -38,7 +38,7 @@ void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT
     aMaxRTScore = lLogP;
   }
 
-  uint32_t p = aCurrentIJ[0], q = aCurrentIJ[1];
+  uint32_t p = aCurrentIJ.first, q = aCurrentIJ.second;
   aRTScores[p][q] = lLogP;
 
   // aOutput << "   },\n";
@@ -46,8 +46,8 @@ void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT
 }
 
 
-void JsonCallback( const EventProxy& aEvent , const double& aR , const double& aT, std::vector<uint32_t>& aCurrentIJ , std::stringstream& aOutput, 
-                  std::vector<std::vector<double>>& aRTScores, std::vector<uint32_t>& aMaxScorePosition, double& aMaxRTScore )
+void JsonCallback( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int,int>& aCurrentIJ , std::stringstream& aOutput, 
+                  std::vector<std::vector<double>>& aRTScores, std::pair<int,int>& aMaxScorePosition, double& aMaxRTScore )
 {
   mtx.lock();
   // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << ", Clusters:[\n";
@@ -65,7 +65,7 @@ void JsonCallback( const EventProxy& aEvent , const double& aR , const double& a
     aMaxRTScore = lLogP;
   }
 
-  uint32_t p = aCurrentIJ[0], q = aCurrentIJ[1];
+  uint32_t p = aCurrentIJ.first, q = aCurrentIJ.second;
   aRTScores[p][q] = lLogP;
 
   // aOutput << "   },\n";
@@ -73,8 +73,8 @@ void JsonCallback( const EventProxy& aEvent , const double& aR , const double& a
 }
 
 //just prints the best R, T at the end
-std::vector<double> bestRT(std::vector<uint32_t>& aMaxScorePosition, std::vector<std::vector<double>>& aRTScores){
-  int i = aMaxScorePosition[0], j = aMaxScorePosition[1];
+std::pair<double,double> bestRT(std::pair<int, int>& aMaxScorePosition, std::vector<std::vector<double>>& aRTScores){
+  int i = aMaxScorePosition.first, j = aMaxScorePosition.second;
   double lRValue(0), lTValue(0);
   double lValueSum(0);
   for(int I(-2); I < 3 ; ++I ){
@@ -93,7 +93,7 @@ std::vector<double> bestRT(std::vector<uint32_t>& aMaxScorePosition, std::vector
   double outputR = Configuration::Instance.minScanR() + (lRIndex * Configuration::Instance.dR());
   double outputT = Configuration::Instance.maxScanT() - (lTIndex * Configuration::Instance.dT());
 
-  return {Configuration::Instance.toPhysicalUnits(outputR), Configuration::Instance.toPhysicalUnits(outputT)};
+  return std::make_pair(Configuration::Instance.toPhysicalUnits(outputR), Configuration::Instance.toPhysicalUnits(outputT));
 }
 
 
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
   Event lEvent;  
   std::vector<std::vector<double>> lRTScores(Configuration::Instance.Rbins(),
                                             std::vector<double>(Configuration::Instance.Tbins()/*, 1*/));
-  std::vector<uint32_t> lMaxScorePosition(2,0);
+  std::pair<int, int> lMaxScorePosition;
   double lMaxRTScore = -9E99;
   //the above will store our scores - it needs to end up in the callback
 
@@ -121,19 +121,19 @@ int main(int argc, char **argv)
   if( lFilename.size() == 0 )
   {
     std::cout << "Warning: Running scan without callback" << std::endl;
-    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::vector<uint32_t> aCurrentIJ){} ); // Null callback
+    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ){} ); // Null callback
   }
   else if( lFilename.size() > 4 and lFilename.substr(lFilename.size() - 4) == ".xml" )
   {
     std::stringstream lOutput;
-    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::vector<uint32_t> aCurrentIJ ){ XmlCallback( aEvent , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
+    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ XmlCallback( aEvent , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
     std::ofstream lOutFile( lFilename );
     lOutFile << "<Results>\n" << lOutput.str() << "</Results>\n";
   }
   else if( lFilename.size() > 5 and lFilename.substr(lFilename.size() - 5) == ".json" )
   {
     std::stringstream lOutput;
-    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::vector<uint32_t> aCurrentIJ ){ JsonCallback( aEvent , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
+    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ JsonCallback( aEvent , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
     std::ofstream lOutFile( lFilename );
     lOutFile << "{\nResults:[\n" << lOutput.str() << "]\n}";
   }
@@ -143,11 +143,11 @@ int main(int argc, char **argv)
   }
 
   std::cout << "max score was: " << lMaxRTScore << std::endl;
-  std::cout << "at position (" << lMaxScorePosition[0] << ", " << lMaxScorePosition[1] << ")"<< std::endl;
+  std::cout << "at position (" << lMaxScorePosition.first << ", " << lMaxScorePosition.second << ")"<< std::endl;
   std::cout << "out of a possible " << Configuration::Instance.Rbins() << " R Bins"
   << " and " << Configuration::Instance.Tbins() << " T Bins" << std::endl;
-  std::vector<double> a(2);
+  std::pair<double,double> a;
   a = bestRT(lMaxScorePosition, lRTScores);
-  std::cout << "best R value is: " << a[0] << " and the best T value is: " << a[1] << std::endl;
+  std::cout << "best R value is: " << a.first << " and the best T value is: " << a.second << std::endl;
 
 }

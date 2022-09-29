@@ -1,60 +1,52 @@
+'''
+this file will produce a heatmap of the cluster scores
+provided with a 2d array saved to a text file
+DELINEATED BY COMMAS
+'''
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-def gett(line):
-    index1 = line.index(':') + 1
-    index2 = line.index(',')
-    return float(line[index1:index2]), index2+1
 
-def reader(fName):
-    rDict = {}
+def genNumbersFromLine(line, tbins=35):
+    output = np.zeros(tbins)
+    line = line.split(',')
+    for i in range(tbins):
+        output[i] = float(line[i])
+    return output[::-1]
+
+def readFromFile(fName, rbins=35, tbins=35):
+    rbins, tbins = int(rbins), int(tbins)
+    output = np.zeros((rbins, tbins))
+    r = 0
     with open(fName) as f:
         line = 1
         while line:
             line = f.readline()
-            if len(line) < 4: continue
-            if line[4] != 'R': continue
-
-            #read the R value
-            R, index = gett(line)
-            line = line[index:]
-
-            #read T value
-            T, index = gett(line)
-            line = line[index:]
-
-            #read Score
-            score, _ = gett(line)
-
-            if R not in rDict:
-                rDict[R] = {T:score}
-                continue
-            rDict[R][T] = score
-    return rDict
-
-def creator(rDict):
-    #dict which has r values as a key
-    #each r value contains a dict that looks like
-    #t:score within
-
-    rWidth = len(rDict.keys())
-    #assume it's the same for T for now
-    output = np.zeros((rWidth, rWidth))
-
-    for rIndex, rKey in enumerate(sorted(rDict.keys())):
-        #get the current T dict 
-        tDict = rDict[rKey]
-        for tIndex, tKey in enumerate(sorted(tDict.keys())):
-            output[rIndex, tIndex] = tDict[tKey]
-            # if rIndex == 0:
-            #     print(tKey, rKey)
+            if len(line) < 3: break
+            output[r,] = genNumbersFromLine(line)
+            r+=1
     return output
 
+def mapper(arr):
+    plt.imshow(arr, cmap='viridis', interpolation='nearest')
+    plt.colorbar()
+    fName = os.path.dirname(os.path.realpath(__file__))+ "/heatmap.png"
+    print('saving heatmap as',fName)
+    plt.savefig(fName)
 
 if __name__ == '__main__':
     import sys
-    rd = reader(sys.argv[1])
-    arr = creator(rd)
-
-    plt.imshow(arr, cmap='hot', interpolation='nearest')
-    plt.savefig("heatmap.png")
+    import os
+    args = [arg for arg in sys.argv[1:]]
+    try:
+        arr = readFromFile(*args)
+    except Exception as e:
+        print(e)
+        print('supply scores file, rbins, tbins to the command line')
+        print('eg python3 reader.py scores.txt 35 35')
+        exit()
+    maxscore = np.max(arr)
+    print(f'maxscore is {maxscore}')
+    arr = np.where(arr > maxscore * 1.5, arr, maxscore * 1.5)
+    mapper(arr)

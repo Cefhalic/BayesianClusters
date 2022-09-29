@@ -38,7 +38,7 @@ public:
   
   //! Run the scan
   //! \param aCallback A callback for each RT-scan result
-  void ScanRT( const std::function< void( const EventProxy& , const double& , const double& , std::vector<uint32_t>  ) >& aCallback  );
+  void ScanRT( const std::function< void( const EventProxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback  );
 
   //! Run clusterization for a specific choice of R and T
   //! \param R The R parameter for clusterization

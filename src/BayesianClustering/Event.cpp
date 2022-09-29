@@ -30,7 +30,7 @@ void Event::Preprocess()
   [&]( const std::size_t& i ){ mData.at( i ).Preprocess( mData , i ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
 }
 
-void Event::ScanRT( const std::function< void( const EventProxy& , const double& , const double& , std::vector<uint32_t>  ) >& aCallback ) 
+void Event::ScanRT( const std::function< void( const EventProxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback ) 
 {
   Preprocess();    
 
