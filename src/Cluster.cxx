@@ -75,27 +75,23 @@ void JsonCallback( const EventProxy& aEvent , const double& aR , const double& a
 //just prints the best R, T at the end
 std::vector<double> bestRT(std::vector<uint32_t>& aMaxScorePosition, std::vector<std::vector<double>>& aRTScores){
   int i = aMaxScorePosition[0], j = aMaxScorePosition[1];
-  if ((i < 2) or (j < 2)) return {1.0, 1.0};
-  if ((i > Configuration::Instance.Rbins() - 3 ) or (j > Configuration::Instance.Tbins() - 3)) return {1.0, 1.0};
-
-  // double lRIndex(0), lTIndex(0);
   double lRValue(0), lTValue(0);
   double lValueSum(0);
   for(int I(-2); I < 3 ; ++I ){
-   for(int J(-2); J < 3 ; ++J ){
-    auto lVal = aRTScores[i + I][j + J];
-    lValueSum += lVal;
-    lRValue += (i+I) * lVal;
-    lTValue += (j+J) * lVal;
+    if ((i < 2) or (j < 2)) break;
+    if ((i > Configuration::Instance.Rbins() - 3 ) or (j > Configuration::Instance.Tbins() - 3)) break;
+    for(int J(-2); J < 3 ; ++J ){
+      auto lVal = aRTScores[i + I][j + J];
+      lValueSum += lVal;
+      lRValue += (i+I) * lVal;
+      lTValue += (j+J) * lVal;
   }}
 
   double lRIndex = lRValue / lValueSum;
   double lTIndex = lTValue /  lValueSum;
 
-  int lR = int(lRIndex), lT = int(lTIndex);
-
-  double outputR = Configuration::Instance.minScanR() + (lR * Configuration::Instance.dR());
-  double outputT = Configuration::Instance.maxScanT() - (lT * Configuration::Instance.dT());
+  double outputR = Configuration::Instance.minScanR() + (lRIndex * Configuration::Instance.dR());
+  double outputT = Configuration::Instance.maxScanT() - (lTIndex * Configuration::Instance.dT());
 
   return {Configuration::Instance.toPhysicalUnits(outputR), Configuration::Instance.toPhysicalUnits(outputT)};
 }
