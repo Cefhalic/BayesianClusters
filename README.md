@@ -47,7 +47,7 @@ To build the maths documentation: `make docs`
 
 The maths documentation is then at `documentation/OptimizingTheMaths.pdf`
 
-## Cluster.exe
+## Scan.exe
 ### To see help
 ```
 ./Scan.exe --help
