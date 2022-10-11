@@ -9,92 +9,101 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <mutex>
+#include <algorithm>
   
 /* ===== Local utilities ===== */
 #include "Utilities/ProgressBar.hpp"
+#include "Utilities/ListComprehension.hpp"
+#include "Utilities/Display.hpp"
+
+/* ===== For Root ===== */
+#include "TAxis.h"
+#include "TGraph.h"
+#include "TEllipse.h"
 
 
-std::mutex mtx; // mutex for critical section
-
-
-
-void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int>& aCurrentIJ , std::stringstream& aOutput, 
-                  std::vector<std::vector<double>>& aRTScores, std::pair<int,int>& aMaxScorePosition, double& aMaxRTScore )
+TGraph* DrawGraphs( const std::vector< const Data* >& aPoints , const int& aColour )
 {
-  mtx.lock();
-  // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << ", Clusters:[\n";
-  aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << "}\n";
+  auto x( [](const Data* j){return j->x;} | aPoints ) , y( [](const Data* j){return j->y;} | aPoints );
+  TGraph* lGraph = new TGraph( x.size() , x.data() , y.data() );
+  lGraph->SetMarkerColor( aColour );
+  return lGraph;
+}
 
-  // for( auto& i : aEvent.mClusters )
-  // {
-  //   if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
-  // }
-  
-  double lLogP = aEvent.mLogP;
-  //score setting stuff
-  if (lLogP > aMaxRTScore){
-    aMaxScorePosition = aCurrentIJ;
-    aMaxRTScore = lLogP;
+
+TEllipse* DrawEllipse( const std::vector< const Data* >& aPoints , const int& aColour )
+{
+  auto x( [](const Data* j){return j->x;} | aPoints ) , y( [](const Data* j){return j->y;} | aPoints );
+
+  double x1(0.0) , y1(0.0) , x2(0.0) , y2(0.0);
+  for( auto& i: aPoints )
+  {
+    x1 += i->x;
+    x2 += i->x * i->x;
+    y1 += i->y;
+    y2 += i->y * i->y;
   }
 
-  uint32_t p = aCurrentIJ.first, q = aCurrentIJ.second;
-  aRTScores[p][q] = lLogP;
+  x1 /= x.size();
+  x2 /= x.size();
+  y1 /= y.size();
+  y2 /= y.size();
 
-  // aOutput << "   },\n";
-  mtx.unlock();  
+  TEllipse* lEll = new TEllipse( x1 , y1 , 4 * sqrt( x2 - (x1*x1) ) , 4 * sqrt( y2 - (y1*y1) ) );
+  lEll->SetFillStyle(0);
+  lEll->SetLineColor( aColour );    
+  lEll->Draw();
+
+  return lEll;
 }
 
 
-void JsonCallback( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int,int>& aCurrentIJ , std::stringstream& aOutput, 
-                  std::vector<std::vector<double>>& aRTScores, std::pair<int,int>& aMaxScorePosition, double& aMaxRTScore )
+//! Function for an event-display
+// \param aEvent The event to draw
+void DrawPoints( const EventProxy& aProxy )
 {
-  mtx.lock();
-  // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << ", Clusters:[\n";
-  aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << "}\n";
+  std::map< const Cluster* , std::vector< const Data* > > lClusters;
+  PRECISION x0( 9e99 ) , x1( -9e99 ) , y0( 9e99 ) , y1( -9e99 );
 
-  // for( auto& i : aEvent.mClusters )
-  // {
-  //   if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
-  // }
-  
-  double lLogP = aEvent.mLogP;
-  //score setting stuff
-  if (lLogP > aMaxRTScore){
-    aMaxScorePosition = aCurrentIJ;
-    aMaxRTScore = lLogP;
+  for( auto& i : aProxy.mData )
+  { 
+    Data* lData( i.mData );
+    lClusters[ i.mCluster ? i.mCluster->GetParent() : NULL ].push_back( lData );
+//    lClusters[ NULL ].push_back( lData );
+
+    x0 = std::min( x0 , lData->x );
+    x1 = std::max( x1 , lData->x );
+    y0 = std::min( y0 , lData->y );
+    y1 = std::max( y1 , lData->y );
   }
 
-  uint32_t p = aCurrentIJ.first, q = aCurrentIJ.second;
-  aRTScores[p][q] = lLogP;
+  std::cout << "Clusters = " << lClusters.size() << std::endl;
 
-  // aOutput << "   },\n";
-  mtx.unlock();  
+  auto lGraph = DrawGraphs( lClusters[NULL] , 1 );
+  lGraph->SetTitle("Data points");
+  auto lAxis = lGraph->GetXaxis();
+  lAxis->SetLimits(x0,x1); lAxis->SetRangeUser(x0,x1); lAxis->SetLabelSize(0.025); lAxis->SetTickLength(0);
+  lAxis = lGraph->GetYaxis();
+  lAxis->SetLimits(y0,y1); lAxis->SetRangeUser(y0,y1); lAxis->SetLabelSize(0.025); lAxis->SetTickLength(0);
+  lGraph->Draw( "a p" );
+
+  int counter( 0 );
+  for( auto& i : lClusters )
+  { 
+    if( i.first ) DrawGraphs( i.second , counter + 2 ) -> Draw( "p same" );
+    counter = ( counter + 1 ) % 8;
+  } 
+
+  counter =  0;
+  for( auto& i : lClusters )
+  { 
+    if( i.first ) DrawEllipse( i.second , counter + 2 ) -> Draw( "p same" );
+    counter = ( counter + 1 ) % 8;
+  } 
+
+
 }
 
-//just prints the best R, T at the end
-std::pair<double,double> bestRT(std::pair<int, int>& aMaxScorePosition, std::vector<std::vector<double>>& aRTScores){
-  int i = aMaxScorePosition.first, j = aMaxScorePosition.second;
-  double lRValue(0), lTValue(0);
-  double lValueSum(0);
-  for(int I(-2); I < 3 ; ++I ){
-    if ((i < 2) or (j < 2)) break;
-    if ((i > Configuration::Instance.Rbins() - 3 ) or (j > Configuration::Instance.Tbins() - 3)) break;
-    for(int J(-2); J < 3 ; ++J ){
-      auto lVal = aRTScores[i + I][j + J];
-      lValueSum += lVal;
-      lRValue += (i+I) * lVal;
-      lTValue += (j+J) * lVal;
-  }}
-
-  double lRIndex = lRValue / lValueSum;
-  double lTIndex = lTValue /  lValueSum;
-
-  double outputR = Configuration::Instance.minScanR() + (lRIndex * Configuration::Instance.dR());
-  double outputT = Configuration::Instance.maxScanT() - (lTIndex * Configuration::Instance.dT());
-
-  return std::make_pair(Configuration::Instance.toPhysicalUnits(outputR), Configuration::Instance.toPhysicalUnits(outputT));
-}
 
 
 
@@ -102,52 +111,35 @@ std::pair<double,double> bestRT(std::pair<int, int>& aMaxScorePosition, std::vec
 int main(int argc, char **argv)
 {
 
-
   std::cout << "+------------------------------------+" << std::endl;
-  ProgressBar2 lBar( "| Cluster Scan. Andrew W. Rose. 2022 |" , 1 );
+  ProgressBar2 lBar( "| Cluster. Andrew W. Rose. 2022 |" , 1 );
   std::cout << "+------------------------------------+" << std::endl;
   Configuration::Instance.FromCommandline( argc , argv );
   std::cout << "+------------------------------------+" << std::endl;
 
   Event lEvent;  
-  std::vector<std::vector<double>> lRTScores(Configuration::Instance.Rbins(),
-                                            std::vector<double>(Configuration::Instance.Tbins()/*, 1*/));
-  std::pair<int, int> lMaxScorePosition;
-  double lMaxRTScore = -9E99;
-  //the above will store our scores - it needs to end up in the callback
+
+  if( ( Configuration::Instance.ClusterR() < 0 ) or ( Configuration::Instance.ClusterT() < 0 ) ) throw std::runtime_error( "Must specify r and t" );
 
   const std::string& lFilename = Configuration::Instance.outputFile();
 
   if( lFilename.size() == 0 )
   {
-    std::cout << "Warning: Running scan without callback" << std::endl;
-    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ){} ); // Null callback
-  }
-  else if( lFilename.size() > 4 and lFilename.substr(lFilename.size() - 4) == ".xml" )
-  {
-    std::stringstream lOutput;
-    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ XmlCallback( aEvent , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
-    std::ofstream lOutFile( lFilename );
-    lOutFile << "<Results>\n" << lOutput.str() << "</Results>\n";
-  }
-  else if( lFilename.size() > 5 and lFilename.substr(lFilename.size() - 5) == ".json" )
-  {
-    std::stringstream lOutput;
-    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ JsonCallback( aEvent , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
-    std::ofstream lOutFile( lFilename );
-    lOutFile << "{\nResults:[\n" << lOutput.str() << "]\n}";
+    lEvent.Clusterize( 
+      Configuration::Instance.ClusterR() , 
+      Configuration::Instance.ClusterT() , 
+      [&]( const EventProxy& aEvent ){ Display( [&](){ DrawPoints( aEvent ); } ); } 
+    ); 
   }
   else
   {
-    throw std::runtime_error( "No handler for specified output-file" );
+    lEvent.Clusterize( 
+      Configuration::Instance.ClusterR() , 
+      Configuration::Instance.ClusterT() , 
+      [&]( const EventProxy& aEvent ){ ToFile( lFilename , [&](){ DrawPoints( aEvent ); } ); } 
+    ); 
   }
 
-  std::cout << "max score was: " << lMaxRTScore << std::endl;
-  std::cout << "at position (" << lMaxScorePosition.first << ", " << lMaxScorePosition.second << ")"<< std::endl;
-  std::cout << "out of a possible " << Configuration::Instance.Rbins() << " R Bins"
-  << " and " << Configuration::Instance.Tbins() << " T Bins" << std::endl;
-  std::pair<double,double> a;
-  a = bestRT(lMaxScorePosition, lRTScores);
-  std::cout << "best R value is: " << a.first << " and the best T value is: " << a.second << std::endl;
+  std::cout << "+------------------------------------+" << std::endl;
 
 }
