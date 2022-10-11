@@ -82,7 +82,7 @@ void ToFile( const std::string& aFilename , Functors&&... aFunctors )
 
   constexpr std::size_t cnt( sizeof...(Functors) );
 
-  TCanvas* c = new TCanvas( "c" , "" , 0 , 0 , 16000 , 8000 );
+  TCanvas* c = new TCanvas( "c" , "" , 0 , 0 , 3200 , 1600 );
 
   std::size_t i = ceil( sqrt( cnt ) );
   std::size_t j = ceil( double(cnt) / i );

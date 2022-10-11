@@ -60,7 +60,16 @@ int main(int argc, char **argv)
 
   Event lEvent;  
 
-  Display( [ & ](){ DrawPoints( lEvent ); } );
+  const std::string& lFilename = Configuration::Instance.outputFile();
+
+  if( lFilename.size() == 0 )
+  {
+    Display( [&](){ DrawPoints( lEvent ); } ); 
+  }
+  else
+  {
+    ToFile( lFilename , [&](){ DrawPoints( lEvent ); } );
+  }
 
 
   std::cout << "+------------------------------------+" << std::endl;
