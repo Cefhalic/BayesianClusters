@@ -90,8 +90,8 @@ void Data::PreprocessLocalizationScores( std::vector<Data>& aData )
 
       // Noticeably faster polynomial approximation of the edge-correction
       lWeight = 1.0;
-      if( eX < lDist )  lWeight *= ( 1 + pow( acos( eX/lDist ) * (2/pi) , 4 ) );
-      if( eY < lDist )  lWeight *= ( 1 + pow( acos( eY/lDist ) * (2/pi) , 4 ) );
+      if( eX < lDist )  lWeight *= ( 1 + pow( acos( eX/R ) * (2/pi) , 4 ) ); // correcting typo
+      if( eY < lDist )  lWeight *= ( 1 + pow( acos( eY/R ) * (2/pi) , 4 ) ); // see second order nbhd of mapped points for details
       lLocalizationSum += lWeight;
     }
 

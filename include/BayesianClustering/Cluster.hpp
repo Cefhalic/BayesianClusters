@@ -29,6 +29,8 @@ public:
     //! Convert the parameters to a log-probability
     //! \return the log-probability of this set of cluster parameters
     double log_score() const;
+
+    double alt_log_score() const;
     
     //! Parameter A defined in the math
     PRECISION A;
@@ -40,6 +42,12 @@ public:
     PRECISION C;
     //! Parameter logF defined in the math
     PRECISION logF;
+
+    //!weighted centre parameters, used
+    // for validation
+    PRECISION weightedCentreX;
+    PRECISION weightedCentreY;
+    PRECISION S2;
   }; 
 
   //! Default constructor

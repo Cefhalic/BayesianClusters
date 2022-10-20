@@ -10,7 +10,8 @@
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Cluster::Parameter::Parameter() : 
-A(0.0) , Bx(0.0) , By(0.0) , C(0.0) , logF(0.0)
+A(0.0) , Bx(0.0) , By(0.0) , C(0.0) , logF(0.0),
+S2(0.0)
 {}
     
 Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& aOther )
@@ -25,10 +26,34 @@ Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& a
 
 inline double CDF( const double& aArg )
 {
-  // Above or below ~8 are indistinguishable from 0 and 1 respectively
+  // Above 8 or below -8 are indistinguishable from 0 and 1 respectively
   // if( aArg > 8.0 ) return 1.0;
   // if( aArg < -8.0 ) return 0.0;
   return  ROOT::Math::normal_cdf( aArg );
+}
+
+double Cluster::Parameter::alt_log_score() const
+{
+  const double pi = atan(1)*4;
+  const double log2pi = log( 2*pi );
+
+  double log_sum;
+  auto inv_A( 1.0 / A ); // "A" is equivalent to nTilde
+  auto sqrt_A( sqrt( A ) ); 
+  double lLogMuIntegral;
+  double lNubarX = Bx * inv_A; //NuBarX is Bx, nTilde is A
+  double lNubarY = By * inv_A;
+
+  lLogMuIntegral = log2pi + log(inv_A) 
+                  +log((CDF(sqrt_A * (1 - lNubarX)) -
+                      CDF(sqrt_A * (-1 - lNubarX))))
+                  +log(CDF(sqrt_A * (1 - lNubarY)) -
+                      CDF(sqrt_A * (-1 - lNubarY)));
+
+  log_sum = logF
+            -S2 / 2.0 
+            +lLogMuIntegral;
+  return log_sum;
 }
 
 __attribute__((flatten))
@@ -38,7 +63,7 @@ double Cluster::Parameter::log_score() const
   auto Dx( Bx * inv_A ) , Dy( By * inv_A );
   auto E( C - ( Bx * Dx ) - ( By * Dy ) );
 
-  double log_sum = logF - double( log( A ) ) + ( 0.5 * E );
+  double log_sum = logF - double( log( A ) ) - ( 0.5 * E );
 
   // We place explicit bounds checks to prevent calls to expensive functions
   auto Gx = CDF( sqrt_A * (1.0-Dx) ) - CDF( sqrt_A * (-1.0-Dx) );
@@ -86,25 +111,28 @@ void Cluster::UpdateLogScore()
   mLastClusterSize = mClusterSize;
 
   thread_local static std::vector< double > MuIntegral( Configuration::Instance.sigmacount() , 1.0 );
-
-  // double constant( mParams[0].log_score() + Configuration::Instance.log_probability_sigma( 0 ) );
-  // for( std::size_t i(1) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) - constant );
-  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp( mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i ) );
+  thread_local static std::vector< double > integralArguments( Configuration::Instance.sigmacount() , 1.0 );
+  double largestArg(-9E99);
+  double tempArg;
+  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) {
+    tempArg =  mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i );
+    if (tempArg > largestArg) largestArg = tempArg;
+    integralArguments[i] = tempArg;
+  }
+  //pass again to set the MuIntegral Correctly
+  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg);
 
   thread_local static ROOT::Math::Interpolator lInt( Configuration::Instance.sigmacount() , ROOT::Math::Interpolation::kLINEAR );
   lInt.SetData( Configuration::Instance.sigmabins() , MuIntegral );
 
   static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
-  mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
+  mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + largestArg - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
+  mClusterScore += log(0.25) -(mClusterSize * log2pi);
 }
 
 Cluster& Cluster::operator+= ( const Cluster& aOther )
 {
-  // if( &aOther == this ) throw std::runtime_error( "Error #1" );
-  // if( aOther.mClusterSize == 0 ) throw std::runtime_error( "Error #2" );
-  // if( aOther.mParent ) throw std::runtime_error( "Error #3" );
-
   auto lIt( mParams.begin() );
   auto lIt2( aOther.mParams.begin() );
 
