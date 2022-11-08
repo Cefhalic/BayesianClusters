@@ -80,12 +80,14 @@ double Cluster::Parameter::log_score() const
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Cluster::Cluster(): mParams( Configuration::Instance.sigmacount() ),
 mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
-mParent( NULL )
+mParent( NULL ) ,
+mData()
 {}
 
 Cluster::Cluster( const Data& aData ): mParams( Configuration::Instance.sigmacount() ),
 mClusterSize( 1 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
-mParent( NULL )
+mParent( NULL ) ,
+mData()
 { 
   const auto s2 = aData.s * aData.s;
   auto lIt( mParams.begin() ) ;
@@ -146,5 +148,11 @@ Cluster* Cluster::GetParent()
   if( mParent ) return mParent = mParent->GetParent();
   return this;
 }
+
+// std::vector< Data* >& Cluster::GetPoints()
+// {
+//   if( !mDataMapped ) throw std::runtime_error( "Points have not been mapped. Run EventProxy::MapPoints() first." );
+//   return mData;
+// }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

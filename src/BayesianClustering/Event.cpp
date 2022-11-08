@@ -48,6 +48,9 @@ void Event::ScanRT( const std::function< void( const EventProxy& , const double&
 
 void Event::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
 {
+  if( R < 0 ) throw std::runtime_error( "R must be specified and non-negative" );
+  if( T < 0 ) throw std::runtime_error( "T must be specified and non-negative" );
+
   Preprocess();    
 
   EventProxy lProxy( *this );

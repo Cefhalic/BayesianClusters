@@ -3,7 +3,8 @@ HEADERS = $(sort $(wildcard include/*.hpp) )
 # Files for library
 LIBRARY_SOURCES = $(sort $(wildcard src/*.cpp) $(wildcard src/**/*.cpp) )
 LIBRARY_OBJECT_FILES = $(patsubst src/%.cpp,obj/lib/%.o,${LIBRARY_SOURCES})
-# LIBRARY_FILE = libClusterize.so
+
+PYTHON_LIBRARY_FILE = BayesianClustering.so
 
 # Files for executables
 EXECUTABLE_SOURCES = $(sort $(wildcard src/*.cxx) )
@@ -21,12 +22,12 @@ default: cpp
 verbose: cpp
 
 clean:
-	rm -rf obj .doxygen ${EXECUTABLES} ${DOCUMENTATION} ${DOXYGEN}
+	rm -rf obj .doxygen ${EXECUTABLES} ${PYTHON_LIBRARY_FILE} ${DOCUMENTATION} ${DOXYGEN}
 
 all : cpp doxygen docs 
 
 help:
-	@echo "\nMakefile for the Bayesian clustering project.\nUsage:"
+	@echo -e "Makefile for the Bayesian clustering project.\nUsage:"
 	@echo "  - make                - Build code"
 	@echo "  - make help           - Display this help message"
 	@echo "  - make clean          - Tidy all build products"
@@ -37,11 +38,15 @@ help:
 	@echo "  - make docs           - Produce PDFs of latex sources"
 	@echo
 
-cpp: ${EXECUTABLES}
+cpp: ${EXECUTABLES} ${PYTHON_LIBRARY_FILE}
 doxygen: ${DOXYGEN} 
 docs: ${DOCUMENTATION}
 
-FLAGS = -I/usr/local/include -L/usr/local/lib -g -std=c++11 -march=native -O3 -lm `root-config --glibs --cflags --libs` -lMathMore -MMD -MP -lboost_program_options
+FLAGS = -I/usr/local/include -I/usr/include/python3.6m \
+        -L/usr/local/lib \
+        -lboost_python36 -lpython3.6m \
+        -g -std=c++11 -march=native -O3 -lm `root-config --glibs --cflags --libs` -lMathMore \
+        -MMD -MP -lboost_program_options
 
 ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
 
@@ -81,12 +86,9 @@ ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
 endif
 
 
+${PYTHON_LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
+	g++ -shared $^ ${FLAGS} -o $@
 
-# ${LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
-# 	g++ -shared $^ ${FLAGS} -o $@
-
-# ${EXECUTABLES}: %.exe: obj/bin/%.o 
-# 	g++ $< -L. -lClusterize ${FLAGS} -o $@
 
 ${DIRECTORIES}:
 	@echo "Making directory      | mkdir -p $@"

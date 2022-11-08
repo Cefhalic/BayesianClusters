@@ -148,6 +148,12 @@ void config_file( const po::options_description& aDesc , const std::string& aFil
 
 void Configuration::FromCommandline( int argc , char **argv )
 {
+  std::vector< std::string > lTemp( argv+1 , argv+argc );
+  FromVector( lTemp );
+}
+
+void Configuration::FromVector( const std::vector< std::string >& aArgs )
+{
   typedef std::string tS;
   typedef std::vector<std::string> tVS;
   typedef unsigned tU;
@@ -197,7 +203,7 @@ void Configuration::FromCommandline( int argc , char **argv )
   ;
 
   po::variables_map lVm;
-  po::store( po::command_line_parser( argc , argv ).options( lDesc ).positional( lPositional ).run() , lVm );
+  po::store( po::command_line_parser( aArgs ).options( lDesc ).positional( lPositional ).run() , lVm );
   po::notify( lVm );    
  
   if( Nr ) SetRBins( Nr , rLo , rHi );

@@ -69,7 +69,6 @@ void DrawPoints( const EventProxy& aProxy )
   { 
     Data* lData( i.mData );
     lClusters[ i.mCluster ? i.mCluster->GetParent() : NULL ].push_back( lData );
-//    lClusters[ NULL ].push_back( lData );
 
     x0 = std::min( x0 , lData->x );
     x1 = std::max( x1 , lData->x );
@@ -118,8 +117,6 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
 
   Event lEvent;  
-
-  if( ( Configuration::Instance.ClusterR() < 0 ) or ( Configuration::Instance.ClusterT() < 0 ) ) throw std::runtime_error( "Must specify r and t" );
 
   const std::string& lFilename = Configuration::Instance.outputFile();
 

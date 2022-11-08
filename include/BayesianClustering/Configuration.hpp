@@ -125,6 +125,9 @@ public:
   //! \param argv The commandline arguments
 	void FromCommandline( int argc , char **argv );
 
+  //! Parse the parameters when passed in as commandline arguments
+  //! \param aArgs The commandline arguments
+  void FromVector( const std::vector< std::string >& aArgs );
 
 
 public:
@@ -302,6 +305,13 @@ public:
 public:
   //! A single global copy of the global variables
   static Configuration Instance;
+
+  //! 
+  inline static Configuration& getInstance()
+  {
+    return Instance;
+  }
+
 
 private:
   //! The scale parameter
