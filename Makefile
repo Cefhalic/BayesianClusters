@@ -4,7 +4,7 @@ HEADERS = $(sort $(wildcard include/*.hpp) )
 LIBRARY_SOURCES = $(sort $(wildcard src/*.cpp) $(wildcard src/**/*.cpp) )
 LIBRARY_OBJECT_FILES = $(patsubst src/%.cpp,obj/lib/%.o,${LIBRARY_SOURCES})
 
-PYTHON_LIBRARY_FILE = BayesianClustering.so
+PYTHON_LIBRARY_FILE = python/BayesianClustering.so
 
 # Files for executables
 EXECUTABLE_SOURCES = $(sort $(wildcard src/*.cxx) )

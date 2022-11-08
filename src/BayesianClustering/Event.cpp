@@ -54,7 +54,6 @@ void Event::Clusterize( const double& R , const double& T , const std::function<
   Preprocess();    
 
   EventProxy lProxy( *this );
-  ProgressBar2 lProgressBar( "Clusterize"  , 0 );
   lProxy.Clusterize( R ,  T , aCallback );
 }
 

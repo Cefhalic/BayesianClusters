@@ -7,6 +7,9 @@
 #include "BayesianClustering/Event.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
+/* ===== Local utilities ===== */
+#include "Utilities/ProgressBar.hpp"
+
 // /* ===== C++ ===== */
 #include <iostream>
 
@@ -131,20 +134,23 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
 
 void EventProxy::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
 {
-  auto twoR2 = 4.0 * R * R;
+  {
+    ProgressBar2 lProgressBar( "Clusterize"  , 0 );  
+    auto twoR2 = 4.0 * R * R;
 
-  mClusters.clear();
-  for( auto& k : mData )
-  { 
-    k.mCluster = NULL;
-    k.mExclude = ( k.mData->CalculateLocalizationScore( mEvent.mData , R ) < T ) ;
+    mClusters.clear();
+    for( auto& k : mData )
+    { 
+      k.mCluster = NULL;
+      k.mExclude = ( k.mData->CalculateLocalizationScore( mEvent.mData , R ) < T ) ;
+    }
+
+    for( auto& k : mData ) k.Clusterize( twoR2 , *this );
+
+    UpdateLogScore();
   }
 
-  for( auto& k : mData ) k.Clusterize( twoR2 , *this );
-
-  UpdateLogScore();
   aCallback( *this );
-
 }
 
 
