@@ -6,15 +6,13 @@
 #include "Utilities/Vectorize.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
-/* ===== For Root ===== */
-#include "Math/SpecFunc.h" 
-
 /* ===== C++ ===== */
 #include <iostream>
 #include <fstream>
 #include <streambuf>
 
 /* ===== BOOST libraries ===== */
+#include <boost/math/special_functions/gamma.hpp>
 #include "boost/algorithm/string.hpp"
 #include "boost/program_options.hpp"
 namespace po = boost::program_options;
@@ -104,7 +102,7 @@ void Configuration::SetAlpha( const double& aAlpha )
 	std::cout << "Alpha: " << aAlpha << std::endl;
 	mAlpha = aAlpha;
 	mLogAlpha = log( aAlpha );
-	mLogGammaAlpha = ROOT::Math::lgamma( aAlpha );
+	mLogGammaAlpha = boost::math::lgamma( aAlpha );
 }
 
 void Configuration::SetValidate( const bool& aValidate )

@@ -1,6 +1,6 @@
 
-/* ===== For Root ===== */
-#include "Math/SpecFunc.h" 
+/* ===== BOOST libraries ===== */
+#include <boost/math/special_functions/gamma.hpp>
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/EventProxy.hpp"
@@ -230,7 +230,7 @@ void EventProxy::UpdateLogScore()
     mClusterCount += 1;
     mClusteredCount += i.mClusterSize;
     mLogP += i.mClusterScore;
-    lLogPl += ROOT::Math::lgamma( i.mClusterSize ); //this was omitted before - why?
+    lLogPl += boost::math::lgamma( i.mClusterSize ); //this was omitted before - why?
     }
   
 
@@ -239,7 +239,7 @@ void EventProxy::UpdateLogScore()
          + ( mClusteredCount * Configuration::Instance.logPbDagger() )
          + ( Configuration::Instance.logAlpha() * mClusterCount )
          + Configuration::Instance.logGammaAlpha()
-         - ROOT::Math::lgamma( Configuration::Instance.alpha() + mClusteredCount );  
+         - boost::math::lgamma( Configuration::Instance.alpha() + mClusteredCount );  
 
   mLogP += (-log(4.0) * mBackgroundCount) + lLogPl;
 }

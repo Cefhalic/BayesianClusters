@@ -2,13 +2,22 @@
 /* ===== Local utilities ===== */
 #include "Utilities/GSLInterpolator.hpp"
 
-/* ===== For Root ===== */
-#include "Math/ProbFunc.h" 
+/* ===== BOOST libraries ===== */
+#include <boost/math/special_functions/erf.hpp>
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Cluster.hpp"
 #include "BayesianClustering/Data.hpp"
 #include "BayesianClustering/Configuration.hpp"
+
+
+
+inline double normal_cdf( const double& x, const double& sigma = 1, const double& x0 = 0 )
+{
+  double z = ( x - x0 ) / ( sigma * sqrt(2) );
+  if (z < -1.) return 0.5*boost::math::erfc(-z);
+  else         return 0.5*(1.0 + boost::math::erf(z));
+}
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -32,7 +41,7 @@ inline double CDF( const double& aArg )
   // Above 8 or below -8 are indistinguishable from 0 and 1 respectively
   // if( aArg > 8.0 ) return 1.0;
   // if( aArg < -8.0 ) return 0.0;
-  return  ROOT::Math::normal_cdf( aArg );
+  return normal_cdf( aArg );
 }
 
 double Cluster::Parameter::alt_log_score() const
