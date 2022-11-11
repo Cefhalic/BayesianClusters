@@ -11,13 +11,16 @@
 #include "BayesianClustering/Configuration.hpp"
 
 
-
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Copied from the CERN ROOT implementaion
+// Swap ROOT::Math::erfc and ROOT::Math::erf for the boost::math version
 inline double normal_cdf( const double& x, const double& sigma = 1, const double& x0 = 0 )
 {
   double z = ( x - x0 ) / ( sigma * sqrt(2) );
-  if (z < -1.) return 0.5*boost::math::erfc(-z);
-  else         return 0.5*(1.0 + boost::math::erf(z));
+  if ( z < -1. ) return 0.5 * boost::math::erfc(-z);
+  else           return 0.5 * ( 1.0 + boost::math::erf(z) );
 }
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

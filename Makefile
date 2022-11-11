@@ -46,10 +46,7 @@ FLAGS = -I/usr/local/include -I/usr/include/python3.6m \
         -L/usr/local/lib \
         -lboost_python36 -lpython3.6m \
         -g -std=c++11 -march=native -O3 -lm -lgsl -lpthread\
-        `root-config --glibs --cflags --libs` -lMathMore \
         -MMD -MP -lboost_program_options
-
-
 
 ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
 
