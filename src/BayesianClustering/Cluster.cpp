@@ -1,6 +1,9 @@
+
+/* ===== Local utilities ===== */
+#include "Utilities/GSLInterpolator.hpp"
+
 /* ===== For Root ===== */
 #include "Math/ProbFunc.h" 
-#include "Math/Interpolator.h" 
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Cluster.hpp"
@@ -124,7 +127,7 @@ void Cluster::UpdateLogScore()
   //pass again to set the MuIntegral Correctly
   for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg);
 
-  thread_local static ROOT::Math::Interpolator lInt( Configuration::Instance.sigmacount() , ROOT::Math::Interpolation::kLINEAR );
+  thread_local static GSLInterpolator lInt( gsl_interp_linear , Configuration::Instance.sigmacount() );
   lInt.SetData( Configuration::Instance.sigmabins() , MuIntegral );
 
   static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );

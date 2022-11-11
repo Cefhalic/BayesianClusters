@@ -1,13 +1,13 @@
 
 
 /* ===== Local utilities ===== */
+#include "Utilities/GSLInterpolator.hpp"
 #include "Utilities/ListComprehension.hpp"
 #include "Utilities/Vectorize.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
 /* ===== For Root ===== */
 #include "Math/SpecFunc.h" 
-#include "Math/Interpolator.h" 
 
 /* ===== C++ ===== */
 #include <iostream>
@@ -211,7 +211,7 @@ void Configuration::FromVector( const std::vector< std::string >& aArgs )
 
   if( Nsig )
   {
-    ROOT::Math::Interpolator lInterpolator( SigKeys , SigVals ); // Default to cubic spline interpolation
+    GSLInterpolator lInterpolator( gsl_interp_cspline, SigKeys , SigVals );
     SetSigmaParameters( Nsig , sigLo , sigHi , [&]( const double& aPt ){ return lInterpolator.Eval( aPt ); } );  
   }
 
