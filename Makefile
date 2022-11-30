@@ -42,9 +42,9 @@ cpp: ${EXECUTABLES} ${PYTHON_LIBRARY_FILE}
 doxygen: ${DOXYGEN} 
 docs: ${DOCUMENTATION}
 
-FLAGS = -I/usr/local/include -I/usr/include/python3.6m \
-        -L/usr/local/lib \
-        -lboost_python36 -lpython3.6m \
+FLAGS = -I/usr/include -I/usr/include/python3.9 \
+        -L/usr/lib -L/usr/lib64 \
+        -lgsl -lgslcblas -lboost_python39 -lpython3.9 \
         -g -std=c++11 -march=native -O3 -lm -lgsl -lpthread\
         -MMD -MP -lboost_program_options
 
