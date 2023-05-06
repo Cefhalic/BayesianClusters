@@ -78,3 +78,51 @@ To show only the data in the specified region of interest
 ```
 ./Display.exe --cfg config.txt -i 1_un_red.csv
 ```
+
+# Instructions for running on Imperial HPC from Python
+
+Log into a login node on HPC or onto the HPC JupyterHub (https://jupyter.rcs.imperial.ac.uk/) and open a terminal window.  The instructions below are printed out from my command history.
+
+## Create an anaconda environment
+
+```
+bash-4.4$ module load anaconda/personal
+bash-4.4$ conda create --name bayesian python=3.8
+bash-4.4$ source activate bayesian
+(bayesian) bash-4.4$ conda env update --file environment.yml --prune
+```
+
+## Download the code
+```
+(bayesian) bash-4.4$ git clone https://github.com/Cefhalic/BayesianClusters.git Bayesian
+(bayesian) bash-4.4$ cd Bayesian/
+(bayesian) bash-4.4$ git checkout PythonBindings
+```
+
+## Compile the code
+```
+(bayesian) bash-4.4$ cd Bayesian/
+(bayesian) bash-4.4$ make clean
+(bayesian) bash-4.4$ make
+```
+
+## Test the code.  
+
+Note that this will not produce any graphical output unless there is an X-Windows or another graphical interface.
+
+```
+(bayesian) bash-4.4$ python ./python/test.py --cfg config.txt -i /rds/general/project/easystorm/live/bayesian/1_un_red.csv --r 20nm --t 40nm
+``` 
+
+## Running the test as a Jupyter notebook
+
+While in a JupyterHub session first set up the conda `bayesian` environment with modules for a jupyter client and make the current conda environment available as `bayesian` within Jupyter.
+
+```
+(bayesian) bash-4.4$ conda install ipykernel jupyter_client
+(bayesian) bash-4.4$ python -m ipykernel install --user --name bayesian --display-name "bayesian"
+```
+
+From the `python` subdirectory of the main `Bayesian` source code directory open the `test.ipynb` Jupyter notebook.
+
+Enjoy!
