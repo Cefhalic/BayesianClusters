@@ -116,10 +116,9 @@ Note that this will not produce any graphical output unless there is an X-Window
 
 ## Running the test as a Jupyter notebook
 
-While in a JupyterHub session first set up the conda `bayesian` environment with modules for a jupyter client and make the current conda environment available as `bayesian` within Jupyter.
+While in a JupyterHub session first set up the conda `bayesian` environment to make the current conda environment available as `bayesian` within Jupyter (the modules should already be included with the environment.yml file above).
 
 ```
-(bayesian) bash-4.4$ conda install ipykernel jupyter_client
 (bayesian) bash-4.4$ python -m ipykernel install --user --name bayesian --display-name "bayesian"
 ```
 
