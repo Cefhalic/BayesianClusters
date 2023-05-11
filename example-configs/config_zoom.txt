@@ -1,5 +1,5 @@
 --centre 87um 31.9um
---zoom 1um
+--width 1um 1um
 --sigma-bins 100
 --sigma-low 5nm
 --sigma-high 100nm
