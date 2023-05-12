@@ -19,10 +19,29 @@ EXECUTABLES = $(patsubst src/%.cxx,%.exe,${EXECUTABLE_SOURCES})
 DOXYGEN = documentation/SoftwareManual.pdf
 DOCUMENTATION = documentation/OptimizingTheMaths.pdf
 
-DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${PYTHON_OBJECT_FILES} ${EXECUTABLE_OBJECT_FILES}, $(dir ${filePath}))) extern
+DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${PYTHON_OBJECT_FILES} ${EXECUTABLE_OBJECT_FILES}, $(dir ${filePath})))
 
 LIBPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'python{version_info[0]}.{version_info[1]}' )" )
 LIBBOOSTPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'boost_python{version_info[0]}{version_info[1]}' )" )
+
+FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREFIX}/include/boost   \
+        -lgsl -lgslcblas -lboost_program_options -lm -lpthread  \
+        -g -std=c++14 -march=native -O3 -MMD -MP -fPIC
+      
+PYTHONFLAGS = -I${CONDA_PREFIX}/include/${LIBPYTHON} -l${LIBBOOSTPYTHON} -l${LIBPYTHON} \
+              -Wno-deprecated-declarations # Hide the annoying boost auto_ptr=>unique_ptr warning     
+
+
+ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
+define switch_verbose 
+	${2}
+endef
+else
+define switch_verbose 
+	@echo ${1}; ${2}
+endef
+endif
+
 
 .PHONY: clean all help cpp doxygen docs verbose
 
@@ -30,7 +49,7 @@ default: cpp
 verbose: cpp
 
 clean:
-	rm -rf obj .doxygen ${LIBRARY_FILE} ${EXECUTABLES} ${PYTHON_LIBRARY_FILE} ${DOCUMENTATION} ${DOXYGEN}
+	rm -rf obj .doxygen ${LIBRARY_FILE} ${EXECUTABLES} ${PYTHON_LIBRARY_FILE}
 
 all : cpp doxygen docs 
 
@@ -50,90 +69,40 @@ cpp: ${EXECUTABLES} ${PYTHON_LIBRARY_FILE}
 doxygen: ${DOXYGEN} 
 docs: ${DOCUMENTATION}
 
-# Adding the includes and libs for the locally built deps first
-FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREFIX}/include/boost   \
-        -lgsl -lgslcblas -lboost_program_options -lm -lpthread  \
-        -g -std=c++14 -march=native -O3 -MMD -MP \
-        \
-        -Wno-deprecated-declarations
-# Hide the annoying boost auto_ptr=>unique_ptr warning     
-
-PYTHONFLAGS = -I${CONDA_PREFIX}/include/${LIBPYTHON} -l${LIBBOOSTPYTHON} -l${LIBPYTHON}
-
-ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
-
-.SECONDEXPANSION:
-obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o)
-	test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
-	g++ $< -o $@ -c ${FLAGS} -fPIC
-
-.SECONDEXPANSION:
-obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o)
-	test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
-	g++ $< -o $@ -c ${FLAGS} -fPIC
-
-.SECONDEXPANSION:
-obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBindings/%.o)
-	test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
-	g++ $< -o $@ -c ${PYTHONFLAGS} ${FLAGS} -fPIC
-
--include $(LIBRARY_OBJECT_FILES:.o=.d)
--include $(PYTHON_OBJECT_FILES:.o=.d)		
--include $(EXECUTABLE_OBJECT_FILES:.o=.d)
-
-${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE} 
-	g++ $^ -o $@ -L. -lBayesianClusteringCore ${FLAGS}
-
-${LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
-	g++ $^ -o $@ -shared ${FLAGS} 
-
-${PYTHON_LIBRARY_FILE}: ${PYTHON_OBJECT_FILES}
-	g++ $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS}
-else
-
 .SECONDEXPANSION:
 obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o)
 	@test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
-	@echo "Building Object Files | g++ -c ... $< -o $@"
-	@g++ $< -o $@ -c ${FLAGS} -fPIC
+	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , g++ $< -o $@ -c ${FLAGS} )
 
 .SECONDEXPANSION:
 obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o)
 	@test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
-	@echo "Building Object Files | g++ -c ... $< -o $@"
-	@g++ $< -o $@ -c ${FLAGS} -fPIC
+	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , g++ $< -o $@ -c ${FLAGS} )
 
 .SECONDEXPANSION:
 obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBindings/%.o)
 	@test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
-	@echo "Building Object Files | g++ -c ... $< -o $@"		
-	@g++ $< -o $@ -c ${PYTHONFLAGS} ${FLAGS} -fPIC
+	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , g++ $< -o $@ -c ${PYTHONFLAGS} ${FLAGS} )
 
 -include $(LIBRARY_OBJECT_FILES:.o=.d)
 -include $(PYTHON_OBJECT_FILES:.o=.d)	
 -include $(EXECUTABLE_OBJECT_FILES:.o=.d)
 
-${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE}
-	@echo "Building Executable   | g++ ... -o $@"
-	@g++ $^ -o $@ -L. -lBayesianClusteringCore ${FLAGS}
-
 ${LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
-	@echo "Building Library      | g++ ... -o $@"
-	@g++ $^ -o $@ -shared ${FLAGS} 
+	$(call switch_verbose, "Building Library      | g++ ... -o $@" , g++ $^ -o $@ -shared ${FLAGS} )
 
 ${PYTHON_LIBRARY_FILE}: ${LIBRARY_FILE} ${PYTHON_OBJECT_FILES}
-	@echo "Building Library      | g++ ... -o $@"
-	@g++ $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS} 
-endif
+	$(call switch_verbose, "Building Library      | g++ ... -o $@" , g++ $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS} )
 
-
+${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE}
+	$(call switch_verbose, "Building Executable   | g++ ... -o $@" , g++ $^ -o $@ -L. -lBayesianClusteringCore ${FLAGS} )
 
 ${DIRECTORIES}:
 	@echo "Making directory      | mkdir -p $@"
 	@mkdir -p $@
 
 ${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
-	@echo "Generating Doxygen Documentation: doxygen Doxyfile ---> $@"
+	@echo "Generating Doxygen Documentation: doxygen utilities/Doxyfile ---> $@"
 	@doxygen utilities/Doxyfile
 	@make -sC .doxygen/latex > /dev/null 2>&1
 	@cp .doxygen/latex/refman.pdf $@
