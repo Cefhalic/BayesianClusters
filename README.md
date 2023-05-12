@@ -80,6 +80,7 @@ To show only the data in the specified region of interest
 ```
 -->
 
+<!--
 # Instructions for running on Imperial HPC from Python
 
 Log into a login node on HPC or onto the HPC JupyterHub (https://jupyter.rcs.imperial.ac.uk/) and open a terminal window.  The instructions below are printed out from my command history.
@@ -105,6 +106,38 @@ bash-4.4$ source activate bayesian
 (bayesian) bash-4.4$ cd Bayesian/
 (bayesian) bash-4.4$ make clean
 (bayesian) bash-4.4$ make
+```
+-->
+
+# Instructions for running on Imperial HPC from Python
+
+Log into a login node on HPC or onto the HPC JupyterHub (https://jupyter.rcs.imperial.ac.uk/) and open a terminal window. 
+
+## Download the code
+```
+git clone https://github.com/Cefhalic/BayesianClusters.git Bayesian
+cd Bayesian/
+```
+
+## Create an anaconda environment
+Should only need to be run once ever!
+```
+module load anaconda/personal
+conda create --name bayesian python=3.8
+conda activate bayesian
+conda env update --file utilities/environment.yml --prune
+```
+
+## Otherwise, activate an existing anaconda environment
+```
+module load anaconda/personal
+conda activate bayesian
+```
+
+## Compile the code
+```
+make clean
+make -j8
 ```
 
 ## Test the code.  
