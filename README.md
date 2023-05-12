@@ -123,6 +123,7 @@ cd Bayesian/
 Should only need to be run once ever!
 ```
 module load anaconda/personal
+conda init bash
 conda create --name bayesian python=3.8
 conda activate bayesian
 conda env update --file utilities/environment.yml --prune
