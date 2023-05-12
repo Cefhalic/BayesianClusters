@@ -63,10 +63,12 @@ ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
 
 .SECONDEXPANSION:
 obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o)
+	test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
 	g++ $< -o $@ -c ${FLAGS} -fPIC
 
 .SECONDEXPANSION:
 obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o)
+	test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
 	g++ $< -o $@ -c ${FLAGS} -fPIC
 
 -include $(LIBRARY_OBJECT_FILES:.o=.d)
@@ -79,11 +81,13 @@ else
 
 .SECONDEXPANSION:
 obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o)
+	@test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
 	@echo "Building Object Files | g++ -c ... $< -o $@"
 	@g++ $< -o $@ -c ${FLAGS} -fPIC
 
 .SECONDEXPANSION:
 obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o)
+	@test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
 	@echo "Building Object Files | g++ -c ... $< -o $@"
 	@g++ $< -o $@ -c ${FLAGS} -fPIC
 
