@@ -90,7 +90,7 @@ Log into a login node on HPC or onto the HPC JupyterHub (https://jupyter.rcs.imp
 bash-4.4$ module load anaconda/personal
 bash-4.4$ conda create --name bayesian python=3.8
 bash-4.4$ source activate bayesian
-(bayesian) bash-4.4$ conda env update --file environment.yml --prune
+(bayesian) bash-4.4$ conda env update --file utilities/environment.yml --prune
 ```
 
 ## Download the code
