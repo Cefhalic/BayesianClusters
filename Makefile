@@ -4,6 +4,8 @@ HEADERS = $(sort $(wildcard include/*.hpp) )
 LIBRARY_SOURCES = $(sort $(wildcard src/Utilities/*.cpp) $(wildcard src/BayesianClustering/*.cpp) )
 LIBRARY_OBJECT_FILES = $(patsubst src/%.cpp,obj/lib/%.o,${LIBRARY_SOURCES})
 
+LIBRARY_FILE = libBayesianClusteringCore.so
+
 PYTHON_SOURCES = $(sort $(wildcard src/PythonBindings/*.cpp) )
 PYTHON_OBJECT_FILES = $(patsubst src/%.cpp,obj/lib/%.o,${PYTHON_SOURCES})
 
@@ -28,7 +30,7 @@ default: cpp
 verbose: cpp
 
 clean:
-	rm -rf obj .doxygen ${EXECUTABLES} ${PYTHON_LIBRARY_FILE} ${DOCUMENTATION} ${DOXYGEN}
+	rm -rf obj .doxygen ${LIBRARY_FILE} ${EXECUTABLES} ${PYTHON_LIBRARY_FILE} ${DOCUMENTATION} ${DOXYGEN}
 
 all : cpp doxygen docs 
 
@@ -79,11 +81,14 @@ obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBin
 -include $(PYTHON_OBJECT_FILES:.o=.d)		
 -include $(EXECUTABLE_OBJECT_FILES:.o=.d)
 
-${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
-	g++ $^ -o $@ ${FLAGS}
+${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE} 
+	g++ $^ -o $@ -L. -lBayesianClusteringCore ${FLAGS}
 
-${PYTHON_LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES} ${PYTHON_OBJECT_FILES}
-	g++ $^ -o $@ -shared ${PYTHONFLAGS} ${FLAGS}
+${LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
+	g++ $^ -o $@ -shared ${FLAGS} 
+
+${PYTHON_LIBRARY_FILE}: ${PYTHON_OBJECT_FILES}
+	g++ $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS}
 else
 
 .SECONDEXPANSION:
@@ -108,13 +113,17 @@ obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBin
 -include $(PYTHON_OBJECT_FILES:.o=.d)	
 -include $(EXECUTABLE_OBJECT_FILES:.o=.d)
 
-${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
+${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE}
 	@echo "Building Executable   | g++ ... -o $@"
-	@g++ $^ -o $@ ${FLAGS}
+	@g++ $^ -o $@ -L. -lBayesianClusteringCore ${FLAGS}
 
-${PYTHON_LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES} ${PYTHON_OBJECT_FILES}
+${LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
 	@echo "Building Library      | g++ ... -o $@"
-	@g++ $^ -o $@ -shared ${PYTHONFLAGS} ${FLAGS}
+	@g++ $^ -o $@ -shared ${FLAGS} 
+
+${PYTHON_LIBRARY_FILE}: ${LIBRARY_FILE} ${PYTHON_OBJECT_FILES}
+	@echo "Building Library      | g++ ... -o $@"
+	@g++ $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS} 
 endif
 
 
