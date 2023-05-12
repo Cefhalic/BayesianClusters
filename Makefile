@@ -16,9 +16,6 @@ DOCUMENTATION = documentation/OptimizingTheMaths.pdf
 
 DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${EXECUTABLE_OBJECT_FILES}, $(dir ${filePath}))) extern
 
-# PYTHONMAJOR = $(eval python --version | sed -e "s|Python \([0-9]*\)\.[0-9]*\.[0-9]*|\1|g")
-# PYTHONMINOR = $(eval python --version | sed -e "s|Python [0-9]*\.\([0-9]*\)\.[0-9]*|\1|g")
-
 LIBPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'python{version_info[0]}.{version_info[1]}' )" )
 LIBBOOSTPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'boost_python{version_info[0]}{version_info[1]}' )" )
 
@@ -43,13 +40,10 @@ help:
 	@echo "  - make doxygen        - Generate doxygen documentation"
 	@echo "  - make docs           - Produce PDFs of latex sources"
 	@echo
-# 	@echo "  - make deps           - Build a local copy of the external dependencies"
 
 cpp: ${EXECUTABLES} ${PYTHON_LIBRARY_FILE}
 doxygen: ${DOXYGEN} 
 docs: ${DOCUMENTATION}
-
-# deps: extern/gsl-2.7.1/.libs/libgsl.so extern/boost_1_81_0/stage/lib/libboost_system.so
 
 # Adding the includes and libs for the locally built deps first
 FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREFIX}/include/boost -I${CONDA_PREFIX}/include/${LIBPYTHON}  \
@@ -115,37 +109,7 @@ ${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
 	@make -C .doxygen/latex
 	@cp .doxygen/latex/refman.pdf $@
 
-#	@python TexLinker.py "https://github.com/Cefhalic/BayesianClusters/blob/" `git rev-parse --abbrev-ref HEAD`
-
-
 ${DOCUMENTATION}:
 	@echo "Generating Maths Documentation: pdflatex ... documentation/OptimizingTheMaths ---> documentation/OptimizingTheMaths.pdf"
 	@pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
 	@pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
-
-
-
-# extern/gsl-2.7.1.tar.gz: extern
-# 	wget -nc https://ftp.gnu.org/gnu/gsl/gsl-2.7.1.tar.gz -P extern
-
-# extern/gsl-2.7.1/Makefile : extern/gsl-2.7.1.tar.gz
-# 	cd extern; \
-# 	gtar xzf gsl-2.7.1.tar.gz --skip-old-files
-
-# extern/gsl-2.7.1/.libs/libgsl.so: extern/gsl-2.7.1/Makefile
-# 	cd extern/gsl-2.7.1; \
-# 	./configure; \
-# 	make -j8
-
-
-# extern/boost_1_81_0.tar.gz: extern
-# 	wget -nc https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz -P extern
-
-# extern/boost_1_81_0/bootstrap.sh: extern/boost_1_81_0.tar.gz
-# 	cd extern; \
-# 	gtar xzf boost_1_81_0.tar.gz --skip-old-files
-
-# extern/boost_1_81_0/stage/lib/libboost_system.so: extern/boost_1_81_0/bootstrap.sh
-# 	cd extern/boost_1_81_0; \
-# 	./bootstrap.sh; \
-# 	./b2 --with-python --with-system --with-program_options 
