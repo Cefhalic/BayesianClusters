@@ -76,6 +76,7 @@ obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBin
 	g++ $< -o $@ -c ${PYTHONFLAGS} ${FLAGS} -fPIC
 
 -include $(LIBRARY_OBJECT_FILES:.o=.d)
+-include $(PYTHON_OBJECT_FILES:.o=.d)		
 -include $(EXECUTABLE_OBJECT_FILES:.o=.d)
 
 ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
@@ -104,6 +105,7 @@ obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBin
 	@g++ $< -o $@ -c ${PYTHONFLAGS} ${FLAGS} -fPIC
 
 -include $(LIBRARY_OBJECT_FILES:.o=.d)
+-include $(PYTHON_OBJECT_FILES:.o=.d)	
 -include $(EXECUTABLE_OBJECT_FILES:.o=.d)
 
 ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
@@ -111,7 +113,7 @@ ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
 	@g++ $^ -o $@ ${FLAGS}
 
 ${PYTHON_LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES} ${PYTHON_OBJECT_FILES}
-	@echo "Building Executable   | g++ ... -o $@"
+	@echo "Building Library      | g++ ... -o $@"
 	@g++ $^ -o $@ -shared ${PYTHONFLAGS} ${FLAGS}
 endif
 
