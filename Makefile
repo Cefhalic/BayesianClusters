@@ -42,21 +42,22 @@ help:
 	@echo "  - make verbose        - Build code, echoing the full command"
 	@echo "  - make doxygen        - Generate doxygen documentation"
 	@echo "  - make docs           - Produce PDFs of latex sources"
-	@echo "  - make deps           - Build a local copy of the external dependencies"
 	@echo
+# 	@echo "  - make deps           - Build a local copy of the external dependencies"
 
 cpp: ${EXECUTABLES} ${PYTHON_LIBRARY_FILE}
 doxygen: ${DOXYGEN} 
 docs: ${DOCUMENTATION}
 
-deps: extern/gsl-2.7.1/.libs/libgsl.so extern/boost_1_81_0/stage/lib/libboost_system.so
+# deps: extern/gsl-2.7.1/.libs/libgsl.so extern/boost_1_81_0/stage/lib/libboost_system.so
 
 # Adding the includes and libs for the locally built deps first
 FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREFIX}/include/boost -I${CONDA_PREFIX}/include/${LIBPYTHON}  \
         -lgsl -lgslcblas -l${LIBBOOSTPYTHON} -lboost_program_options -l${LIBPYTHON} -lm -lpthread  \
-        -g -std=c++11 -march=native -O3 -MMD -MP
-
-
+        -g -std=c++14 -march=native -O3 -MMD -MP \
+        \
+        -Wno-deprecated-declarations
+# Hide the annoying boost auto_ptr=>unique_ptr warning     
 
 ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
 
@@ -120,27 +121,27 @@ ${DOCUMENTATION}:
 
 
 
-extern/gsl-2.7.1.tar.gz: extern
-	wget -nc https://ftp.gnu.org/gnu/gsl/gsl-2.7.1.tar.gz -P extern
+# extern/gsl-2.7.1.tar.gz: extern
+# 	wget -nc https://ftp.gnu.org/gnu/gsl/gsl-2.7.1.tar.gz -P extern
 
-extern/gsl-2.7.1/Makefile : extern/gsl-2.7.1.tar.gz
-	cd extern; \
-	gtar xzf gsl-2.7.1.tar.gz --skip-old-files
+# extern/gsl-2.7.1/Makefile : extern/gsl-2.7.1.tar.gz
+# 	cd extern; \
+# 	gtar xzf gsl-2.7.1.tar.gz --skip-old-files
 
-extern/gsl-2.7.1/.libs/libgsl.so: extern/gsl-2.7.1/Makefile
-	cd extern/gsl-2.7.1; \
-	./configure; \
-	make -j8
+# extern/gsl-2.7.1/.libs/libgsl.so: extern/gsl-2.7.1/Makefile
+# 	cd extern/gsl-2.7.1; \
+# 	./configure; \
+# 	make -j8
 
 
-extern/boost_1_81_0.tar.gz: extern
-	wget -nc https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz -P extern
+# extern/boost_1_81_0.tar.gz: extern
+# 	wget -nc https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz -P extern
 
-extern/boost_1_81_0/bootstrap.sh: extern/boost_1_81_0.tar.gz
-	cd extern; \
-	gtar xzf boost_1_81_0.tar.gz --skip-old-files
+# extern/boost_1_81_0/bootstrap.sh: extern/boost_1_81_0.tar.gz
+# 	cd extern; \
+# 	gtar xzf boost_1_81_0.tar.gz --skip-old-files
 
-extern/boost_1_81_0/stage/lib/libboost_system.so: extern/boost_1_81_0/bootstrap.sh
-	cd extern/boost_1_81_0; \
-	./bootstrap.sh; \
-	./b2 --with-python --with-system --with-program_options 
+# extern/boost_1_81_0/stage/lib/libboost_system.so: extern/boost_1_81_0/bootstrap.sh
+# 	cd extern/boost_1_81_0; \
+# 	./bootstrap.sh; \
+# 	./b2 --with-python --with-system --with-program_options 
