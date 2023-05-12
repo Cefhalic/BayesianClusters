@@ -1,11 +1,26 @@
-/* ===== For Root ===== */
-#include "Math/ProbFunc.h" 
-#include "Math/Interpolator.h" 
+
+/* ===== Local utilities ===== */
+#include "Utilities/GSLInterpolator.hpp"
+
+/* ===== BOOST libraries ===== */
+#include <boost/math/special_functions/erf.hpp>
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Cluster.hpp"
 #include "BayesianClustering/Data.hpp"
 #include "BayesianClustering/Configuration.hpp"
+
+
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Copied from the CERN ROOT implementaion
+// Swap ROOT::Math::erfc and ROOT::Math::erf for the boost::math version
+inline double normal_cdf( const double& x, const double& sigma = 1, const double& x0 = 0 )
+{
+  double z = ( x - x0 ) / ( sigma * sqrt(2) );
+  if ( z < -1. ) return 0.5 * boost::math::erfc(-z);
+  else           return 0.5 * ( 1.0 + boost::math::erf(z) );
+}
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -29,7 +44,7 @@ inline double CDF( const double& aArg )
   // Above 8 or below -8 are indistinguishable from 0 and 1 respectively
   // if( aArg > 8.0 ) return 1.0;
   // if( aArg < -8.0 ) return 0.0;
-  return  ROOT::Math::normal_cdf( aArg );
+  return normal_cdf( aArg );
 }
 
 double Cluster::Parameter::alt_log_score() const
@@ -80,12 +95,14 @@ double Cluster::Parameter::log_score() const
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Cluster::Cluster(): mParams( Configuration::Instance.sigmacount() ),
 mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
-mParent( NULL )
+mParent( NULL ) ,
+mData()
 {}
 
 Cluster::Cluster( const Data& aData ): mParams( Configuration::Instance.sigmacount() ),
 mClusterSize( 1 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
-mParent( NULL )
+mParent( NULL ) ,
+mData()
 { 
   const auto s2 = aData.s * aData.s;
   auto lIt( mParams.begin() ) ;
@@ -122,7 +139,7 @@ void Cluster::UpdateLogScore()
   //pass again to set the MuIntegral Correctly
   for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg);
 
-  thread_local static ROOT::Math::Interpolator lInt( Configuration::Instance.sigmacount() , ROOT::Math::Interpolation::kLINEAR );
+  thread_local static GSLInterpolator lInt( gsl_interp_linear , Configuration::Instance.sigmacount() );
   lInt.SetData( Configuration::Instance.sigmabins() , MuIntegral );
 
   static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );
@@ -146,5 +163,11 @@ Cluster* Cluster::GetParent()
   if( mParent ) return mParent = mParent->GetParent();
   return this;
 }
+
+// std::vector< Data* >& Cluster::GetPoints()
+// {
+//   if( !mDataMapped ) throw std::runtime_error( "Points have not been mapped. Run EventProxy::MapPoints() first." );
+//   return mData;
+// }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

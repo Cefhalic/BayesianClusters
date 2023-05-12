@@ -3,6 +3,7 @@
 /* ===== C++ ===== */
 #include <vector>
 #include <functional>
+#include <cstdint>
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Cluster.hpp"

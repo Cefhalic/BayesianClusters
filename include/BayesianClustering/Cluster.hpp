@@ -7,7 +7,7 @@
 #include "BayesianClustering/Precision.hpp"
 
 class Data;
-
+class EventProxy;
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A class representing a cluster
@@ -69,6 +69,10 @@ public:
   //! Update log-probability after a scan
   void UpdateLogScore();
 
+  //! Get the points after clustering
+  //! \return Reference to a list of points in the cluster after clustering
+  // std::vector< Data* >& GetPoints();
+
 public:
   //! The collection of parameters, each corresponding to a different sigma hypothesis 
   std::vector< Parameter > mParams;
@@ -84,6 +88,11 @@ public:
   
   //! A pointer to the immediate parent of the current cluster
   Cluster* mParent;
+
+public:
+  //! List of points in the cluster after clustering
+  std::vector< Data* > mData;
+
 };
 
 

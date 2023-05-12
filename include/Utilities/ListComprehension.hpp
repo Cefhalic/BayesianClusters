@@ -62,9 +62,9 @@ inline std::vector< tType > operator| ( tType tContainerType::* aPtr , tContaine
 //! Emulate the python range function to generate a vector of ints
 //! \param N The number of elements
 //! \return A vector of ints
-inline std::vector< uint32_t > range( const uint32_t& N )
+inline std::vector< std::size_t > range( const std::size_t& N )
 {
-  std::vector< uint32_t > lVec( N );
+  std::vector< std::size_t > lVec( N );
   std::iota( lVec.begin(), lVec.end(), 0 );
   return lVec;
 }

@@ -1,11 +1,14 @@
 
-/* ===== For Root ===== */
-#include "Math/SpecFunc.h" 
+/* ===== BOOST libraries ===== */
+#include <boost/math/special_functions/gamma.hpp>
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/EventProxy.hpp"
 #include "BayesianClustering/Event.hpp"
 #include "BayesianClustering/Configuration.hpp"
+
+/* ===== Local utilities ===== */
+#include "Utilities/ProgressBar.hpp"
 
 // /* ===== C++ ===== */
 #include <iostream>
@@ -131,20 +134,23 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
 
 void EventProxy::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
 {
-  auto twoR2 = 4.0 * R * R;
+  {
+    ProgressBar2 lProgressBar( "Clusterize"  , 0 );  
+    auto twoR2 = 4.0 * R * R;
 
-  mClusters.clear();
-  for( auto& k : mData )
-  { 
-    k.mCluster = NULL;
-    k.mExclude = ( k.mData->CalculateLocalizationScore( mEvent.mData , R ) < T ) ;
+    mClusters.clear();
+    for( auto& k : mData )
+    { 
+      k.mCluster = NULL;
+      k.mExclude = ( k.mData->CalculateLocalizationScore( mEvent.mData , R ) < T ) ;
+    }
+
+    for( auto& k : mData ) k.Clusterize( twoR2 , *this );
+
+    UpdateLogScore();
   }
 
-  for( auto& k : mData ) k.Clusterize( twoR2 , *this );
-
-  UpdateLogScore();
   aCallback( *this );
-
 }
 
 
@@ -224,7 +230,7 @@ void EventProxy::UpdateLogScore()
     mClusterCount += 1;
     mClusteredCount += i.mClusterSize;
     mLogP += i.mClusterScore;
-    lLogPl += ROOT::Math::lgamma( i.mClusterSize ); //this was omitted before - why?
+    lLogPl += boost::math::lgamma( i.mClusterSize ); //this was omitted before - why?
     }
   
 
@@ -233,7 +239,7 @@ void EventProxy::UpdateLogScore()
          + ( mClusteredCount * Configuration::Instance.logPbDagger() )
          + ( Configuration::Instance.logAlpha() * mClusterCount )
          + Configuration::Instance.logGammaAlpha()
-         - ROOT::Math::lgamma( Configuration::Instance.alpha() + mClusteredCount );  
+         - boost::math::lgamma( Configuration::Instance.alpha() + mClusteredCount );  
 
   mLogP += (-log(4.0) * mBackgroundCount) + lLogPl;
 }

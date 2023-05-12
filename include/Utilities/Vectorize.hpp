@@ -4,6 +4,7 @@
 #include <boost/asio/thread_pool.hpp>
 
 #include <functional>
+#include <cmath>
 
 #include "ListComprehension.hpp"
 

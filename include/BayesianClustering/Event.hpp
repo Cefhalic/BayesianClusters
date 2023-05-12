@@ -3,9 +3,9 @@
 /* ===== C++ ===== */
 #include <vector>
 #include <functional>
+#include <string>
 
 /* ===== Cluster sources ===== */
-// #include "BayesianClustering/Configuration.hpp"
 #include "BayesianClustering/Data.hpp"
 
 class EventProxy;
@@ -24,14 +24,14 @@ public:
 
   //! Deleted assignment operator
   //! \return Reference to this, for chaining calls
-  Event& operator = (const Event& aOther /*!< Anonymous argument */ ) = delete;
+  Event& operator= (const Event& aOther /*!< Anonymous argument */ ) = delete;
 
   //! Default move constructor
   Event( Event&& aOther /*!< Anonymous argument */ ) = default;
 
   //! Default move-assignment constructor
   //! \return Reference to this, for chaining calls
-  Event& operator = ( Event&& aOther /*!< Anonymous argument */ ) = default;
+  Event& operator= ( Event&& aOther /*!< Anonymous argument */ ) = default;
 
   //! All the necessary pre-processing to get the event ready for an RT-scan
   void Preprocess();

@@ -1,13 +1,10 @@
 
 
 /* ===== Local utilities ===== */
+#include "Utilities/GSLInterpolator.hpp"
 #include "Utilities/ListComprehension.hpp"
 #include "Utilities/Vectorize.hpp"
 #include "BayesianClustering/Configuration.hpp"
-
-/* ===== For Root ===== */
-#include "Math/SpecFunc.h" 
-#include "Math/Interpolator.h" 
 
 /* ===== C++ ===== */
 #include <iostream>
@@ -15,6 +12,7 @@
 #include <streambuf>
 
 /* ===== BOOST libraries ===== */
+#include <boost/math/special_functions/gamma.hpp>
 #include "boost/algorithm/string.hpp"
 #include "boost/program_options.hpp"
 namespace po = boost::program_options;
@@ -104,7 +102,7 @@ void Configuration::SetAlpha( const double& aAlpha )
 	std::cout << "Alpha: " << aAlpha << std::endl;
 	mAlpha = aAlpha;
 	mLogAlpha = log( aAlpha );
-	mLogGammaAlpha = ROOT::Math::lgamma( aAlpha );
+	mLogGammaAlpha = boost::math::lgamma( aAlpha );
 }
 
 void Configuration::SetValidate( const bool& aValidate )
@@ -147,6 +145,12 @@ void config_file( const po::options_description& aDesc , const std::string& aFil
 
 
 void Configuration::FromCommandline( int argc , char **argv )
+{
+  std::vector< std::string > lTemp( argv+1 , argv+argc );
+  FromVector( lTemp );
+}
+
+void Configuration::FromVector( const std::vector< std::string >& aArgs )
 {
   typedef std::string tS;
   typedef std::vector<std::string> tVS;
@@ -197,7 +201,7 @@ void Configuration::FromCommandline( int argc , char **argv )
   ;
 
   po::variables_map lVm;
-  po::store( po::command_line_parser( argc , argv ).options( lDesc ).positional( lPositional ).run() , lVm );
+  po::store( po::command_line_parser( aArgs ).options( lDesc ).positional( lPositional ).run() , lVm );
   po::notify( lVm );    
  
   if( Nr ) SetRBins( Nr , rLo , rHi );
@@ -205,7 +209,7 @@ void Configuration::FromCommandline( int argc , char **argv )
 
   if( Nsig )
   {
-    ROOT::Math::Interpolator lInterpolator( SigKeys , SigVals ); // Default to cubic spline interpolation
+    GSLInterpolator lInterpolator( gsl_interp_cspline, SigKeys , SigVals );
     SetSigmaParameters( Nsig , sigLo , sigHi , [&]( const double& aPt ){ return lInterpolator.Eval( aPt ); } );  
   }
 
