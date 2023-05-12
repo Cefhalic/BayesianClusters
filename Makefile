@@ -19,8 +19,9 @@ DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${EXECUTABLE_OBJ
 # PYTHONMAJOR = $(eval python --version | sed -e "s|Python \([0-9]*\)\.[0-9]*\.[0-9]*|\1|g")
 # PYTHONMINOR = $(eval python --version | sed -e "s|Python [0-9]*\.\([0-9]*\)\.[0-9]*|\1|g")
 
-LIBPYTHON = $(shell python -c "from sys import version_info; print( f'python{version_info[0]}.{version_info[1]}' )" )
-LIBBOOSTPYTHON = $(shell python -c "from sys import version_info; print( f'boost_python{version_info[0]}{version_info[1]}' )" )
+LIBPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'python{version_info[0]}.{version_info[1]}' )" )
+LIBBOOSTPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'boost_python{version_info[0]}{version_info[1]}' )" )
+
 
 
 
@@ -54,12 +55,10 @@ docs: ${DOCUMENTATION}
 deps: extern/gsl-2.7.1/.libs/libgsl.so extern/boost_1_81_0/stage/lib/libboost_system.so
 
 # Adding the includes and libs for the locally built deps first
-FLAGS = -Iextern/gsl-2.7.1 -Iextern/boost_1_81_0 \
-	-Lextern/gsl-2.7.1/cblas/.libs -Lextern/gsl-2.7.1/.libs -Lextern/boost_1_81_0/stage/lib \
-	\
-	-Iinclude -I/usr/include/${LIBPYTHON} \
-	-lgsl -lgslcblas -l${LIBBOOSTPYTHON} -lboost_program_options -l${LIBPYTHON} -lm -lpthread \
+FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREFIX}/include/boost -I${CONDA_PREFIX}/include/${LIBPYTHON}  \
+        -lgsl -lgslcblas -l${LIBBOOSTPYTHON} -lboost_program_options -l${LIBPYTHON} -lm -lpthread  \
         -g -std=c++11 -march=native -O3 -MMD -MP
+
 
 
 ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))

@@ -1,0 +1,11 @@
+channels:
+  - conda-forge
+dependencies:
+      - cxx-compiler
+      - boost
+      - gsl
+      - make
+      - python
+      - pip
+      - pip:
+        - matplotlib
