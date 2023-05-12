@@ -3,3 +3,6 @@ obj
 *.aux
 *.log
 *.exe
+.DS_Store
+.ipynb_checkpoints
+*.so
