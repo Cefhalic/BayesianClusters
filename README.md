@@ -54,16 +54,16 @@ The maths documentation is then at `documentation/OptimizingTheMaths.pdf`
 ```
 ### To run an RT-scan without any output (for timing)
 ```
-./Scan.exe --cfg config.txt -i 1_un_red.csv
+./Scan.exe --cfg example-configs/config.txt -i 1_un_red.csv
 ```
 
 ### To run an RT-scan with JSON or XML output
 ```
-./Scan.exe --cfg config.txt -i 1_un_red.csv -o ScanResults.json
+./Scan.exe --cfg example-configs/config.txt -i 1_un_red.csv -o ScanResults.json
 ```
 or
 ```
-./Scan.exe --cfg config.txt -i 1_un_red.csv -o ScanResults.xml
+./Scan.exe --cfg example-configs/config.txt -i 1_un_red.csv -o ScanResults.xml
 ```
 Please note - the file can have any name you please, but the extension must be `.xml` or `.json` and is case sensitive.
 
@@ -76,7 +76,7 @@ To show the whole data set
 ```
 To show only the data in the specified region of interest
 ```
-./Display.exe --cfg config.txt -i 1_un_red.csv
+./Display.exe --cfg example-configs/config.txt -i 1_un_red.csv
 ```
 -->
 
@@ -112,7 +112,7 @@ bash-4.4$ source activate bayesian
 Note that this will not produce any graphical output unless there is an X-Windows or another graphical interface.
 
 ```
-(bayesian) bash-4.4$ python ./python/test.py --cfg config.txt -i /rds/general/project/easystorm/live/bayesian/1_un_red.csv --r 20nm --t 40nm
+(bayesian) bash-4.4$ python ./python/test.py --cfg example-configs/config.txt -i /rds/general/project/easystorm/live/bayesian/1_un_red.csv --r 20nm --t 40nm
 ``` 
 
 ## Running the test as a Jupyter notebook
