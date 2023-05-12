@@ -1,6 +1,6 @@
 # Bayesian Clusters
 
-## The magic Makefile
+<!-- ## The magic Makefile
 
 There is a makefile to handle most boilerplate tasks for you. The makefile has a number of options:
 
@@ -78,6 +78,7 @@ To show only the data in the specified region of interest
 ```
 ./Display.exe --cfg config.txt -i 1_un_red.csv
 ```
+-->
 
 # Instructions for running on Imperial HPC from Python
 
