@@ -1,14 +1,15 @@
-HEADERS = $(sort $(wildcard include/*.hpp) )
+# ========================================================================================================================================================
+# The list of header files for utility
+HEADERS = $(sort $(wildcard include/**/*.hpp) )
 
 # Files for library
 LIBRARY_SOURCES = $(sort $(wildcard src/Utilities/*.cpp) $(wildcard src/BayesianClustering/*.cpp) )
 LIBRARY_OBJECT_FILES = $(patsubst src/%.cpp,obj/lib/%.o,${LIBRARY_SOURCES})
-
 LIBRARY_FILE = libBayesianClusteringCore.so
 
+# Files for the python-bindings library
 PYTHON_SOURCES = $(sort $(wildcard src/PythonBindings/*.cpp) )
 PYTHON_OBJECT_FILES = $(patsubst src/%.cpp,obj/lib/%.o,${PYTHON_SOURCES})
-
 PYTHON_LIBRARY_FILE = python/BayesianClustering.so
 
 # Files for executables
@@ -16,11 +17,14 @@ EXECUTABLE_SOURCES = $(sort $(wildcard src/*.cxx) )
 EXECUTABLE_OBJECT_FILES = $(patsubst src/%.cxx,obj/bin/%.o,${EXECUTABLE_SOURCES})
 EXECUTABLES = $(patsubst src/%.cxx,%.exe,${EXECUTABLE_SOURCES})
 
+# Documentation targets
 DOXYGEN = documentation/SoftwareManual.pdf
 DOCUMENTATION = documentation/OptimizingTheMaths.pdf
 
+# The names of any directory paths that will need to be created
 DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${PYTHON_OBJECT_FILES} ${EXECUTABLE_OBJECT_FILES}, $(dir ${filePath})))
 
+# Various parameters and build flags
 LIBPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'python{version_info[0]}.{version_info[1]}' )" )
 LIBBOOSTPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'boost_python{version_info[0]}{version_info[1]}' )" )
 
@@ -31,7 +35,8 @@ FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREF
 PYTHONFLAGS = -I${CONDA_PREFIX}/include/${LIBPYTHON} -l${LIBBOOSTPYTHON} -l${LIBPYTHON} \
               -Wno-deprecated-declarations # Hide the annoying boost auto_ptr=>unique_ptr warning     
 
-
+# ========================================================================================================================================================
+# Utility function to switch between raw and sanitized output
 ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
 define switch_verbose 
 	${2}
@@ -42,7 +47,8 @@ define switch_verbose
 endef
 endif
 
-
+# ========================================================================================================================================================
+# The rules
 .PHONY: clean all help cpp doxygen docs verbose
 
 default: cpp
@@ -98,10 +104,9 @@ ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE}
 	$(call switch_verbose, "Building Executable   | g++ ... -o $@" , g++ $^ -o $@ -L. -lBayesianClusteringCore ${FLAGS} )
 
 ${DIRECTORIES}:
-	@echo "Making directory      | mkdir -p $@"
-	@mkdir -p $@
+	$(call switch_verbose, "Making directory      | mkdir -p $@"   , mkdir -p $@ )
 
-${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
+${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES} ${PYTHON_SOURCES}
 	@echo "Generating Doxygen Documentation: doxygen utilities/Doxyfile ---> $@"
 	@doxygen utilities/Doxyfile
 	@make -sC .doxygen/latex > /dev/null 2>&1
@@ -111,3 +116,5 @@ ${DOCUMENTATION}:
 	@echo "Generating Maths Documentation: pdflatex ... documentation/OptimizingTheMaths ---> documentation/OptimizingTheMaths.pdf"
 	@pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
 	@pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
+
+# ========================================================================================================================================================
