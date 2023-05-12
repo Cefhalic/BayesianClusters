@@ -107,7 +107,7 @@ ${DIRECTORIES}:
 
 ${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
 	@echo "Generating Doxygen Documentation: doxygen Doxyfile ---> $@"
-	@doxygen Doxyfile
+	@doxygen utilities/Doxyfile
 	@make -C .doxygen/latex
 	@cp .doxygen/latex/refman.pdf $@
 
