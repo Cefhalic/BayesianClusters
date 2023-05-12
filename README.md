@@ -135,6 +135,7 @@ conda activate bayesian
 ```
 
 ## Compile the code
+From within the ```Bayesian``` folder
 ```
 make clean
 make -j8
