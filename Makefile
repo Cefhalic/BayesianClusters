@@ -35,6 +35,8 @@ FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREF
 PYTHONFLAGS = -I${CONDA_PREFIX}/include/${LIBPYTHON} -l${LIBBOOSTPYTHON} -l${LIBPYTHON} \
               -Wno-deprecated-declarations # Hide the annoying boost auto_ptr=>unique_ptr warning     
 
+CXX = ${CONDA_PREFIX}/bin/g++
+
 # ========================================================================================================================================================
 # Utility function to switch between raw and sanitized output
 ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
@@ -75,33 +77,33 @@ cpp: ${EXECUTABLES} ${PYTHON_LIBRARY_FILE}
 doxygen: ${DOXYGEN} 
 docs: ${DOCUMENTATION}
 
-.SECONDEXPANSION:
-obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o)
+CONDA:
 	@test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
-	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , g++ $< -o $@ -c ${FLAGS} )
 
 .SECONDEXPANSION:
-obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o)
-	@test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
-	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , g++ $< -o $@ -c ${FLAGS} )
+obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o) CONDA
+	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , ${CXX} $< -o $@ -c ${FLAGS} )
 
 .SECONDEXPANSION:
-obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBindings/%.o)
-	@test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
-	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , g++ $< -o $@ -c ${PYTHONFLAGS} ${FLAGS} )
+obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o) CONDA 
+	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , ${CXX} $< -o $@ -c ${FLAGS} )
+
+.SECONDEXPANSION:
+obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBindings/%.o) CONDA
+	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , ${CXX} $< -o $@ -c ${PYTHONFLAGS} ${FLAGS} )
 
 -include $(LIBRARY_OBJECT_FILES:.o=.d)
 -include $(PYTHON_OBJECT_FILES:.o=.d)	
 -include $(EXECUTABLE_OBJECT_FILES:.o=.d)
 
 ${LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
-	$(call switch_verbose, "Building Library      | g++ ... -o $@" , g++ $^ -o $@ -shared ${FLAGS} )
+	$(call switch_verbose, "Building Library      | g++ ... -o $@" , ${CXX} $^ -o $@ -shared ${FLAGS} )
 
 ${PYTHON_LIBRARY_FILE}: ${LIBRARY_FILE} ${PYTHON_OBJECT_FILES}
-	$(call switch_verbose, "Building Library      | g++ ... -o $@" , g++ $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS} )
+	$(call switch_verbose, "Building Library      | g++ ... -o $@" , ${CXX} $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS} )
 
 ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE}
-	$(call switch_verbose, "Building Executable   | g++ ... -o $@" , g++ $^ -o $@ -L. -lBayesianClusteringCore ${FLAGS} )
+	$(call switch_verbose, "Building Executable   | g++ ... -o $@" , ${CXX} $^ -o $@ -L. -lBayesianClusteringCore ${FLAGS} )
 
 ${DIRECTORIES}:
 	$(call switch_verbose, "Making directory      | mkdir -p $@"   , mkdir -p $@ )
