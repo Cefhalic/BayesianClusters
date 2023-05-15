@@ -77,19 +77,22 @@ cpp: ${EXECUTABLES} ${PYTHON_LIBRARY_FILE}
 doxygen: ${DOXYGEN} 
 docs: ${DOCUMENTATION}
 
+GIT:
+	@git config --local core.hooksPath .githooks/
+
 CONDA:
 	@test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
 
 .SECONDEXPANSION:
-obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o) CONDA
+obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o) CONDA GIT
 	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , ${CXX} $< -o $@ -c ${FLAGS} )
 
 .SECONDEXPANSION:
-obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o) CONDA 
+obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o) CONDA GIT 
 	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , ${CXX} $< -o $@ -c ${FLAGS} )
 
 .SECONDEXPANSION:
-obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBindings/%.o) CONDA
+obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBindings/%.o) CONDA GIT
 	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , ${CXX} $< -o $@ -c ${PYTHONFLAGS} ${FLAGS} )
 
 -include $(LIBRARY_OBJECT_FILES:.o=.d)

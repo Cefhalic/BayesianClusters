@@ -1,0 +1,23 @@
+#! /bin/bash 
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+mod_files=$(git diff --name-only --cached origin/${branch})
+
+if ${CONDA_PREFIX}/bin/python -c "from os.path import splitext; exts = set( splitext(x)[1] for x in '''${mod_files}'''.split('\n') ); exit( len( exts & {'.hpp','.cpp','.cxx'} ) == 0 )"; then
+	if ! make -j8; then
+		echo "C++ did not build. Please run 'make'"
+		exit 1
+	fi
+
+	if ! make doxygen; then
+		echo "Undocumented C++ detected. Please run 'make doxygen'"
+		exit 1
+	fi
+
+	if [ -n "$(git diff --name-only documentation/SoftwareManual.pdf)" ]; then
+		echo "Documentation has been updated, please commit and push-again."
+		exit 1
+	fi
+fi
+
+echo "All checks passed"
