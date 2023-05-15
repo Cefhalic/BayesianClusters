@@ -203,7 +203,7 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   class_< Data, boost::noncopyable >( "Data" , no_init )
     .def_readonly("x", &Data::x)
     .def_readonly("y", &Data::y)
-    .def( "NearestNeighbour" , &Data_GetNearestNeighbour )      
+    // .def( "NearestNeighbour" , &Data_GetNearestNeighbour )      
     ;   
 
   class_< DataProxy, boost::noncopyable >( "DataProxy", init< Data& >() )
