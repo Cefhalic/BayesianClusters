@@ -298,15 +298,22 @@ public:
 		return toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
 	}
 
+  //! Getter for the x-coordinate of the physical centre
+  //! \return The x-coordinate of the physical centre
   double getCentreX() const {return mPhysicalCentreX;}
+  //! Getter for the y-coordinate of the physical centre
+  //! \return The y-coordinate of the physical centre
   double getCentreY() const {return mPhysicalCentreY;}
+  //! Getter for the scaling factor applied to the dataset
+  //! \return The scaling factor applied to the dataset
   double getZoom() const {return 2.0 / mScale;}
 
 public:
   //! A single global copy of the global variables
   static Configuration Instance;
 
-  //! 
+  //! Getter for the singleton instance
+  //! \return The singleton instance
   inline static Configuration& getInstance()
   {
     return Instance;

@@ -54,7 +54,9 @@ public:
   //! Update log-probability after a scan
   void UpdateLogScore();
 
+  //! Sean's validation code for testing when the running log-score fails
   void ValidateLogScore();
+
   //! Get the proxy for the Nth neighbour of this data-point
   //! \return A reference to the neighbour data-proxy
   //! \param aIndex The index of the neighbour we are looking for 
@@ -83,6 +85,7 @@ public:
   double mLogP;
 
 private:
+  //! The underlying event this is a proxy to
   const Event& mEvent;
 
   // //max score we see in this event wrapper

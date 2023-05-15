@@ -30,6 +30,8 @@ public:
     //! \return the log-probability of this set of cluster parameters
     double log_score() const;
 
+    //! Sean's alternative function to calculate the log-score using only the A's and B's as per the original paper for debugging 
+    //! \return the log-probability of this set of cluster parameters
     double alt_log_score() const;
     
     //! Parameter A defined in the math
@@ -43,10 +45,12 @@ public:
     //! Parameter logF defined in the math
     PRECISION logF;
 
-    //!weighted centre parameters, used
-    // for validation
+
+    //! Parameters added by Sean for validation
     PRECISION weightedCentreX;
+    //! Parameters added by Sean for validation
     PRECISION weightedCentreY;
+    //! Parameters added by Sean for validation
     PRECISION S2;
   }; 
 

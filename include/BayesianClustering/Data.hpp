@@ -75,9 +75,16 @@ public:
   //! \param aIndex The index of the current data-point
   void Preprocess( std::vector<Data>& aData , const std::size_t& aIndex );
 
+  //! Calculate the localization score from the local neighbourhood
+  //! \todo Remind myself how this works and what the difference is with below
+  //! \param aData ?
   void PreprocessLocalizationScores( std::vector<Data>& aData );
 
-
+  //! Calculate the localization score from the local neighbourhood
+  //! \todo Remind myself how this works and what the difference is with above
+  //! \param aData ?
+  //! \param R ?  
+  //! \return The localization score
   PRECISION CalculateLocalizationScore( const std::vector<Data>& aData , const double& R ) const;
 
 public:
