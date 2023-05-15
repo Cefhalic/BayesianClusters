@@ -18,6 +18,9 @@ if ${CONDA_PREFIX}/bin/python -c "from os.path import splitext; exts = set( spli
 		echo "Documentation has been updated, please commit and push-again."
 		exit 1
 	fi
+
+	echo "All checks passed"
+else
+	echo "No modified C++ sources found"
 fi
 
-echo "All checks passed"
