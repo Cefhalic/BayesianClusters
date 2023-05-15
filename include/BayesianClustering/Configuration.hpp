@@ -83,6 +83,9 @@ public:
   // //! \param aScale The scale of the window in physical units (becomes ±1 in algorithm units)
 	// void SetZoom( const double& aScale );
 
+  //! Setter for the size of the RoI window
+  //! \param aWidthX The width of the window in physical units
+  //! \param aWidthY The height of the window in physical units
   void SetWidth( const double& aWidthX , const double& aWidthY );
 
   //! Setter for the sigma-bins to be integrated over
@@ -311,7 +314,12 @@ public:
   //! \return The scaling factor applied to the dataset
   // double getZoom() const {return 2.0 / mScale;}
 
+  //! Getter for the width of the ROI window
+  //! \return The width of the ROI window
   double getWidthX() const { return mWidthX; }
+
+  //! Getter for the height of the ROI window
+  //! \return The height of the ROI window
   double getWidthY() const { return mWidthY; }
 
 public:
