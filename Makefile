@@ -35,6 +35,8 @@ FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREF
 PYTHONFLAGS = -I${CONDA_PREFIX}/include/${LIBPYTHON} -l${LIBBOOSTPYTHON} -l${LIBPYTHON} \
               -Wno-deprecated-declarations # Hide the annoying boost auto_ptr=>unique_ptr warning     
 
+RPATHFLAG = -Wl,-rpath=$(dir $(abspath ${LIBRARY_FILE}))
+
 CXX = ${CONDA_PREFIX}/bin/g++
 
 # ========================================================================================================================================================
@@ -103,7 +105,7 @@ ${LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
 	$(call switch_verbose, "Building Library      | g++ ... -o $@" , ${CXX} $^ -o $@ -shared ${FLAGS} )
 
 ${PYTHON_LIBRARY_FILE}: ${LIBRARY_FILE} ${PYTHON_OBJECT_FILES}
-	$(call switch_verbose, "Building Library      | g++ ... -o $@" , ${CXX} $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS} )
+	$(call switch_verbose, "Building Library      | g++ ... -o $@" , ${CXX} $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS} ${RPATHFLAG} )
 
 ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE}
 	$(call switch_verbose, "Building Executable   | g++ ... -o $@" , ${CXX} $^ -o $@ -L. -lBayesianClusteringCore ${FLAGS} )
