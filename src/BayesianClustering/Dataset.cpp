@@ -1,7 +1,7 @@
 
 /* ===== Cluster sources ===== */
-#include "BayesianClustering/Event.hpp"
-#include "BayesianClustering/EventProxy.hpp"
+#include "BayesianClustering/Dataset.hpp"
+#include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
 /* ===== Local utilities ===== */
@@ -15,7 +15,7 @@
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Configuration Configuration::Instance;
 
-Event::Event()
+Dataset::Dataset()
 {
   const std::string& lFilename = Configuration::Instance.inputFile();
   if( lFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
@@ -23,14 +23,14 @@ Event::Event()
   LoadCSV( lFilename );
 }
 
-void Event::Preprocess()
+void Dataset::Preprocess()
 {
   // Populate mNeighbour lists  
   ProgressBar2 lProgressBar( "Populating neighbourhood" , mData.size() );
   [&]( const std::size_t& i ){ mData.at( i ).Preprocess( mData , i ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
 }
 
-void Event::ScanRT( const std::function< void( const EventProxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback ) 
+void Dataset::ScanRT( const std::function< void( const RoI& , const double& , const double& , std::pair<int,int>  ) >& aCallback ) 
 {
   Preprocess();    
 
@@ -39,26 +39,26 @@ void Event::ScanRT( const std::function< void( const EventProxy& , const double&
     [&]( const std::size_t& i ){ mData.at( i ).PreprocessLocalizationScores( mData ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
   }
 
-  std::vector< EventProxy > lEventProxys;
-  lEventProxys.reserve( Nthreads );
-  for( int i(0) ; i!=Nthreads ; ++i ) lEventProxys.emplace_back( *this );
+  std::vector< RoI > lRoIs;
+  lRoIs.reserve( Nthreads );
+  for( int i(0) ; i!=Nthreads ; ++i ) lRoIs.emplace_back( *this );
   ProgressBar2 lProgressBar( "Scan over RT"  , 0 );
-  [&]( const std::size_t& i ){ lEventProxys.at(i).ScanRT( aCallback , Nthreads , i ); } || range( Nthreads );
+  [&]( const std::size_t& i ){ lRoIs.at(i).ScanRT( aCallback , Nthreads , i ); } || range( Nthreads );
 }
 
-void Event::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
+void Dataset::Clusterize( const double& R , const double& T , const std::function< void( const RoI& ) >& aCallback )
 {
   if( R < 0 ) throw std::runtime_error( "R must be specified and non-negative" );
   if( T < 0 ) throw std::runtime_error( "T must be specified and non-negative" );
 
   Preprocess();    
 
-  EventProxy lProxy( *this );
+  RoI lProxy( *this );
   lProxy.Clusterize( R ,  T , aCallback );
 }
 
 /* ===== Function for loading a chunk of data from CSV file ===== */
-void __LoadCSV__( const std::string& aFilename , Event& aEvent , std::vector< Data >& aData , const std::size_t& aOffset , int aCount )
+void __LoadCSV__( const std::string& aFilename , Dataset& aDataset , std::vector< Data >& aData , const std::size_t& aOffset , int aCount )
 {
   const double lMaxX( Configuration::Instance.getWidthX() / 2 ) , lMaxY( Configuration::Instance.getWidthY() / 2 );
 
@@ -105,7 +105,7 @@ void __LoadCSV__( const std::string& aFilename , Event& aEvent , std::vector< Da
   std::sort( aData.begin() , aData.end() );
 }
 
-void Event::LoadCSV( const std::string& aFilename )
+void Dataset::LoadCSV( const std::string& aFilename )
 {
   auto f = fopen( aFilename.c_str() , "rb");
   if ( f == NULL ) throw std::runtime_error( "File is not available" );
@@ -143,7 +143,7 @@ void Event::LoadCSV( const std::string& aFilename )
   std::cout << "Read " << mData.size() << " points" << std::endl;
 }
 
-void Event::WriteCSV( const std::string& aFilename )
+void Dataset::WriteCSV( const std::string& aFilename )
 {
   auto f = fopen( aFilename.c_str() , "w");
   if ( f == NULL ) throw std::runtime_error( "File is not available" );

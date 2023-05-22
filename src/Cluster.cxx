@@ -1,7 +1,7 @@
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Cluster.hpp"
-#include "BayesianClustering/Event.hpp"
-#include "BayesianClustering/EventProxy.hpp"
+#include "BayesianClustering/Dataset.hpp"
+#include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
 // /* ===== C++ ===== */
@@ -17,8 +17,8 @@
 
 
 //! Callback to report clusters
-// \param aEvent The event to draw
-void ReportClusters( const EventProxy& aProxy )
+// \param aDataset The Dataset to draw
+void ReportClusters( const RoI& aProxy )
 {
   std::map< const Cluster* , std::vector< const Data* > > lClusters;
 
@@ -49,9 +49,9 @@ int main(int argc, char **argv)
   Configuration::Instance.SetRBins( 0 , 0 , Configuration::Instance.ClusterR() );
   std::cout << "+------------------------------------+" << std::endl;
 
-  Event lEvent;  
+  Dataset lDataset;  
 
-  lEvent.Clusterize( 
+  lDataset.Clusterize( 
     Configuration::Instance.ClusterR() , 
     Configuration::Instance.ClusterT() , 
     &ReportClusters

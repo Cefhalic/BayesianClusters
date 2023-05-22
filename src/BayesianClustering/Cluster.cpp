@@ -80,7 +80,7 @@ double Cluster::Parameter::log_score() const
 
   double log_sum = logF - double( log( A ) ) - ( 0.5 * E );
 
-  // We place explicit bounds checks to prevent calls to expensive functions
+  // We place explicit bounds checks to prDataset calls to expensive functions
   auto Gx = CDF( sqrt_A * (1.0-Dx) ) - CDF( sqrt_A * (-1.0-Dx) );
   if( Gx != 1.0 ) log_sum += log( Gx );
   auto Gy = CDF( sqrt_A * (1.0-Dy) ) - CDF( sqrt_A * (-1.0-Dy) );
@@ -166,7 +166,7 @@ Cluster* Cluster::GetParent()
 
 // std::vector< Data* >& Cluster::GetPoints()
 // {
-//   if( !mDataMapped ) throw std::runtime_error( "Points have not been mapped. Run EventProxy::MapPoints() first." );
+//   if( !mDataMapped ) throw std::runtime_error( "Points have not been mapped. Run RoI::MapPoints() first." );
 //   return mData;
 // }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

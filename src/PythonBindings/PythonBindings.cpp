@@ -5,8 +5,8 @@
 using namespace boost::python;
 
 #include "BayesianClustering/Configuration.hpp"
-#include "BayesianClustering/Event.hpp"
-#include "BayesianClustering/EventProxy.hpp"
+#include "BayesianClustering/Dataset.hpp"
+#include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/Cluster.hpp"
 
 #include "BayesianClustering/Data.hpp"
@@ -108,7 +108,7 @@ void ConfigFromVector( const boost::python::object& aList )
 //! \param aCallback A callback to which results are passed
 void OneStopGetClusters( const boost::python::object& aCallback )
 { 
-  Event lEvent;
+  Dataset lDataset;
 
   Configuration::Instance.SetRBins( 0 , 0 , Configuration::Instance.ClusterR() );
 
@@ -118,12 +118,12 @@ void OneStopGetClusters( const boost::python::object& aCallback )
       boost::python::list lClusters;
       boost::python::list lBackground;
 
-      for ( const auto& i : aEventProxy.mClusters  )
+      for ( const auto& i : aRoI.mClusters  )
       {
         if( !i.mParent ) lClusters.append( boost::ref( i ) );
       }
 
-      for( auto& i : aEventProxy.mData )
+      for( auto& i : aRoI.mData )
       { 
         if( i.mCluster ) i.mCluster->GetParent()->mData.push_back( i.mData );
         else             lBackground.append( boost::ref( i.mData ) );
@@ -147,24 +147,24 @@ std::size_t Cluster_GetSize( Cluster& aCluster )
   return aCluster.mData.size();
 }
 
-//! Utility function to get a python iterator over all the data points in an event
-//! \param aEvent The event over which we are iterating
-//! \return An iterator object pointing to a member of the event
-PyIterator<Data> Event_GetIterator( const Event& aEvent ) { return PyIterator<Data>( aEvent.mData ); }
+//! Utility function to get a python iterator over all the data points in an Dataset
+//! \param aDataset The Dataset over which we are iterating
+//! \return An iterator object pointing to a member of the Dataset
+PyIterator<Data> Dataset_GetIterator( const Dataset& aDataset ) { return PyIterator<Data>( aDataset.mData ); }
 
-//! Utility function to get the number of data points in an event
-//! \param aEvent The event we are inspecting
-//! \return The number of data points in the event
-std::size_t Event_GetSize( Event& aEvent )
+//! Utility function to get the number of data points in an Dataset
+//! \param aDataset The Dataset we are inspecting
+//! \return The number of data points in the Dataset
+std::size_t Dataset_GetSize( Dataset& aDataset )
 { 
-  return aEvent.mData.size();
+  return aDataset.mData.size();
 }
 
-// boost::python::object Data_GetNearestNeighbour( const Data& aData , const Event& aEvent )
+// boost::python::object Data_GetNearestNeighbour( const Data& aData , const Dataset& aDataset )
 // {
 //   for ( const auto& i : aData.mNeighbours )
 //   {
-//     if( i.first > 0 ) return boost::python::make_tuple( i.first , boost::ref( aEvent.mData[ i.second ] ) );
+//     if( i.first > 0 ) return boost::python::make_tuple( i.first , boost::ref( aDataset.mData[ i.second ] ) );
 //   }
 
 //   return boost::python::object();
@@ -180,17 +180,17 @@ BOOST_PYTHON_MODULE( BayesianClustering )
     .def( "FromVector" , &ConfigFromVector ).staticmethod("FromVector")
     ;
 
-	class_< Event, boost::noncopyable >( "Event" )
-    .def( "__iter__" , &Event_GetIterator )
-    .def( "__len__" , &Event_GetSize ) 
-    .def( "Preprocess" , &Event::Preprocess )       
+	class_< Dataset, boost::noncopyable >( "Dataset" )
+    .def( "__iter__" , &Dataset_GetIterator )
+    .def( "__len__" , &Dataset_GetSize ) 
+    .def( "Preprocess" , &Dataset::Preprocess )       
     ;
 
   class_< PyIterator<Data> >( "DataIterator", no_init )
     .def("__next__" , &PyIterator<Data>::next , return_value_policy<reference_existing_object>() )
     ;        
 
-  class_< EventProxy, boost::noncopyable >( "EventProxy", init< Event& >() )
+  class_< RoI, boost::noncopyable >( "RoI", init< Dataset& >() )
     ;   
 
   class_< Cluster, boost::noncopyable >( "Cluster" )

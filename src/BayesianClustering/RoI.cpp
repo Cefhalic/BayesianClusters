@@ -3,8 +3,8 @@
 #include <boost/math/special_functions/gamma.hpp>
 
 /* ===== Cluster sources ===== */
-#include "BayesianClustering/EventProxy.hpp"
-#include "BayesianClustering/Event.hpp"
+#include "BayesianClustering/RoI.hpp"
+#include "BayesianClustering/Dataset.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
 /* ===== Local utilities ===== */
@@ -14,15 +14,15 @@
 #include <iostream>
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-EventProxy::EventProxy( Event& aEvent ) :
-  mBackgroundCount( 0 ) , mEvent( aEvent )
+RoI::RoI( Dataset& aDataset ) :
+  mBackgroundCount( 0 ) , mDataset( aDataset )
 {
-  mClusters.reserve( aEvent.mData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
-  mData.reserve( aEvent.mData.size() );
-  for( auto& i : aEvent.mData ) mData.emplace_back( i );
+  mClusters.reserve( aDataset.mData.size() );  // Reserve as much space for clusters as there are data points - prDataset pointers being invalidated!
+  mData.reserve( aDataset.mData.size() );
+  for( auto& i : aDataset.mData ) mData.emplace_back( i );
 }
 
-void EventProxy::CheckClusterization( const double& R , const double& T )
+void RoI::CheckClusterization( const double& R , const double& T )
 {
   const auto lRlimit = 4.0 * R * R;
 
@@ -94,7 +94,7 @@ void EventProxy::CheckClusterization( const double& R , const double& T )
 }
 
 __attribute__((flatten))
-void EventProxy::ScanRT( const std::function< void( const EventProxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset )
+void RoI::ScanRT( const std::function< void( const RoI& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset )
 {
   double dR( aParallelization * Configuration::Instance.dR() );
   double R( Configuration::Instance.minScanR() + ( aOffset * Configuration::Instance.dR() ) ) , twoR2( 0 ) , T( 0 );
@@ -132,7 +132,7 @@ void EventProxy::ScanRT( const std::function< void( const EventProxy& , const do
 }
 
 
-void EventProxy::Clusterize( const double& R , const double& T , const std::function< void( const EventProxy& ) >& aCallback )
+void RoI::Clusterize( const double& R , const double& T , const std::function< void( const RoI& ) >& aCallback )
 {
   {
     ProgressBar2 lProgressBar( "Clusterize"  , 0 );  
@@ -142,7 +142,7 @@ void EventProxy::Clusterize( const double& R , const double& T , const std::func
     for( auto& k : mData )
     { 
       k.mCluster = NULL;
-      k.mExclude = ( k.mData->CalculateLocalizationScore( mEvent.mData , R ) < T ) ;
+      k.mExclude = ( k.mData->CalculateLocalizationScore( mDataset.mData , R ) < T ) ;
     }
 
     for( auto& k : mData ) k.Clusterize( twoR2 , *this );
@@ -154,7 +154,7 @@ void EventProxy::Clusterize( const double& R , const double& T , const std::func
 }
 
 
-void EventProxy::ValidateLogScore()
+void RoI::ValidateLogScore()
 {
   for ( auto& i : mClusters)
   {
@@ -217,7 +217,7 @@ void EventProxy::ValidateLogScore()
 }
 
 
-void EventProxy::UpdateLogScore()
+void RoI::UpdateLogScore()
 {
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0;

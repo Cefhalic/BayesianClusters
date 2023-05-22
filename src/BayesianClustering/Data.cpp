@@ -6,7 +6,7 @@
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Data.hpp"
 #include "BayesianClustering/Cluster.hpp"
-#include "BayesianClustering/Event.hpp"
+#include "BayesianClustering/Dataset.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Cluster.hpp"
-#include "BayesianClustering/Event.hpp"
-#include "BayesianClustering/EventProxy.hpp"
+#include "BayesianClustering/Dataset.hpp"
+#include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
 // /* ===== C++ ===== */
@@ -19,19 +19,19 @@ std::mutex mtx; // mutex for critical section
 
 
 
-void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int>& aCurrentIJ , std::stringstream& aOutput, 
+void XmlCallback( const RoI& aDataset , const double& aR , const double& aT, std::pair<int, int>& aCurrentIJ , std::stringstream& aOutput, 
                   std::vector<std::vector<double>>& aRTScores, std::pair<int,int>& aMaxScorePosition, double& aMaxRTScore )
 {
   mtx.lock();
-  // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << ", Clusters:[\n";
-  aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << "}\n";
+  // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aDataset.mLogP << ", NumClusteredPts:" << aDataset.mClusteredCount << ", NumBackgroundPts:" << aDataset.mBackgroundCount << ", Clusters:[\n";
+  aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aDataset.mLogP << ", NumClusteredPts:" << aDataset.mClusteredCount << ", NumBackgroundPts:" << aDataset.mBackgroundCount << "}\n";
 
-  // for( auto& i : aEvent.mClusters )
+  // for( auto& i : aDataset.mClusters )
   // {
   //   if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
   // }
   
-  double lLogP = aEvent.mLogP;
+  double lLogP = aDataset.mLogP;
   //score setting stuff
   if (lLogP > aMaxRTScore){
     aMaxScorePosition = aCurrentIJ;
@@ -46,19 +46,19 @@ void XmlCallback( const EventProxy& aEvent , const double& aR , const double& aT
 }
 
 
-void JsonCallback( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int,int>& aCurrentIJ , std::stringstream& aOutput, 
+void JsonCallback( const RoI& aDataset , const double& aR , const double& aT, std::pair<int,int>& aCurrentIJ , std::stringstream& aOutput, 
                   std::vector<std::vector<double>>& aRTScores, std::pair<int,int>& aMaxScorePosition, double& aMaxRTScore )
 {
   mtx.lock();
-  // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << ", Clusters:[\n";
-  aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aEvent.mLogP << ", NumClusteredPts:" << aEvent.mClusteredCount << ", NumBackgroundPts:" << aEvent.mBackgroundCount << "}\n";
+  // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aDataset.mLogP << ", NumClusteredPts:" << aDataset.mClusteredCount << ", NumBackgroundPts:" << aDataset.mBackgroundCount << ", Clusters:[\n";
+  aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aDataset.mLogP << ", NumClusteredPts:" << aDataset.mClusteredCount << ", NumBackgroundPts:" << aDataset.mBackgroundCount << "}\n";
 
-  // for( auto& i : aEvent.mClusters )
+  // for( auto& i : aDataset.mClusters )
   // {
   //   if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
   // }
   
-  double lLogP = aEvent.mLogP;
+  double lLogP = aDataset.mLogP;
   //score setting stuff
   if (lLogP > aMaxRTScore){
     aMaxScorePosition = aCurrentIJ;
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
   Configuration::Instance.FromCommandline( argc , argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  Event lEvent;  
+  Dataset lDataset;  
   std::vector<std::vector<double>> lRTScores(Configuration::Instance.Rbins(),
                                             std::vector<double>(Configuration::Instance.Tbins()/*, 1*/));
   std::pair<int, int> lMaxScorePosition;
@@ -121,19 +121,19 @@ int main(int argc, char **argv)
   if( lFilename.size() == 0 )
   {
     std::cout << "Warning: Running scan without callback" << std::endl;
-    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ){} ); // Null callback
+    lDataset.ScanRT( [&]( const RoI& aDataset , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ){} ); // Null callback
   }
   else if( lFilename.size() > 4 and lFilename.substr(lFilename.size() - 4) == ".xml" )
   {
     std::stringstream lOutput;
-    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ XmlCallback( aEvent , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
+    lDataset.ScanRT( [&]( const RoI& aDataset , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ XmlCallback( aDataset , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
     std::ofstream lOutFile( lFilename );
     lOutFile << "<Results>\n" << lOutput.str() << "</Results>\n";
   }
   else if( lFilename.size() > 5 and lFilename.substr(lFilename.size() - 5) == ".json" )
   {
     std::stringstream lOutput;
-    lEvent.ScanRT( [&]( const EventProxy& aEvent , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ JsonCallback( aEvent , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
+    lDataset.ScanRT( [&]( const RoI& aDataset , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ JsonCallback( aDataset , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
     std::ofstream lOutFile( lFilename );
     lOutFile << "{\nResults:[\n" << lOutput.str() << "]\n}";
   }

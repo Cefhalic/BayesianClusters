@@ -7,7 +7,7 @@
 #include "BayesianClustering/Precision.hpp"
 
 class Data;
-class EventProxy;
+class RoI;
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A class representing a cluster

@@ -232,7 +232,7 @@ public:
 
 
   //! Getter for the input file 
-  //! \return The name of the input event file
+  //! \return The name of the input Dataset file
   inline const std::string& inputFile() const { return mInputFile; }
   //! Getter for the output file 
   //! \return The name of the output file
@@ -344,7 +344,7 @@ private:
   //! Whether or not to run the validation on the clustering 
 	bool mValidate;
 
-  //! The input event file
+  //! The input Dataset file
   std::string mInputFile;
 
   //! The output file 
