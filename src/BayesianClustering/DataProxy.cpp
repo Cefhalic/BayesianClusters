@@ -3,7 +3,7 @@
 #include "BayesianClustering/DataProxy.hpp"
 #include "BayesianClustering/Data.hpp"
 #include "BayesianClustering/Cluster.hpp"
-#include "BayesianClustering/RoI.hpp"
+#include "BayesianClustering/RoIproxy.hpp"
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -12,15 +12,15 @@ mData( &aData ),
 mCluster( NULL )
 {}
 
-void DataProxy::Clusterize( const PRECISION& a2R2 , RoI& aDataset ) // We are at the top-level
+void DataProxy::Clusterize( const PRECISION& a2R2 , RoIproxy& aRoI ) // We are at the top-level
 {
   if( mCluster || mExclude ) return;
 
-  aDataset.mClusters.emplace_back();
-  Clusterize( a2R2 , aDataset , &aDataset.mClusters.back() );
+  aRoI.mClusters.emplace_back();
+  Clusterize( a2R2 , aRoI , &aRoI.mClusters.back() );
 }
 
-void DataProxy::Clusterize( const PRECISION& a2R2 , RoI& aDataset , Cluster* aCluster )
+void DataProxy::Clusterize( const PRECISION& a2R2 , RoIproxy& aRoI , Cluster* aCluster )
 {
   if( mCluster )
   {
@@ -40,7 +40,7 @@ void DataProxy::Clusterize( const PRECISION& a2R2 , RoI& aDataset , Cluster* aCl
     for( auto& i : mData->mNeighbours )
     {
       if( i.first > a2R2 ) break;
-      aDataset.GetData( i.second ).Clusterize( a2R2 , aDataset , aCluster );
+      aRoI.GetData( i.second ).Clusterize( a2R2 , aRoI , aCluster );
     }  
   }
 }

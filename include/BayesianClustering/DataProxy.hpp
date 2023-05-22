@@ -7,7 +7,7 @@
 #include "BayesianClustering/Precision.hpp"
 #include "BayesianClustering/Cluster.hpp"
 
-class RoI;
+class RoIproxy;
 class Cluster;
 class Data;
 
@@ -37,14 +37,14 @@ public:
 
   //! Entry point clusterization function - a new cluster will be created
   //! \param a2R2   The clusterization radius
-  //! \param aDataset The Dataset-proxy in which we are running
-  void Clusterize( const PRECISION& a2R2 , RoI& aDataset );
+  //! \param aRoI The RoI-proxy in which we are running
+  void Clusterize( const PRECISION& a2R2 , RoIproxy& aRoI );
   
   //! Recursive clusterization function
   //! \param a2R2     The clusterization radius
-  //! \param aDataset   The Dataset-proxy in which we are running  
+  //! \param aRoI   The RoI-proxy in which we are running  
   //! \param aCluster The cluster we are building
-  void Clusterize( const PRECISION& a2R2 , RoI& aDataset , Cluster* aCluster );
+  void Clusterize( const PRECISION& a2R2 , RoIproxy& aRoI , Cluster* aCluster );
   
   //! Get a pointer to this data-proxy's ultimate parent cluster (or null if unclustered
   //! \return A pointer to this data-proxy's ultimate parent cluster  

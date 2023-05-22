@@ -1,8 +1,10 @@
 /* ===== Cluster sources ===== */
+#include "BayesianClustering/API.hpp"
 #include "BayesianClustering/Cluster.hpp"
-#include "BayesianClustering/Dataset.hpp"
 #include "BayesianClustering/RoI.hpp"
+#include "BayesianClustering/RoIproxy.hpp"
 #include "BayesianClustering/Configuration.hpp"
+#include "BayesianClustering/Dataset.hpp"
 
 // /* ===== C++ ===== */
 #include <vector>
@@ -17,8 +19,8 @@
 
 
 //! Callback to report clusters
-// \param aDataset The Dataset to draw
-void ReportClusters( const RoI& aProxy )
+// \param aRoI The RoI to draw
+void ReportClusters( const RoIproxy& aProxy )
 {
   std::map< const Cluster* , std::vector< const Data* > > lClusters;
 
@@ -49,9 +51,13 @@ int main(int argc, char **argv)
   Configuration::Instance.SetRBins( 0 , 0 , Configuration::Instance.ClusterR() );
   std::cout << "+------------------------------------+" << std::endl;
 
-  Dataset lDataset;  
+  const std::string& lInputFilename = Configuration::Instance.inputFile();
+  if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
+  Dataset lDataset = LoadLocalizationFile( lInputFilename );
 
-  lDataset.Clusterize( 
+  RoI lRoI( lDataset );  
+
+  lRoI.Clusterize( 
     Configuration::Instance.ClusterR() , 
     Configuration::Instance.ClusterT() , 
     &ReportClusters
