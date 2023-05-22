@@ -96,25 +96,25 @@ void RoIproxy::CheckClusterization( const double& R , const double& T )
 __attribute__((flatten))
 void RoIproxy::ScanRT( const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset )
 {
-  double dR( aParallelization * Configuration::Instance.dR() );
-  double R( Configuration::Instance.minScanR() + ( aOffset * Configuration::Instance.dR() ) ) , twoR2( 0 ) , T( 0 );
+  double dR( aParallelization * CurrentConfiguration().dR() );
+  double R( CurrentConfiguration().minScanR() + ( aOffset * CurrentConfiguration().dR() ) ) , twoR2( 0 ) , T( 0 );
 
-  for( uint32_t i( aOffset ) ; i<Configuration::Instance.Rbins() ; i+=aParallelization , R+=dR )
+  for( uint32_t i( aOffset ) ; i<CurrentConfiguration().Rbins() ; i+=aParallelization , R+=dR )
   {
     twoR2 = 4.0 * R * R;
-    T = Configuration::Instance.maxScanT();
+    T = CurrentConfiguration().maxScanT();
 
     mClusters.clear();
     for( auto& k : mData ) k.mCluster = NULL;
 
     std::pair<int,int> lCurrentIJ;
 
-    for( uint32_t j(0) ; j!=Configuration::Instance.Tbins() ; ++j , T-=Configuration::Instance.dT() )
+    for( uint32_t j(0) ; j!=CurrentConfiguration().Tbins() ; ++j , T-=CurrentConfiguration().dT() )
     {
       for( auto& k : mData ) k.mExclude = ( k.mData->mLocalizationScores[ i ] < T ) ;
       for( auto& k : mData ) k.Clusterize( twoR2 , *this );
       UpdateLogScore();
-      if( Configuration::Instance.validate() ){
+      if( CurrentConfiguration().validate() ){
         CheckClusterization( R , T ) ;
         ValidateLogScore();
         }
@@ -187,7 +187,7 @@ void RoIproxy::ValidateLogScore()
     //we need to recalculate w here i think 
     
     auto lIt(parent->mParams.begin());
-    auto lSig2It( Configuration::Instance.sigmabins2().begin() );
+    auto lSig2It( CurrentConfiguration().sigmabins2().begin() );
     for ( ; lIt != parent->mParams.end() ; ++lIt, ++lSig2It){
       //we need to add on w_i here - which comes with each point in the cluster
       double w = 1.0 / (s2 + *lSig2It); //these are found in the protoclusters, inside datapoint
@@ -206,7 +206,7 @@ void RoIproxy::ValidateLogScore()
   for (auto& i : mClusters)
   {
     if (i.mClusterSize == 0) continue;
-    for( std::size_t j(0) ; j!=Configuration::Instance.sigmacount() ; ++j )
+    for( std::size_t j(0) ; j!=CurrentConfiguration().sigmacount() ; ++j )
     {
       fastLogScore = i.mParams[j].log_score();
       valLogScore = i.mParams[j].alt_log_score();
@@ -235,11 +235,11 @@ void RoIproxy::UpdateLogScore()
   
 
   mBackgroundCount = mData.size() - mClusteredCount;
-  lLogPl += ( mBackgroundCount * Configuration::Instance.logPb() ) 
-         + ( mClusteredCount * Configuration::Instance.logPbDagger() )
-         + ( Configuration::Instance.logAlpha() * mClusterCount )
-         + Configuration::Instance.logGammaAlpha()
-         - boost::math::lgamma( Configuration::Instance.alpha() + mClusteredCount );  
+  lLogPl += ( mBackgroundCount * CurrentConfiguration().logPb() ) 
+         + ( mClusteredCount * CurrentConfiguration().logPbDagger() )
+         + ( CurrentConfiguration().logAlpha() * mClusterCount )
+         + CurrentConfiguration().logGammaAlpha()
+         - boost::math::lgamma( CurrentConfiguration().alpha() + mClusteredCount );  
 
   mLogP += (-log(4.0) * mBackgroundCount) + lLogPl;
 }

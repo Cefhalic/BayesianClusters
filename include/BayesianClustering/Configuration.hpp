@@ -271,9 +271,9 @@ public:
 
 
 
-// public:
-//   //! A single global copy of the global variables
-//   static Configuration Instance;
+public:
+  //! A single global copy of the global variables
+  static Configuration* Current;
 
 //   //! Getter for the singleton instance
 //   //! \return The singleton instance
@@ -361,3 +361,15 @@ private:
   //! The value of T for clustering
   double mClusterT;
 };
+
+
+inline Configuration& CurrentConfiguration()
+{
+  if( ! Configuration::Current ) throw std::runtime_error( "Current configuration not set" );
+  return *Configuration::Current;
+}
+
+inline void SetCurrentConfiguration( Configuration& aConfiguration )
+{
+  Configuration::Current = & aConfiguration;
+}

@@ -103,7 +103,7 @@
 // //! \param aList A list of strings to parse as config arguments
 // void ConfigFromVector( const boost::python::object& aList )
 // {
-//   Configuration::Instance.FromVector( py_list_to_std_vector< std::string >( aList ) );
+//   CurrentConfiguration().FromVector( py_list_to_std_vector< std::string >( aList ) );
 // }
 
 // //! Run a 1-pass clustering for a specified R & T and pass the results to a callback function

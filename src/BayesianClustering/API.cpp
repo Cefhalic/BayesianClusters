@@ -94,38 +94,6 @@ std::vector< Data > LoadLocalizationFile( const std::string& aFilename )
 }
 
 
-// typedef std::array< std::array< std::vector<Data> , 512 > , 512 > Dataset;
-// Dataset __ToDataset__( std::vector< Data >& aData )
-// {
-//   // Calculate our scaling factor
-//   std::pair< double , double> lXbound( std::make_pair( 9e99 , -9e99 ) ) , lYbound( std::make_pair( 9e99 , -9e99 ) );
-
-//   for( auto& k : aData )
-//   {
-//     if ( k.x < lXbound.first  ) lXbound.first  = k.x;
-//     if ( k.x > lXbound.second ) lXbound.second = k.x;
-//     if ( k.y < lYbound.first  ) lYbound.first  = k.y;
-//     if ( k.y > lYbound.second ) lYbound.second = k.y;
-//   }
-
-//   auto lXScale( 512.0 / ( lXbound.second - lXbound.first ) );
-//   auto lYScale( 512.0 / ( lYbound.second - lYbound.first ) );
-
-//   // Fill the dataset to return
-//   Dataset lRet;
-//   std::size_t lCounter( 0 );
-
-//   for( auto& i : lData )
-//   {
-//     for( auto& j : i )
-//     {
-//       std::size_t x = ( j.x - lXbound.first ) * lXScale;
-//       std::size_t y = ( j.y - lYbound.first ) * lYScale;
-//       lRet[x][y].emplace_back( std::move(j) );
-//       lCounter++;
-//     }    
-//   }  
-// }
 
 
 std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFromConfigFile& aDummy )
@@ -135,13 +103,13 @@ std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFro
   std::vector< Data > lData;
   for( auto& k : aDataset )
   {
-    double x = Configuration::Instance.toAlgorithmX( k.x );
-    double y = Configuration::Instance.toAlgorithmY( k.y );      
-    double s = Configuration::Instance.toAlgorithmUnits( k.s );
+    double x = CurrentConfiguration().toAlgorithmX( k.x );
+    double y = CurrentConfiguration().toAlgorithmY( k.y );      
+    double s = CurrentConfiguration().toAlgorithmUnits( k.s );
     if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( x , y , s );
   }
 
-  lRet.emplace_back( std::move( lData ) , Configuration::Instance );
+  lRet.emplace_back( std::move( lData ) , CurrentConfiguration() );
   return lRet;
 }
 
@@ -291,7 +259,7 @@ std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tAut
     double lZoom = std::max( lRecord.X.second - lRecord.X.first , lRecord.Y.second - lRecord.Y.first );
     double lCentreX( ( lRecord.X.second + lRecord.X.first ) / 2.0 ) , lCentreY( ( lRecord.Y.second + lRecord.Y.first ) / 2.0 );
 
-    Configuration lConfiguration( Configuration::Instance );
+    Configuration lConfiguration( CurrentConfiguration() );
     lConfiguration.Rezoom( lZoom );
     lConfiguration.SetCentre( lCentreX , lCentreY );
 

@@ -93,20 +93,20 @@ double Cluster::Parameter::log_score() const
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Cluster::Cluster(): mParams( Configuration::Instance.sigmacount() ),
+Cluster::Cluster(): mParams( CurrentConfiguration().sigmacount() ),
 mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
 mParent( NULL ) ,
 mData()
 {}
 
-Cluster::Cluster( const Data& aData ): mParams( Configuration::Instance.sigmacount() ),
+Cluster::Cluster( const Data& aData ): mParams( CurrentConfiguration().sigmacount() ),
 mClusterSize( 1 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
 mParent( NULL ) ,
 mData()
 { 
   const auto s2 = aData.s * aData.s;
   auto lIt( mParams.begin() ) ;
-  auto lSig2It( Configuration::Instance.sigmabins2().begin() );
+  auto lSig2It( CurrentConfiguration().sigmabins2().begin() );
 
   for( ; lIt != mParams.end() ; ++lIt , ++lSig2It )
   {
@@ -127,22 +127,22 @@ void Cluster::UpdateLogScore()
   if( mClusterSize <= mLastClusterSize ) return; // We were not bigger than the previous size when we were evaluated - score is still valid
   mLastClusterSize = mClusterSize;
 
-  thread_local static std::vector< double > MuIntegral( Configuration::Instance.sigmacount() , 1.0 );
-  thread_local static std::vector< double > integralArguments( Configuration::Instance.sigmacount() , 1.0 );
+  thread_local static std::vector< double > MuIntegral( CurrentConfiguration().sigmacount() , 1.0 );
+  thread_local static std::vector< double > integralArguments( CurrentConfiguration().sigmacount() , 1.0 );
   double largestArg(-9E99);
   double tempArg;
-  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) {
-    tempArg =  mParams[i].log_score() + Configuration::Instance.log_probability_sigma( i );
+  for( std::size_t i(0) ; i!=CurrentConfiguration().sigmacount() ; ++i ) {
+    tempArg =  mParams[i].log_score() + CurrentConfiguration().log_probability_sigma( i );
     if (tempArg > largestArg) largestArg = tempArg;
     integralArguments[i] = tempArg;
   }
   //pass again to set the MuIntegral Correctly
-  for( std::size_t i(0) ; i!=Configuration::Instance.sigmacount() ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg);
+  for( std::size_t i(0) ; i!=CurrentConfiguration().sigmacount() ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg);
 
-  thread_local static GSLInterpolator lInt( gsl_interp_linear , Configuration::Instance.sigmacount() );
-  lInt.SetData( Configuration::Instance.sigmabins() , MuIntegral );
+  thread_local static GSLInterpolator lInt( gsl_interp_linear , CurrentConfiguration().sigmacount() );
+  lInt.SetData( CurrentConfiguration().sigmabins() , MuIntegral );
 
-  static const double Lower( Configuration::Instance.sigmabins(0) ) , Upper( Configuration::Instance.sigmabins(Configuration::Instance.sigmacount()-1) );
+  static const double Lower( CurrentConfiguration().sigmabins(0) ) , Upper( CurrentConfiguration().sigmabins(CurrentConfiguration().sigmacount()-1) );
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + largestArg - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore += log(0.25) -(mClusterSize * log2pi);

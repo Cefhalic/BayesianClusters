@@ -26,8 +26,11 @@ Data::~Data()
 __attribute__((flatten))
 void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
 {
+  double max2R  = CurrentConfiguration().max2R();
+  double max2R2 = CurrentConfiguration().max2R2();
+
   static constexpr double pi = atan(1)*4;  
-  auto dphi = asin( Configuration::Instance.max2R() / r ); // Configuration::Instance.max2R() / ( r - aParameters.max2R() );
+  auto dphi = asin( max2R / r ); // max2R / ( r - aParameters.max2R() );
   auto dphi2 = (2*pi) - dphi;
 
   std::size_t i( aIndex + 1 );
@@ -37,11 +40,11 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
   // Iterate over other hits and populate the mNeighbour list
   for( ; aPlusIt != aPlusEnd ; ++aPlusIt , ++i )
   {
-    if( ( aPlusIt->r - r ) > Configuration::Instance.max2R() ) break; // aPlusIt is always further out than curent 
+    if( ( aPlusIt->r - r ) > max2R ) break; // aPlusIt is always further out than curent 
     auto lPhi = dPhi( *aPlusIt );
     if( lPhi > dphi and lPhi < dphi2 ) continue;
     PRECISION ldR2 = dR2( *aPlusIt );
-    if( ldR2 < Configuration::Instance.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , i ) );
+    if( ldR2 < max2R2 ) mNeighbours.push_back( std::make_pair( ldR2 , i ) );
   }
 
   i = aIndex - 1;
@@ -50,11 +53,11 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
 
   for( ; aMinusIt != aMinusEnd ; ++aMinusIt , --i )
   {
-    if( ( r - aMinusIt->r ) > Configuration::Instance.max2R() ) break; // curent is always further out than aMinusIn
+    if( ( r - aMinusIt->r ) > max2R ) break; // curent is always further out than aMinusIn
     auto lPhi = dPhi( *aMinusIt );
     if( lPhi > dphi and lPhi < dphi2 ) continue;
     PRECISION ldR2 = dR2( *aMinusIt );    
-    if( ldR2 < Configuration::Instance.max2R2() ) mNeighbours.push_back( std::make_pair( ldR2 , i ) );
+    if( ldR2 < max2R2 ) mNeighbours.push_back( std::make_pair( ldR2 , i ) );
   }
 
   std::sort( mNeighbours.begin() , mNeighbours.end() );
@@ -75,10 +78,10 @@ void Data::PreprocessLocalizationScores( std::vector<Data>& aData )
 
   auto lNeighbourit( mNeighbours.begin() );
   PRECISION lLocalizationSum( 0 ) , lLastLocalizationSum( 0 ) , lLocalizationScore( 0 );
-  mLocalizationScores.reserve( Configuration::Instance.Rbins() );
+  mLocalizationScores.reserve( CurrentConfiguration().Rbins() );
 
-  double R( Configuration::Instance.minScanR() ) , R2( 0 );
-  for( uint32_t i(0) ; i!=Configuration::Instance.Rbins() ; ++i , R+=Configuration::Instance.dR() )
+  double R( CurrentConfiguration().minScanR() ) , R2( 0 );
+  for( uint32_t i(0) ; i!=CurrentConfiguration().Rbins() ; ++i , R+=CurrentConfiguration().dR() )
   {
     R2 = R * R;
 

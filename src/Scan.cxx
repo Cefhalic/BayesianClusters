@@ -80,7 +80,7 @@ std::pair<double,double> bestRT(std::pair<int, int>& aMaxScorePosition, std::vec
   double lValueSum(0);
   for(int I(-2); I < 3 ; ++I ){
     if ((i < 2) or (j < 2)) break;
-    if ((i > Configuration::Instance.Rbins() - 3 ) or (j > Configuration::Instance.Tbins() - 3)) break;
+    if ((i > CurrentConfiguration().Rbins() - 3 ) or (j > CurrentConfiguration().Tbins() - 3)) break;
     for(int J(-2); J < 3 ; ++J ){
       auto lVal = aRTScores[i + I][j + J];
       lValueSum += lVal;
@@ -91,10 +91,10 @@ std::pair<double,double> bestRT(std::pair<int, int>& aMaxScorePosition, std::vec
   double lRIndex = lRValue / lValueSum;
   double lTIndex = lTValue /  lValueSum;
 
-  double outputR = Configuration::Instance.minScanR() + (lRIndex * Configuration::Instance.dR());
-  double outputT = Configuration::Instance.maxScanT() - (lTIndex * Configuration::Instance.dT());
+  double outputR = CurrentConfiguration().minScanR() + (lRIndex * CurrentConfiguration().dR());
+  double outputT = CurrentConfiguration().maxScanT() - (lTIndex * CurrentConfiguration().dT());
 
-  return std::make_pair(Configuration::Instance.toPhysicalUnits(outputR), Configuration::Instance.toPhysicalUnits(outputT));
+  return std::make_pair(CurrentConfiguration().toPhysicalUnits(outputR), CurrentConfiguration().toPhysicalUnits(outputT));
 }
 
 
@@ -107,21 +107,21 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
   ProgressBar2 lBar( "| Cluster Scan. Andrew W. Rose. 2022 |" , 1 );
   std::cout << "+------------------------------------+" << std::endl;
-  Configuration::Instance.FromCommandline( argc , argv );
+  CurrentConfiguration().FromCommandline( argc , argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  const std::string& lInputFilename = Configuration::Instance.inputFile();
+  const std::string& lInputFilename = CurrentConfiguration().inputFile();
   if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
   auto lRoI = LoadLocalizationFile( lInputFilename );
 
   auto lRoIs = ExtractRoIs( lRoI , FromConfigFile );  
 
-  // std::vector<std::vector<double>> lRTScores( Configuration::Instance.Rbins(), std::vector<double>(Configuration::Instance.Tbins()/*, 1*/));
+  // std::vector<std::vector<double>> lRTScores( CurrentConfiguration().Rbins(), std::vector<double>(CurrentConfiguration().Tbins()/*, 1*/));
   // std::pair<int, int> lMaxScorePosition;
   // double lMaxRTScore = -9E99;
   // //the above will store our scores - it needs to end up in the callback
 
-  // const std::string& lOutputFilename = Configuration::Instance.outputFile();
+  // const std::string& lOutputFilename = CurrentConfiguration().outputFile();
 
   // if( lOutputFilename.size() == 0 )
   // {
@@ -149,8 +149,8 @@ int main(int argc, char **argv)
 
   // std::cout << "max score was: " << lMaxRTScore << std::endl;
   // std::cout << "at position (" << lMaxScorePosition.first << ", " << lMaxScorePosition.second << ")"<< std::endl;
-  // std::cout << "out of a possible " << Configuration::Instance.Rbins() << " R Bins"
-  // << " and " << Configuration::Instance.Tbins() << " T Bins" << std::endl;
+  // std::cout << "out of a possible " << CurrentConfiguration().Rbins() << " R Bins"
+  // << " and " << CurrentConfiguration().Tbins() << " T Bins" << std::endl;
   // std::pair<double,double> a;
   // a = bestRT(lMaxScorePosition, lRTScores);
   // std::cout << "best R value is: " << a.first << " and the best T value is: " << a.second << std::endl;

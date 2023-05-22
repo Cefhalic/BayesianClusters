@@ -46,28 +46,32 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
   ProgressBar2 lBar( "| Cluster. Andrew W. Rose. 2022 |" , 1 );
   std::cout << "+------------------------------------+" << std::endl;
-  Configuration::Instance.FromCommandline( argc , argv );
-  Configuration::Instance.SetRBins( 0 , 0 , Configuration::Instance.ClusterR() );
+  Configuration lMasterConfig;
+  lMasterConfig.FromCommandline( argc , argv );
+  lMasterConfig.SetRBins( 0 , 0 , lMasterConfig.ClusterR() );
   std::cout << "+------------------------------------+" << std::endl;
 
-  const std::string& lInputFilename = Configuration::Instance.inputFile();
+  const std::string& lInputFilename = lMasterConfig.inputFile();
   if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
-  auto lRoI = LoadLocalizationFile( lInputFilename );
+  auto lDataset = LoadLocalizationFile( lInputFilename );
 
-  auto lRoIs = ExtractRoIs( lRoI , Auto  );  
-  lRoI.clear();
+  SetCurrentConfiguration( lMasterConfig );
+  auto lRoIs = ExtractRoIs( lDataset , Auto  );  
+  lDataset.clear();
 
-  std::sort( lRoIs.begin() , lRoIs.end() , []( RoI& a , RoI& b ){ return a.mData.size() < b.mData.size(); } );
+  // std::sort( lRoIs.begin() , lRoIs.end() , []( RoI& a , RoI& b ){ return a.mData.size() < b.mData.size(); } );
 
   std::cout << "+------------------------------------+" << std::endl;
   for( auto& lRoI : lRoIs )    
   {
+    SetCurrentConfiguration( lRoI.mConfiguration );
     std::cout << "Clusterizing RoI with " << lRoI.mData.size() << " localizations" << std::endl;
     lRoI.Clusterize( 
-      Configuration::Instance.ClusterR() , 
-      Configuration::Instance.ClusterT() , 
+      lMasterConfig.ClusterR() , 
+      lMasterConfig.ClusterT() , 
       &ReportClusters
     ); 
+    lRoI.mData.clear();
     std::cout << "+------------------------------------+" << std::endl;
   }
 
