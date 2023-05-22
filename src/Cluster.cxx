@@ -4,7 +4,6 @@
 #include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/RoIproxy.hpp"
 #include "BayesianClustering/Configuration.hpp"
-#include "BayesianClustering/Dataset.hpp"
 
 // /* ===== C++ ===== */
 #include <vector>
@@ -53,16 +52,23 @@ int main(int argc, char **argv)
 
   const std::string& lInputFilename = Configuration::Instance.inputFile();
   if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
-  Dataset lDataset = LoadLocalizationFile( lInputFilename );
+  auto lRoI = LoadLocalizationFile( lInputFilename );
 
-  RoI lRoI( lDataset );  
+  auto lRoIs = ExtractRoIs( lRoI , Auto  );  
+  lRoI.clear();
 
-  lRoI.Clusterize( 
-    Configuration::Instance.ClusterR() , 
-    Configuration::Instance.ClusterT() , 
-    &ReportClusters
-  ); 
+  std::sort( lRoIs.begin() , lRoIs.end() , []( RoI& a , RoI& b ){ return a.mData.size() < b.mData.size(); } );
 
   std::cout << "+------------------------------------+" << std::endl;
+  for( auto& lRoI : lRoIs )    
+  {
+    std::cout << "Clusterizing RoI with " << lRoI.mData.size() << " localizations" << std::endl;
+    lRoI.Clusterize( 
+      Configuration::Instance.ClusterR() , 
+      Configuration::Instance.ClusterT() , 
+      &ReportClusters
+    ); 
+    std::cout << "+------------------------------------+" << std::endl;
+  }
 
 }

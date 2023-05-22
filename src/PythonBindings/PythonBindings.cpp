@@ -10,7 +10,7 @@
 // #include "BayesianClustering/Cluster.hpp"
 
 // #include "BayesianClustering/API.hpp"
-// #include "BayesianClustering/Dataset.hpp"
+// #include "BayesianClustering/RoI.hpp"
 // #include "BayesianClustering/Data.hpp"
 // #include "BayesianClustering/DataProxy.hpp"
 
@@ -110,8 +110,8 @@
 // //! \param aCallback A callback to which results are passed
 // void OneStopGetClusters( const std::string& aFilename , const boost::python::object& aCallback )
 // { 
-//   Dataset lDataset = LoadLocalizationFile( aFilename );
-//   RoI lRoI( lDataset );
+//   RoI lRoI = LoadLocalizationFile( aFilename );
+//   RoI lRoI( lRoI );
 
 //   Configuration::Instance.SetRBins( 0 , 0 , Configuration::Instance.ClusterR() );
 
@@ -183,7 +183,7 @@
 //     .def( "FromVector" , &ConfigFromVector ).staticmethod("FromVector")
 //     ;
 
-// 	class_< RoI, boost::noncopyable >( "RoI", init<const Dataset&>() )
+// 	class_< RoI, boost::noncopyable >( "RoI", init<const RoI&>() )
 //     .def( "__iter__" , &RoI_GetIterator )
 //     .def( "__len__" , &RoI_GetSize ) 
 //     .def( "Preprocess" , &RoI::Preprocess )       
@@ -214,7 +214,7 @@
 //   class_< DataProxy, boost::noncopyable >( "DataProxy", init< Data& >() )
 //     ;   
 
-//   class_< Dataset, boost::noncopyable >( "Dataset" )
+//   class_< RoI, boost::noncopyable >( "RoI" )
 //     ;     
 // }
 

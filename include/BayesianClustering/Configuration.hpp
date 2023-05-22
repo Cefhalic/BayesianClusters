@@ -265,16 +265,22 @@ public:
   //! \return The height of the ROI window
   double getArea() const { return mArea; }
 
-public:
-  //! A single global copy of the global variables
-  static Configuration Instance;
 
-  //! Getter for the singleton instance
-  //! \return The singleton instance
-  inline static Configuration& getInstance()
-  {
-    return Instance;
-  }
+
+  void Rezoom( const double& aScale );
+
+
+
+// public:
+//   //! A single global copy of the global variables
+//   static Configuration Instance;
+
+//   //! Getter for the singleton instance
+//   //! \return The singleton instance
+//   inline static Configuration& getInstance()
+//   {
+//     return Instance;
+//   }
 
 
 private:

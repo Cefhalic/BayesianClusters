@@ -13,22 +13,12 @@
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-RoI::RoI( const Dataset& aDataset )
+RoI::RoI( std::vector<Data>&& aData , const Configuration& aConfiguration ) : 
+  mData( std::move( aData ) ),
+  mConfiguration( aConfiguration )
 {
-
-  for( auto& i : aDataset )
-    for( auto& j : i )
-      for( auto& k : j )
-      {
-        double x = Configuration::Instance.toAlgorithmX( k.x );
-        double y = Configuration::Instance.toAlgorithmY( k.y );      
-        double s = Configuration::Instance.toAlgorithmUnits( k.s );
-        if( fabs(x) < 1 and fabs(y) < 1 ) mData.emplace_back( x , y , s );
-      }
-
   std::sort( mData.begin() , mData.end() );
-
-  std::cout << "Read " << mData.size() << " points into RoI" << std::endl;
+  std::cout << "Constructed RoI with " << mData.size() << " points" << std::endl;  
 }
 
 void RoI::Preprocess()

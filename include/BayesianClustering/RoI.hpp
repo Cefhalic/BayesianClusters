@@ -6,8 +6,8 @@
 #include <string>
 
 /* ===== Cluster sources ===== */
-#include "BayesianClustering/Dataset.hpp"
 #include "BayesianClustering/Data.hpp"
+#include "BayesianClustering/Configuration.hpp"
 
 class RoIproxy;
 
@@ -18,8 +18,7 @@ class RoI
 {
 public:
   //! Default Constructor
-  //! \param aFilename The name of the file to load   
-  RoI( const Dataset& aDataset );  
+  RoI( std::vector<Data>&& aData , const Configuration& aConfiguration );  
 
   //! Deleted copy constructor
   RoI( const RoI& aOther /*!< Anonymous argument */ ) = delete;
@@ -55,5 +54,8 @@ public:
 public:
   //! The collection of raw data points
   std::vector<Data> mData; 
+
+  //! Each RoI should have it's own configuration
+  Configuration mConfiguration;
 };
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

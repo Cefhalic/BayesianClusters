@@ -18,7 +18,6 @@
 namespace po = boost::program_options;
 
 Configuration::Configuration() :
-	// mScale(1) , mScale2(1),
   mPhysicalCentreX(0), mPhysicalCentreY(0),
   mWidthX(0), mWidthY(0),
   mArea(0),
@@ -123,6 +122,33 @@ void Configuration::SetOutputFile( const std::string& aFileName )
 
   mOutputFile = aFileName;
 }
+
+
+
+void Configuration::Rezoom( const double& aScale )
+{
+  std::cout << "Zoom: " << aScale << std::endl;
+
+  double lScale = 2.0 / aScale;
+  double lScaling = lScale / mScale;
+  double lScaling2 = lScaling * lScaling;
+
+  mSigmaspacing *= lScaling;
+  mMaxR *= lScaling;
+  mMaxR2 *= lScaling2;
+  mMax2R *= lScaling;
+  mMax2R2 *= lScaling2;
+
+  mMinScanR *= lScaling;
+  mMaxScanR *= lScaling;
+  mMinScanT *= lScaling;
+  mMaxScanT *= lScaling;
+  mDR *= lScaling;
+  mDT *= lScaling;
+
+  mScale = lScale;
+}
+
 
 
 
