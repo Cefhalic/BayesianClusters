@@ -108,7 +108,7 @@ ${PYTHON_LIBRARY_FILE}: ${LIBRARY_FILE} ${PYTHON_OBJECT_FILES}
 	$(call switch_verbose, "Building Library      | g++ ... -o $@" , ${CXX} $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS} ${RPATHFLAG} )
 
 ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE}
-	$(call switch_verbose, "Building Executable   | g++ ... -o $@" , ${CXX} $^ -o $@ -L. -lBayesianClusteringCore ${FLAGS} )
+	$(call switch_verbose, "Building Executable   | g++ ... -o $@" , ${CXX} $^ -o $@         -L. -lBayesianClusteringCore                ${FLAGS} ${RPATHFLAG} )
 
 ${DIRECTORIES}:
 	$(call switch_verbose, "Making directory      | mkdir -p $@"   , mkdir -p $@ )
