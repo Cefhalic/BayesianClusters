@@ -127,30 +127,44 @@ cd Bayesian/
 
 ## Create an anaconda environment
 Should only need to be run once ever!
-```
-module load anaconda3/personal
-conda create --name bayesian python=3.8
-conda activate bayesian
-conda env update --file utilities/environment.yml --prune
-```
-or, for the RCS cluster:
+
+<table><tr><td>
+ 
+On the RCS cluster:
 ```
 module load anaconda3/personal
 conda create --name bayesian python=3.8
 source activate bayesian
 conda env update --file utilities/environment.yml --prune
 ```
+</td><td> 
+ 
+Developer Installation:
+```
+module load anaconda3/personal
+conda create --name bayesian python=3.8
+conda activate bayesian
+conda env update --file utilities/environment.yml --prune
+```
+</td></tr></table>
 
 ## Otherwise, activate an existing anaconda environment
-```
-module load anaconda3/personal
-conda activate bayesian
-```
-or, for the RCS cluster:
+
+<table><tr><td>
+ 
+On the RCS cluster:
 ```
 module load anaconda3/personal
 source activate bayesian
 ```
+</td><td> 
+ 
+Developer Installation:
+```
+module load anaconda3/personal
+conda activate bayesian
+```
+</td></tr></table>
 
 ## Compile the code
 From within the ```Bayesian``` folder
