@@ -1,9 +1,15 @@
-HEADERS = $(sort $(wildcard include/*.hpp) )
+# ========================================================================================================================================================
+# The list of header files for utility
+HEADERS = $(sort $(wildcard include/**/*.hpp) )
 
 # Files for library
-LIBRARY_SOURCES = $(sort $(wildcard src/*.cpp) $(wildcard src/**/*.cpp) )
+LIBRARY_SOURCES = $(sort $(wildcard src/Utilities/*.cpp) $(wildcard src/BayesianClustering/*.cpp) )
 LIBRARY_OBJECT_FILES = $(patsubst src/%.cpp,obj/lib/%.o,${LIBRARY_SOURCES})
+LIBRARY_FILE = libBayesianClusteringCore.so
 
+# Files for the python-bindings library
+PYTHON_SOURCES = $(sort $(wildcard src/PythonBindings/*.cpp) )
+PYTHON_OBJECT_FILES = $(patsubst src/%.cpp,obj/lib/%.o,${PYTHON_SOURCES})
 PYTHON_LIBRARY_FILE = python/BayesianClustering.so
 
 # Files for executables
@@ -11,24 +17,49 @@ EXECUTABLE_SOURCES = $(sort $(wildcard src/*.cxx) )
 EXECUTABLE_OBJECT_FILES = $(patsubst src/%.cxx,obj/bin/%.o,${EXECUTABLE_SOURCES})
 EXECUTABLES = $(patsubst src/%.cxx,%.exe,${EXECUTABLE_SOURCES})
 
+# Documentation targets
 DOXYGEN = documentation/SoftwareManual.pdf
 DOCUMENTATION = documentation/OptimizingTheMaths.pdf
 
-DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${EXECUTABLE_OBJECT_FILES}, $(dir ${filePath}))) extern
+# The names of any directory paths that will need to be created
+DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${PYTHON_OBJECT_FILES} ${EXECUTABLE_OBJECT_FILES}, $(dir ${filePath})))
 
-# PYTHONMAJOR = $(eval python --version | sed -e "s|Python \([0-9]*\)\.[0-9]*\.[0-9]*|\1|g")
-# PYTHONMINOR = $(eval python --version | sed -e "s|Python [0-9]*\.\([0-9]*\)\.[0-9]*|\1|g")
-
+# Various parameters and build flags
 LIBPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'python{version_info[0]}.{version_info[1]}' )" )
 LIBBOOSTPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'boost_python{version_info[0]}{version_info[1]}' )" )
 
+FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREFIX}/include/boost   \
+        -lgsl -lgslcblas -lboost_program_options -lm -lpthread  \
+        -g -std=c++14 -march=native -O3 -MMD -MP -fPIC
+      
+PYTHONFLAGS = -I${CONDA_PREFIX}/include/${LIBPYTHON} -l${LIBBOOSTPYTHON} -l${LIBPYTHON} \
+              -Wno-deprecated-declarations # Hide the annoying boost auto_ptr=>unique_ptr warning     
+
+RPATHFLAG = -Wl,-rpath=$(dir $(abspath ${LIBRARY_FILE}))
+
+CXX = ${CONDA_PREFIX}/bin/g++
+
+# ========================================================================================================================================================
+# Utility function to switch between raw and sanitized output
+ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
+define switch_verbose 
+	${2}
+endef
+else
+define switch_verbose 
+	@echo ${1}; ${2}
+endef
+endif
+
+# ========================================================================================================================================================
+# The rules
 .PHONY: clean all help cpp doxygen docs verbose
 
 default: cpp
 verbose: cpp
 
 clean:
-	rm -rf obj .doxygen ${EXECUTABLES} ${PYTHON_LIBRARY_FILE} ${DOCUMENTATION} ${DOXYGEN}
+	rm -rf obj .doxygen ${LIBRARY_FILE} ${EXECUTABLES} ${PYTHON_LIBRARY_FILE}
 
 all : cpp doxygen docs 
 
@@ -42,105 +73,55 @@ help:
 	@echo "  - make verbose        - Build code, echoing the full command"
 	@echo "  - make doxygen        - Generate doxygen documentation"
 	@echo "  - make docs           - Produce PDFs of latex sources"
-	@echo "  - make deps           - Build a local copy of the external dependencies"
 	@echo
 
 cpp: ${EXECUTABLES} ${PYTHON_LIBRARY_FILE}
 doxygen: ${DOXYGEN} 
 docs: ${DOCUMENTATION}
 
-deps: extern/gsl-2.7.1/.libs/libgsl.so extern/boost_1_81_0/stage/lib/libboost_system.so
+GIT:
+	@git config --local core.hooksPath .githooks/
 
-# Adding the includes and libs for the locally built deps first
-FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREFIX}/include/boost -I${CONDA_PREFIX}/include/${LIBPYTHON}  \
-        -lgsl -lgslcblas -l${LIBBOOSTPYTHON} -lboost_program_options -l${LIBPYTHON} -lm -lpthread  \
-        -g -std=c++11 -march=native -O3 -MMD -MP
-
-
-
-ifeq (verbose, $(filter verbose,$(MAKECMDGOALS)))
+CONDA:
+	@test -n "${CONDA_PREFIX}" || (echo "CONDA_PREFIX not set: Please activate conda environment" ; exit 1)
 
 .SECONDEXPANSION:
-obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o)
-	g++ $< -o $@ -c ${FLAGS} -fPIC
+obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o) CONDA GIT
+	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , ${CXX} $< -o $@ -c ${FLAGS} )
 
 .SECONDEXPANSION:
-obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o)
-	g++ $< -o $@ -c ${FLAGS} -fPIC
+obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o) CONDA GIT 
+	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , ${CXX} $< -o $@ -c ${FLAGS} )
+
+.SECONDEXPANSION:
+obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBindings/%.o) CONDA GIT
+	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , ${CXX} $< -o $@ -c ${PYTHONFLAGS} ${FLAGS} )
 
 -include $(LIBRARY_OBJECT_FILES:.o=.d)
+-include $(PYTHON_OBJECT_FILES:.o=.d)	
 -include $(EXECUTABLE_OBJECT_FILES:.o=.d)
 
-${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
-	g++ $^ -o $@ ${FLAGS}
+${LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
+	$(call switch_verbose, "Building Library      | g++ ... -o $@" , ${CXX} $^ -o $@ -shared ${FLAGS} )
 
-else
+${PYTHON_LIBRARY_FILE}: ${LIBRARY_FILE} ${PYTHON_OBJECT_FILES}
+	$(call switch_verbose, "Building Library      | g++ ... -o $@" , ${CXX} $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS} ${RPATHFLAG} )
 
-.SECONDEXPANSION:
-obj/bin/%.o : src/%.cxx | $$(dir obj/bin/%.o)
-	@echo "Building Object Files | g++ -c ... $< -o $@"
-	@g++ $< -o $@ -c ${FLAGS} -fPIC
-
-.SECONDEXPANSION:
-obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o)
-	@echo "Building Object Files | g++ -c ... $< -o $@"
-	@g++ $< -o $@ -c ${FLAGS} -fPIC
-
--include $(LIBRARY_OBJECT_FILES:.o=.d)
--include $(EXECUTABLE_OBJECT_FILES:.o=.d)
-
-${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_OBJECT_FILES}
-	@echo "Building Executable   | g++ ... -o $@"
-	@g++ $^ -o $@ ${FLAGS}
-
-endif
-
-
-${PYTHON_LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
-	g++ $^ -o $@ -shared ${FLAGS}
-
+${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE}
+	$(call switch_verbose, "Building Executable   | g++ ... -o $@" , ${CXX} $^ -o $@         -L. -lBayesianClusteringCore                ${FLAGS} ${RPATHFLAG} )
 
 ${DIRECTORIES}:
-	@echo "Making directory      | mkdir -p $@"
-	@mkdir -p $@
+	$(call switch_verbose, "Making directory      | mkdir -p $@"   , mkdir -p $@ )
 
-${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES}
-	@echo "Generating Doxygen Documentation: doxygen Doxyfile ---> $@"
-	@doxygen Doxyfile
-	@make -C .doxygen/latex
+${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES} ${PYTHON_SOURCES}
+	@echo "Generating Doxygen Documentation: doxygen utilities/Doxyfile ---> $@"
+	@doxygen utilities/Doxyfile
+	@make -sC .doxygen/latex > /dev/null 2>&1
 	@cp .doxygen/latex/refman.pdf $@
-
-#	@python TexLinker.py "https://github.com/Cefhalic/BayesianClusters/blob/" `git rev-parse --abbrev-ref HEAD`
-
 
 ${DOCUMENTATION}:
 	@echo "Generating Maths Documentation: pdflatex ... documentation/OptimizingTheMaths ---> documentation/OptimizingTheMaths.pdf"
 	@pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
 	@pdflatex -output-directory=./documentation ./documentation/OptimizingTheMaths
 
-
-
-extern/gsl-2.7.1.tar.gz: extern
-	wget -nc https://ftp.gnu.org/gnu/gsl/gsl-2.7.1.tar.gz -P extern
-
-extern/gsl-2.7.1/Makefile : extern/gsl-2.7.1.tar.gz
-	cd extern; \
-	gtar xzf gsl-2.7.1.tar.gz --skip-old-files
-
-extern/gsl-2.7.1/.libs/libgsl.so: extern/gsl-2.7.1/Makefile
-	cd extern/gsl-2.7.1; \
-	./configure; \
-	make -j8
-
-
-extern/boost_1_81_0.tar.gz: extern
-	wget -nc https://boostorg.jfrog.io/artifactory/main/release/1.81.0/source/boost_1_81_0.tar.gz -P extern
-
-extern/boost_1_81_0/bootstrap.sh: extern/boost_1_81_0.tar.gz
-	cd extern; \
-	gtar xzf boost_1_81_0.tar.gz --skip-old-files
-
-extern/boost_1_81_0/stage/lib/libboost_system.so: extern/boost_1_81_0/bootstrap.sh
-	cd extern/boost_1_81_0; \
-	./bootstrap.sh; \
-	./b2 --with-python --with-system --with-program_options 
+# ========================================================================================================================================================

@@ -54,16 +54,16 @@ The maths documentation is then at `documentation/OptimizingTheMaths.pdf`
 ```
 ### To run an RT-scan without any output (for timing)
 ```
-./Scan.exe --cfg config.txt -i 1_un_red.csv
+./Scan.exe --cfg example-configs/config.txt -i 1_un_red.csv
 ```
 
 ### To run an RT-scan with JSON or XML output
 ```
-./Scan.exe --cfg config.txt -i 1_un_red.csv -o ScanResults.json
+./Scan.exe --cfg example-configs/config.txt -i 1_un_red.csv -o ScanResults.json
 ```
 or
 ```
-./Scan.exe --cfg config.txt -i 1_un_red.csv -o ScanResults.xml
+./Scan.exe --cfg example-configs/config.txt -i 1_un_red.csv -o ScanResults.xml
 ```
 Please note - the file can have any name you please, but the extension must be `.xml` or `.json` and is case sensitive.
 
@@ -76,10 +76,11 @@ To show the whole data set
 ```
 To show only the data in the specified region of interest
 ```
-./Display.exe --cfg config.txt -i 1_un_red.csv
+./Display.exe --cfg example-configs/config.txt -i 1_un_red.csv
 ```
 -->
 
+<!--
 # Instructions for running on Imperial HPC from Python
 
 Log into a login node on HPC or onto the HPC JupyterHub (https://jupyter.rcs.imperial.ac.uk/) and open a terminal window.  The instructions below are printed out from my command history.
@@ -87,10 +88,10 @@ Log into a login node on HPC or onto the HPC JupyterHub (https://jupyter.rcs.imp
 ## Create an anaconda environment
 
 ```
-bash-4.4$ module load anaconda/personal
+bash-4.4$ module load anaconda3/personal
 bash-4.4$ conda create --name bayesian python=3.8
 bash-4.4$ source activate bayesian
-(bayesian) bash-4.4$ conda env update --file environment.yml --prune
+(bayesian) bash-4.4$ conda env update --file utilities/environment.yml --prune
 ```
 
 ## Download the code
@@ -106,13 +107,78 @@ bash-4.4$ source activate bayesian
 (bayesian) bash-4.4$ make clean
 (bayesian) bash-4.4$ make
 ```
+-->
+
+# Instructions for running on Imperial HPC from Python
+
+Log into a login node on HPC or onto the HPC JupyterHub (https://jupyter.rcs.imperial.ac.uk/) and open a terminal window. 
+
+## On first login into the RCS HPC cluster
+```
+module load anaconda3/personal
+anaconda-setup
+```
+
+## Download the code
+```
+git clone https://github.com/Cefhalic/BayesianClusters.git Bayesian
+cd Bayesian/
+```
+
+## Create an anaconda environment
+Should only need to be run once ever!
+
+<table><tr><td>
+ 
+On the RCS cluster:
+```
+module load anaconda3/personal
+conda create --name bayesian python=3.8
+source activate bayesian
+conda env update --file utilities/environment.yml --prune
+```
+</td><td> 
+ 
+Developer Installation:
+```
+module load anaconda3/personal
+conda create --name bayesian python=3.8
+conda activate bayesian
+conda env update --file utilities/environment.yml --prune
+```
+</td></tr></table>
+
+## Otherwise, activate an existing anaconda environment
+
+<table><tr><td>
+ 
+On the RCS cluster:
+```
+module load anaconda3/personal
+source activate bayesian
+```
+</td><td> 
+ 
+Developer Installation:
+```
+module load anaconda3/personal
+conda activate bayesian
+```
+</td></tr></table>
+
+## Compile the code
+From within the ```Bayesian``` folder
+```
+make clean
+make -j8
+```
 
 ## Test the code.  
 
 Note that this will not produce any graphical output unless there is an X-Windows or another graphical interface.
 
 ```
-(bayesian) bash-4.4$ python ./python/test.py --cfg config.txt -i /rds/general/project/easystorm/live/bayesian/1_un_red.csv --r 20nm --t 40nm
+(bayesian) bash-4.4$ python ./python/test.py --cfg example-configs/config.txt -i /rds/general/project/easystorm/live/bayesian/1_un_red.csv --r 20nm --t 40nm
 ``` 
 
 ## Running the test as a Jupyter notebook
