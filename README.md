@@ -88,7 +88,7 @@ Log into a login node on HPC or onto the HPC JupyterHub (https://jupyter.rcs.imp
 ## Create an anaconda environment
 
 ```
-bash-4.4$ module load anaconda/personal
+bash-4.4$ module load anaconda3/personal
 bash-4.4$ conda create --name bayesian python=3.8
 bash-4.4$ source activate bayesian
 (bayesian) bash-4.4$ conda env update --file utilities/environment.yml --prune
@@ -113,6 +113,13 @@ bash-4.4$ source activate bayesian
 
 Log into a login node on HPC or onto the HPC JupyterHub (https://jupyter.rcs.imperial.ac.uk/) and open a terminal window. 
 
+## On first login into the HPC cluster
+```
+module load anaconda3/personal
+anaconda-setup
+conda init bash
+```
+
 ## Download the code
 ```
 git clone https://github.com/Cefhalic/BayesianClusters.git Bayesian
@@ -122,8 +129,7 @@ cd Bayesian/
 ## Create an anaconda environment
 Should only need to be run once ever!
 ```
-module load anaconda/personal
-conda init bash
+module load anaconda3/personal
 conda create --name bayesian python=3.8
 conda activate bayesian
 conda env update --file utilities/environment.yml --prune
@@ -131,7 +137,7 @@ conda env update --file utilities/environment.yml --prune
 
 ## Otherwise, activate an existing anaconda environment
 ```
-module load anaconda/personal
+module load anaconda3/personal
 conda activate bayesian
 ```
 
