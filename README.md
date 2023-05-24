@@ -113,11 +113,10 @@ bash-4.4$ source activate bayesian
 
 Log into a login node on HPC or onto the HPC JupyterHub (https://jupyter.rcs.imperial.ac.uk/) and open a terminal window. 
 
-## On first login into the HPC cluster
+## On first login into the RCS HPC cluster
 ```
 module load anaconda3/personal
 anaconda-setup
-conda init bash
 ```
 
 ## Download the code
