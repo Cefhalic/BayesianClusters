@@ -119,7 +119,7 @@ mData()
   }
 }
 
-void Cluster::UpdateLogScore()
+void Cluster::UpdateLogScore( const std::vector< double >& aSigmaBins , const std::vector< double >& aLogProbabilitySigma )
 {
   static constexpr double pi = atan(1)*4;
   static constexpr double log2pi = log( 2*pi );
@@ -127,22 +127,23 @@ void Cluster::UpdateLogScore()
   if( mClusterSize <= mLastClusterSize ) return; // We were not bigger than the previous size when we were evaluated - score is still valid
   mLastClusterSize = mClusterSize;
 
-  thread_local static std::vector< double > MuIntegral( CurrentConfiguration().sigmacount() , 1.0 );
-  thread_local static std::vector< double > integralArguments( CurrentConfiguration().sigmacount() , 1.0 );
+  const std::size_t lSigmaCount( aSigmaBins.size() );
+  thread_local static std::vector< double > MuIntegral( lSigmaCount , 1.0 );
+  thread_local static std::vector< double > integralArguments( lSigmaCount , 1.0 );
   double largestArg(-9E99);
   double tempArg;
-  for( std::size_t i(0) ; i!=CurrentConfiguration().sigmacount() ; ++i ) {
-    tempArg =  mParams[i].log_score() + CurrentConfiguration().log_probability_sigma( i );
+  for( std::size_t i(0) ; i!=lSigmaCount ; ++i ) {
+    tempArg =  mParams[i].log_score() + aLogProbabilitySigma[i];
     if (tempArg > largestArg) largestArg = tempArg;
     integralArguments[i] = tempArg;
   }
   //pass again to set the MuIntegral Correctly
-  for( std::size_t i(0) ; i!=CurrentConfiguration().sigmacount() ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg);
+  for( std::size_t i(0) ; i!=lSigmaCount ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg);
 
-  thread_local static GSLInterpolator lInt( gsl_interp_linear , CurrentConfiguration().sigmacount() );
-  lInt.SetData( CurrentConfiguration().sigmabins() , MuIntegral );
+  thread_local static GSLInterpolator lInt( gsl_interp_linear , lSigmaCount );
+  lInt.SetData( aSigmaBins , MuIntegral );
 
-  static const double Lower( CurrentConfiguration().sigmabins(0) ) , Upper( CurrentConfiguration().sigmabins(CurrentConfiguration().sigmacount()-1) );
+  const double Lower( aSigmaBins[0] ) , Upper( aSigmaBins[lSigmaCount-1] );
   // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + largestArg - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore += log(0.25) -(mClusterSize * log2pi);

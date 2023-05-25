@@ -88,7 +88,7 @@ public:
   Cluster* GetParent();
 
   //! Update log-probability after a scan
-  void UpdateLogScore();
+  void UpdateLogScore( const std::vector< double >& aSigmaBins , const std::vector< double >& aLogProbabilitySigma );
 
   //! Get the points after clustering
   //! \return Reference to a list of points in the cluster after clustering

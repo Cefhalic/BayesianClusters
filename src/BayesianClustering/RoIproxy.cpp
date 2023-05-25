@@ -225,14 +225,13 @@ void RoIproxy::UpdateLogScore()
   {
     if( i.mClusterSize == 0 ) continue;
     
-    i.UpdateLogScore();
+    i.UpdateLogScore( mRoI.mConfiguration.sigmabins() , mRoI.mConfiguration.log_probability_sigma() );
     mClusterCount += 1;
     mClusteredCount += i.mClusterSize;
     mLogP += i.mClusterScore;
     lLogPl += boost::math::lgamma( i.mClusterSize ); //this was omitted before - why?
-    }
+  }
   
-
   mBackgroundCount = mData.size() - mClusteredCount;
   lLogPl += ( mBackgroundCount * mRoI.mConfiguration.logPb() ) 
          + ( mClusteredCount * mRoI.mConfiguration.logPbDagger() )
