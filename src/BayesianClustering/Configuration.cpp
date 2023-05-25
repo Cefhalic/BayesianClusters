@@ -4,6 +4,7 @@
 #include "Utilities/GSLInterpolator.hpp"
 #include "Utilities/ListComprehension.hpp"
 #include "Utilities/Vectorize.hpp"
+#include "Utilities/Units.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
 /* ===== C++ ===== */

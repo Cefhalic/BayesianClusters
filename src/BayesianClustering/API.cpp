@@ -9,6 +9,7 @@
 /* ===== Local utilities ===== */
 #include "Utilities/ProgressBar.hpp"
 #include "Utilities/Vectorize.hpp"
+#include "Utilities/Units.hpp"
 
 // /* ===== C++ ===== */
 #include <iostream>

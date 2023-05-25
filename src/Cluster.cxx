@@ -6,6 +6,7 @@
 #include "BayesianClustering/Configuration.hpp"
 
 // /* ===== C++ ===== */
+#include <map>
 #include <vector>
 #include <fstream>
 #include <sstream>
