@@ -55,14 +55,9 @@ int main(int argc, char **argv)
   if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
   auto lDataset = LoadLocalizationFile( lInputFilename );
 
-  SetCurrentConfiguration( lMasterConfig );
-  auto lRoIs = ExtractRoIs( lDataset , Auto  );  
-  lDataset.clear();
-
-  // std::sort( lRoIs.begin() , lRoIs.end() , []( RoI& a , RoI& b ){ return a.mData.size() < b.mData.size(); } );
-
   std::cout << "+------------------------------------+" << std::endl;
-  for( auto& lRoI : lRoIs )    
+  SetCurrentConfiguration( lMasterConfig );
+  for( auto& lRoI : ExtractRoIs( lDataset , Auto  ) )    
   {
     SetCurrentConfiguration( lRoI.mConfiguration );
     std::cout << "Clusterizing RoI with " << lRoI.mData.size() << " localizations" << std::endl;

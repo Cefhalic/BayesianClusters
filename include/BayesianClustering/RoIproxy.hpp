@@ -8,6 +8,7 @@
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Cluster.hpp"
 #include "BayesianClustering/DataProxy.hpp"
+#include "BayesianClustering/Configuration.hpp"
 
 class RoI;
 
@@ -43,7 +44,7 @@ public:
   //! \param aCallback        A callback for each RT-scan result
   //! \param aParallelization The stride with which we will iterate across RT parameters
   //! \param aOffset          The starting point for the strides as we iterate across RT parameters
-  void ScanRT( const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization = 1 , const uint8_t& aOffset = 0 );
+  void ScanRT( const Configuration::tBounds& R , const Configuration::tBounds& T , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization = 1 , const uint8_t& aOffset = 0 );
 
   //! Run clusterization for a specific choice of R and T
   //! \param R The R parameter for clusterization

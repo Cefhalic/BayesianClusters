@@ -5,7 +5,6 @@
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/RoIproxy.hpp"
 #include "BayesianClustering/RoI.hpp"
-#include "BayesianClustering/Configuration.hpp"
 
 /* ===== Local utilities ===== */
 #include "Utilities/ProgressBar.hpp"
@@ -94,36 +93,36 @@ void RoIproxy::CheckClusterization( const double& R , const double& T )
 }
 
 __attribute__((flatten))
-void RoIproxy::ScanRT( const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset )
+void RoIproxy::ScanRT( const Configuration::tBounds& R , const Configuration::tBounds& T , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset )
 {
-  double dR( aParallelization * CurrentConfiguration().dR() );
-  double R( CurrentConfiguration().minScanR() + ( aOffset * CurrentConfiguration().dR() ) ) , twoR2( 0 ) , T( 0 );
+  double dR( aParallelization * R.spacing );
+  double lR( R.min + ( aOffset * R.spacing ) ) , twoR2( 0 ) , lT( 0 );
 
-  for( uint32_t i( aOffset ) ; i<CurrentConfiguration().Rbins() ; i+=aParallelization , R+=dR )
+  for( uint32_t i( aOffset ) ; i<R.bins ; i+=aParallelization , lR+=dR )
   {
-    twoR2 = 4.0 * R * R;
-    T = CurrentConfiguration().maxScanT();
+    twoR2 = 4.0 * lR * lR;
+    lT = T.max;
 
     mClusters.clear();
     for( auto& k : mData ) k.mCluster = NULL;
 
     std::pair<int,int> lCurrentIJ;
 
-    for( uint32_t j(0) ; j!=CurrentConfiguration().Tbins() ; ++j , T-=CurrentConfiguration().dT() )
+    for( uint32_t j(0) ; j!=T.bins ; ++j , lT-=T.spacing )
     {
-      for( auto& k : mData ) k.mExclude = ( k.mData->mLocalizationScores[ i ] < T ) ;
+      for( auto& k : mData ) k.mExclude = ( k.mData->mLocalizationScores[ i ] < lT ) ;
       for( auto& k : mData ) k.Clusterize( twoR2 , *this );
       UpdateLogScore();
-      if( CurrentConfiguration().validate() ){
-        CheckClusterization( R , T ) ;
+      if( mRoI.mConfiguration.validate() ){
+        CheckClusterization( lR , lT ) ;
         ValidateLogScore();
-        }
+      }
 
       //place to store current ij
       lCurrentIJ.first = i;
       lCurrentIJ.second = j;
  
-      aCallback( *this , R , T, lCurrentIJ );
+      aCallback( *this , lR , lT, lCurrentIJ );
     }
   }
 
@@ -187,7 +186,7 @@ void RoIproxy::ValidateLogScore()
     //we need to recalculate w here i think 
     
     auto lIt(parent->mParams.begin());
-    auto lSig2It( CurrentConfiguration().sigmabins2().begin() );
+    auto lSig2It( mRoI.mConfiguration.sigmabins2().begin() );
     for ( ; lIt != parent->mParams.end() ; ++lIt, ++lSig2It){
       //we need to add on w_i here - which comes with each point in the cluster
       double w = 1.0 / (s2 + *lSig2It); //these are found in the protoclusters, inside datapoint
@@ -206,7 +205,7 @@ void RoIproxy::ValidateLogScore()
   for (auto& i : mClusters)
   {
     if (i.mClusterSize == 0) continue;
-    for( std::size_t j(0) ; j!=CurrentConfiguration().sigmacount() ; ++j )
+    for( std::size_t j(0) ; j!=mRoI.mConfiguration.sigmacount() ; ++j )
     {
       fastLogScore = i.mParams[j].log_score();
       valLogScore = i.mParams[j].alt_log_score();
@@ -235,11 +234,11 @@ void RoIproxy::UpdateLogScore()
   
 
   mBackgroundCount = mData.size() - mClusteredCount;
-  lLogPl += ( mBackgroundCount * CurrentConfiguration().logPb() ) 
-         + ( mClusteredCount * CurrentConfiguration().logPbDagger() )
-         + ( CurrentConfiguration().logAlpha() * mClusterCount )
-         + CurrentConfiguration().logGammaAlpha()
-         - boost::math::lgamma( CurrentConfiguration().alpha() + mClusteredCount );  
+  lLogPl += ( mBackgroundCount * mRoI.mConfiguration.logPb() ) 
+         + ( mClusteredCount * mRoI.mConfiguration.logPbDagger() )
+         + ( mRoI.mConfiguration.logAlpha() * mClusterCount )
+         + mRoI.mConfiguration.logGammaAlpha()
+         - boost::math::lgamma( mRoI.mConfiguration.alpha() + mClusteredCount );  
 
   mLogP += (-log(4.0) * mBackgroundCount) + lLogPl;
 }

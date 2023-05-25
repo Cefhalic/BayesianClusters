@@ -71,6 +71,19 @@ inline long double StrToDist( const std::string& aStr )
 class Configuration
 {
 public:
+
+  struct tBounds
+  {
+    //! The lowest value of R to scan 
+    double min;
+    //! The largest value of R to scan
+    double max;
+    //! The spacing of value of R to scan 
+    double spacing;
+    //! The number of R values to scan 
+    std::size_t bins;
+  };
+
   //! Default constructor
 	Configuration();
 
@@ -183,31 +196,39 @@ public:
   //! \return The maximum value of 2R squared
 	inline const double& max2R2() const { return mMax2R2; }
 
+  //! Getter for the bounds of R to scan 
+  //! \return The lbounds of R to scan 
+  inline const tBounds& Rbounds() const { return mRbounds; }
+  //! Getter for the bounds of T to scan 
+  //! \return The lbounds of T to scan 
+  inline const tBounds& Tbounds() const { return mTbounds; }
+
+
   //! Getter for the lowest value of R to scan 
   //! \return The lowest value of R to scan 
-	inline const double& minScanR() const { return mMinScanR; }
+	inline const double& minScanR() const { return mRbounds.min; }
   //! Getter for the highest value of R to scan 
   //! \return The highest value of R to scan 
-	inline const double& maxScanR() const { return mMaxScanR; }
+	inline const double& maxScanR() const { return mRbounds.max; }
   //! Getter for the lowest value of T to scan 
   //! \return The lowest value of T to scan 
-	inline const double& minScanT() const { return mMinScanT; }
+	inline const double& minScanT() const { return mTbounds.min; }
   //! Getter for the highest value of T to scan 
   //! \return The highest value of T to scan 
-	inline const double& maxScanT() const { return mMaxScanT; }
+	inline const double& maxScanT() const { return mTbounds.max; }
 
   //! Getter for the spacing of value of R to scan 
   //! \return The spacing of value of R to scan 
-	inline const double& dR() const { return mDR; }
+	inline const double& dR() const { return mRbounds.spacing; }
   //! Getter for the number of R values to scan
   //! \return The number of R values to scan
-	inline const std::size_t& Rbins() const { return mRbins; }
+	inline const std::size_t& Rbins() const { return mRbounds.bins; }
   //! Getter for the spacing of value of T to scan 
   //! \return The spacing of value of T to scan 
-	inline const double& dT() const { return mDT; }
+	inline const double& dT() const { return mTbounds.spacing; }
   //! Getter for the number of T values to scan
   //! \return The number of T values to scan
-	inline const std::size_t& Tbins() const { return mTbins; }
+	inline const std::size_t& Tbins() const { return mTbounds.bins; }
 
   //! Logarithm of the P_b parameter  
   //! \return Logarithm of the P_b parameter 
@@ -318,22 +339,27 @@ private:
   //! The maximum value of 2R squared
   double mMax2R2;
 
-  //! The lowest value of R to scan 
-	double mMinScanR;
-  //! The largest value of R to scan
-  double mMaxScanR;
-  //! The lowest value of T to scan
-  double mMinScanT;
-  //! The largest value of T to scan
-  double mMaxScanT;
-  //! The spacing of value of R to scan 
-	double mDR;
-  //! The spacing of value of T to scan 
-  double mDT;
-  //! The number of R values to scan 
-	std::size_t mRbins;
-  //! The number of T values to scan 
-	std::size_t mTbins;
+  //! The bounds of R to scan 
+  tBounds mRbounds;
+  //! The bounds of T to scan 
+  tBounds mTbounds;
+
+  // //! The lowest value of R to scan 
+	// double mMinScanR;
+  // //! The largest value of R to scan
+  // double mMaxScanR;
+  // //! The lowest value of T to scan
+  // double mMinScanT;
+  // //! The largest value of T to scan
+  // double mMaxScanT;
+  // //! The spacing of value of R to scan 
+	// double mDR;
+  // //! The spacing of value of T to scan 
+  // double mDT;
+  // //! The number of R values to scan 
+	// std::size_t mRbins;
+  // //! The number of T values to scan 
+	// std::size_t mTbins;
 
   //! The alpha parameter
 	double mAlpha;

@@ -17,6 +17,13 @@ class RoIproxy;
 class RoI
 {
 public:
+
+  struct ScanEntry
+  {
+    double r , t;
+    PRECISION score;
+  };
+
   //! Default Constructor
   RoI( std::vector<Data>&& aData , const Configuration& aConfiguration );  
 
@@ -39,7 +46,12 @@ public:
   
   //! Run the scan
   //! \param aCallback A callback for each RT-scan result
-  void ScanRT( const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback  );
+  void ScanRT( const Configuration::tBounds& R , const Configuration::tBounds& T , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback  );
+
+  //! Run the scan
+  //! \param aCallback A callback for each RT-scan result
+  void ScanRT( const Configuration::tBounds& R , const Configuration::tBounds& T , const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback  );
+
 
   //! Run clusterization for a specific choice of R and T
   //! \param R The R parameter for clusterization

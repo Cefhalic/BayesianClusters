@@ -27,9 +27,10 @@ Configuration::Configuration() :
   mArea(0),
 	mSigmacount(-1), mSigmaspacing(-1),
 	mMaxR(-1), mMaxR2(-1), mMax2R(-1), mMax2R2(-1),
-	mMinScanR(-1), mMaxScanR(-1), mMinScanT(-1), mMaxScanT(-1),
-	mDR(-1), mDT(-1),
-	mRbins(-1),  mTbins(-1),
+	// mMinScanR(-1), mMaxScanR(-1), mMinScanT(-1), mMaxScanT(-1),
+	// mDR(-1), mDT(-1),
+	// mRbins(-1),  mTbins(-1),
+  mRbounds{-1,-1,-1,UINT_MAX} , mTbounds{-1,-1,-1,UINT_MAX},
 	mLogPb(-1), mLogPbDagger(-1), 
 	mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
 	mValidate(false),
@@ -67,12 +68,12 @@ void Configuration::SetSigmaParameters( const std::size_t& aSigmacount , const d
 
 void Configuration::SetRBins( const std::size_t& aRbins , const double& aMinScanR , const double& aMaxScanR )
 {
-	mRbins = aRbins;
-	mMinScanR = aMinScanR;
-	mMaxScanR = aMaxScanR;
-	mDR = ( mMaxScanR - mMinScanR ) / mRbins;
+	mRbounds.bins = aRbins;
+	mRbounds.min = toAlgorithmUnits( aMinScanR );
+	mRbounds.max = toAlgorithmUnits( aMaxScanR );
+	mRbounds.spacing = ( mRbounds.max - mRbounds.min ) / mRbounds.bins;
 
-	std::cout << "R-bins: " << mRbins << " bins from " << mMinScanR << " to " << mMaxScanR << " in steps of " << mDR << std::endl;
+	std::cout << "R-bins: " << aRbins << " bins from " << aMinScanR << " to " << aMaxScanR << " in steps of " << toPhysicalUnits( mRbounds.spacing ) << std::endl;
 
 	mMaxR = aMaxScanR;
 	mMaxR2 = mMaxR * mMaxR;
@@ -82,12 +83,12 @@ void Configuration::SetRBins( const std::size_t& aRbins , const double& aMinScan
 
 void Configuration::SetTBins( const std::size_t& aTbins , const double& aMinScanT , const double& aMaxScanT )
 {
-	mTbins = aTbins;
-	mMinScanT = aMinScanT;
-	mMaxScanT = aMaxScanT;
-	mDT = ( mMaxScanT - mMinScanT ) / mTbins;
+	mTbounds.bins = aTbins;
+	mTbounds.min = toAlgorithmUnits( aMinScanT );
+	mTbounds.max = toAlgorithmUnits( aMaxScanT );
+	mTbounds.spacing = ( mTbounds.max - mTbounds.min ) / mTbounds.bins;
 
-	std::cout << "T-bins: " << mTbins << " bins from " << mMinScanT << " to " << mMaxScanT << " in steps of " << mDT << std::endl;
+	std::cout << "T-bins: " << aTbins << " bins from " << aMinScanT << " to " << aMaxScanT << " in steps of " << toPhysicalUnits( mTbounds.spacing ) << std::endl;
 }
 
 void Configuration::SetPb( const double& aPB )
@@ -143,12 +144,16 @@ void Configuration::Rezoom( const double& aScale )
   // mMax2R *= lScaling;
   // mMax2R2 *= lScaling2;
 
-  // mMinScanR *= lScaling;
-  // mMaxScanR *= lScaling;
-  // mMinScanT *= lScaling;
-  // mMaxScanT *= lScaling;
-  // mDR *= lScaling;
-  // mDT *= lScaling;
+  // mRbounds.min *= lScaling;
+  // mRbounds.max *= lScaling;
+  // mRbounds.spacing *= lScaling;
+
+  // mTbounds.min *= lScaling;
+  // mTbounds.max *= lScaling;
+  // mTbounds.spacing *= lScaling;
+
+  // mClusterR *= lScaling;
+  // mClusterT *= lScaling;
 
   // mScale = lScale;
 }

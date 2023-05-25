@@ -1,5 +1,6 @@
 #pragma once
 
+
 /* ===== C++ ===== */
 #include <string>
 #include <vector>
@@ -22,5 +23,59 @@ class tAuto{}; static const tAuto Auto;
 
 std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFromConfigFile& aDummy ); 
 std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tAuto& aDummy ); 
+
+
+
+// template < typename T > class Handler;
+
+// class BaseHandler
+// {
+// public:
+// 	BaseHandler() : mPrevious( NULL ) , mNext( NULL )
+// 	{}
+
+// 	template < typename T >
+// 	BaseHandler& operator>> ( T&& aNext )
+// 	{
+// 		mNext = new T( std::move( aNext ) );
+// 		return *mNext;
+// 	}
+
+// 	virtual ~BaseHandler()
+// 	{ 
+// 		if( mNext ) delete mNext;
+// 		mNext = NULL;
+// 	}
+
+// 	virtual void run()
+// 	{
+// 		if( mPrevious ) mPrevious -> run();
+// 		else throw std::runtime( "No previous defined" );
+// 	}
+
+// 	Handler<T>& Do
+
+// protected:
+// 	BaseHandler* mPrevious;
+
+// private:
+// 	virtual void Dummy() = 0;
+// 	BaseHandler* mNext;
+// };
+
+
+// template < typename T >
+// class Handler : public BaseHandler
+// {
+// public:
+// 	Handler() = default;
+
+// 	virtual ~Handler() = default;
+
+// 	virtual void handle( T& aArg ) = 0;
+
+// private:
+// 	void Dummy(){};
+// };
 
 

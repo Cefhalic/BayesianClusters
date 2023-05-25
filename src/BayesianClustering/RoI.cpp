@@ -23,12 +23,11 @@ RoI::RoI( std::vector<Data>&& aData , const Configuration& aConfiguration ) :
 
 void RoI::Preprocess()
 {
-  // Populate mNeighbour lists  
   ProgressBar2 lProgressBar( "Populating neighbourhood" , mData.size() );
   [&]( const std::size_t& i ){ mData.at( i ).Preprocess( mData , i ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
 }
 
-void RoI::ScanRT( const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback ) 
+void RoI::ScanRT( const Configuration::tBounds& R , const Configuration::tBounds& T , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback ) 
 {
   Preprocess();    
 
@@ -41,7 +40,16 @@ void RoI::ScanRT( const std::function< void( const RoIproxy& , const double& , c
   lRoIproxys.reserve( Nthreads );
   for( int i(0) ; i!=Nthreads ; ++i ) lRoIproxys.emplace_back( *this );
   ProgressBar2 lProgressBar( "Scan over RT"  , 0 );
-  [&]( const std::size_t& i ){ lRoIproxys.at(i).ScanRT( aCallback , Nthreads , i ); } || range( Nthreads );
+  [&]( const std::size_t& i ){ lRoIproxys.at(i).ScanRT( R , T , aCallback , Nthreads , i ); } || range( Nthreads );
+}
+
+void RoI::ScanRT( const Configuration::tBounds& R , const Configuration::tBounds& T , const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback  )
+{
+  std::mutex lMtx;
+  std::vector< ScanEntry > lResults;
+  ScanRT( R , T , [&]( const RoIproxy& aRoI, const double& aR , const double& aT , std::pair<int,int> ) { lMtx.lock(); lResults.push_back( { CurrentConfiguration().toPhysicalUnits(aR) , CurrentConfiguration().toPhysicalUnits(aT) , aRoI.mLogP } ); lMtx.unlock(); } );
+  std::sort( lResults.begin() , lResults.end() , []( const ScanEntry& a , const ScanEntry& b ){ if ( a.r < b.r ) return true; return ( a.t < b.t ); } );
+  aCallback( lResults );
 }
 
 void RoI::Clusterize( const double& R , const double& T , const std::function< void( const RoIproxy& ) >& aCallback )

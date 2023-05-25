@@ -26,6 +26,10 @@ Data::~Data()
 __attribute__((flatten))
 void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
 {
+  thread_local static std::size_t mMaxNeighbourCount( 0 );
+
+  mNeighbours.reserve( mMaxNeighbourCount );
+
   double max2R  = CurrentConfiguration().max2R();
   double max2R2 = CurrentConfiguration().max2R2();
 
@@ -61,6 +65,8 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
   }
 
   std::sort( mNeighbours.begin() , mNeighbours.end() );
+
+  if( mNeighbours.size() > mMaxNeighbourCount ) mMaxNeighbourCount = mNeighbours.size();
 
   // -------------------------------------------------------------------------------------
 
