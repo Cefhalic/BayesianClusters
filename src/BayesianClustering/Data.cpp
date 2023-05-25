@@ -24,17 +24,13 @@ Data::~Data()
 // Although the neighbourhood calculation is reciprocal (if I am your neighbour then you are mine) and we can, in fact, use that to halve the number of calculations,
 // doing so requires arbitration between threads or a single-threaded reciprocation step, both of which take longer than brute-forcing it
 __attribute__((flatten))
-void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
+void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex , const double& aMax2R , const double& aMax2R2 )
 {
   thread_local static std::size_t mMaxNeighbourCount( 0 );
-
   mNeighbours.reserve( mMaxNeighbourCount );
 
-  double max2R  = CurrentConfiguration().max2R();
-  double max2R2 = CurrentConfiguration().max2R2();
-
   static constexpr double pi = atan(1)*4;  
-  auto dphi = asin( max2R / r ); // max2R / ( r - aParameters.max2R() );
+  auto dphi = asin( aMax2R / r ); // aMax2R / ( r - aParameters.aMax2R() );
   auto dphi2 = (2*pi) - dphi;
 
   std::size_t i( aIndex + 1 );
@@ -44,11 +40,11 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
   // Iterate over other hits and populate the mNeighbour list
   for( ; aPlusIt != aPlusEnd ; ++aPlusIt , ++i )
   {
-    if( ( aPlusIt->r - r ) > max2R ) break; // aPlusIt is always further out than curent 
+    if( ( aPlusIt->r - r ) > aMax2R ) break; // aPlusIt is always further out than curent 
     auto lPhi = dPhi( *aPlusIt );
     if( lPhi > dphi and lPhi < dphi2 ) continue;
     PRECISION ldR2 = dR2( *aPlusIt );
-    if( ldR2 < max2R2 ) mNeighbours.push_back( std::make_pair( ldR2 , i ) );
+    if( ldR2 < aMax2R2 ) mNeighbours.push_back( std::make_pair( ldR2 , i ) );
   }
 
   i = aIndex - 1;
@@ -57,11 +53,11 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex )
 
   for( ; aMinusIt != aMinusEnd ; ++aMinusIt , --i )
   {
-    if( ( r - aMinusIt->r ) > max2R ) break; // curent is always further out than aMinusIn
+    if( ( r - aMinusIt->r ) > aMax2R ) break; // curent is always further out than aMinusIn
     auto lPhi = dPhi( *aMinusIt );
     if( lPhi > dphi and lPhi < dphi2 ) continue;
     PRECISION ldR2 = dR2( *aMinusIt );    
-    if( ldR2 < max2R2 ) mNeighbours.push_back( std::make_pair( ldR2 , i ) );
+    if( ldR2 < aMax2R2 ) mNeighbours.push_back( std::make_pair( ldR2 , i ) );
   }
 
   std::sort( mNeighbours.begin() , mNeighbours.end() );

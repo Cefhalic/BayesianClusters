@@ -73,7 +73,7 @@ public:
   //! All the necessary pre-processing to get this data-point ready for an RT-scan
   //! \param aData  The collection of data-points 
   //! \param aIndex The index of the current data-point
-  void Preprocess( std::vector<Data>& aData , const std::size_t& aIndex );
+  void Preprocess( std::vector<Data>& aData , const std::size_t& aIndex , const double& aMax2R , const double& aMax2R2 );
 
   //! Calculate the localization score from the local neighbourhood
   //! \todo Remind myself how this works and what the difference is with below

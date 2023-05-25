@@ -21,15 +21,18 @@ RoI::RoI( std::vector<Data>&& aData , const Configuration& aConfiguration ) :
   std::cout << "Constructed RoI with " << mData.size() << " points" << std::endl;  
 }
 
-void RoI::Preprocess()
+void RoI::Preprocess( const double& aMaxR )
 {
+  const double lMax2R  = 2.0 * aMaxR;
+  const double lMax2R2 = lMax2R * lMax2R;
+
   ProgressBar2 lProgressBar( "Populating neighbourhood" , mData.size() );
-  [&]( const std::size_t& i ){ mData.at( i ).Preprocess( mData , i ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
+  [ & ]( const std::size_t& i ){ mData.at( i ).Preprocess( mData , i , lMax2R , lMax2R2 ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
 }
 
 void RoI::ScanRT( const Configuration::tBounds& R , const Configuration::tBounds& T , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback ) 
 {
-  Preprocess();    
+  Preprocess( R.max );    
 
   {
     ProgressBar2 lProgressBar( "Populating localization scores" , mData.size() );
@@ -47,7 +50,7 @@ void RoI::ScanRT( const Configuration::tBounds& R , const Configuration::tBounds
 {
   std::mutex lMtx;
   std::vector< ScanEntry > lResults;
-  ScanRT( R , T , [&]( const RoIproxy& aRoI, const double& aR , const double& aT , std::pair<int,int> ) { lMtx.lock(); lResults.push_back( { CurrentConfiguration().toPhysicalUnits(aR) , CurrentConfiguration().toPhysicalUnits(aT) , aRoI.mLogP } ); lMtx.unlock(); } );
+  ScanRT( R , T , [&]( const RoIproxy& aRoI, const double& aR , const double& aT , std::pair<int,int> ) { lMtx.lock(); lResults.push_back( { mConfiguration.toPhysicalUnits(aR) , mConfiguration.toPhysicalUnits(aT) , aRoI.mLogP } ); lMtx.unlock(); } );
   std::sort( lResults.begin() , lResults.end() , []( const ScanEntry& a , const ScanEntry& b ){ if ( a.r < b.r ) return true; return ( a.t < b.t ); } );
   aCallback( lResults );
 }
@@ -57,7 +60,7 @@ void RoI::Clusterize( const double& R , const double& T , const std::function< v
   if( R < 0 ) throw std::runtime_error( "R must be specified and non-negative" );
   if( T < 0 ) throw std::runtime_error( "T must be specified and non-negative" );
 
-  Preprocess();    
+  Preprocess( R );    
 
   RoIproxy lProxy( *this );
   lProxy.Clusterize( R ,  T , aCallback );

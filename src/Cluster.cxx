@@ -62,8 +62,8 @@ int main(int argc, char **argv)
     SetCurrentConfiguration( lRoI.mConfiguration );
     std::cout << "Clusterizing RoI with " << lRoI.mData.size() << " localizations" << std::endl;
     lRoI.Clusterize( 
-      lMasterConfig.ClusterR() , 
-      lMasterConfig.ClusterT() , 
+      CurrentConfiguration().ClusterR() , 
+      CurrentConfiguration().ClusterT() , 
       &ReportClusters
     ); 
     lRoI.mData.clear();

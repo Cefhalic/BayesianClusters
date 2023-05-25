@@ -42,7 +42,7 @@ public:
   RoI& operator= ( RoI&& aOther /*!< Anonymous argument */ ) = default;
 
   //! All the necessary pre-processing to get the RoI ready for an RT-scan
-  void Preprocess();
+  void Preprocess( const double& aMaxR );
   
   //! Run the scan
   //! \param aCallback A callback for each RT-scan result
