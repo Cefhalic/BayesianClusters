@@ -23,7 +23,7 @@ Data::~Data()
 // Although the neighbourhood calculation is reciprocal (if I am your neighbour then you are mine) and we can, in fact, use that to halve the number of calculations,
 // doing so requires arbitration between threads or a single-threaded reciprocation step, both of which take longer than brute-forcing it
 __attribute__((flatten))
-void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex , const double& aMax2R , const double& aMax2R2 )
+void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex , const double& aMax2R , const double& aMax2R2 , const std::vector< double >& aSigmabins2 )
 {
   thread_local static std::size_t mMaxNeighbourCount( 0 );
   mNeighbours.reserve( mMaxNeighbourCount );
@@ -65,7 +65,7 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex , co
 
   // -------------------------------------------------------------------------------------
 
-  mProtoCluster = new Cluster( *this , CurrentConfiguration().sigmabins2() );
+  mProtoCluster = new Cluster( *this , aSigmabins2 );
 
   // -------------------------------------------------------------------------------------
 }

@@ -18,23 +18,22 @@ RoI::RoI( std::vector<Data>&& aData , const Configuration& aConfiguration ) :
   mConfiguration( aConfiguration )
 {
   std::sort( mData.begin() , mData.end() );
-  // [ & ]( Data& aData ){ aData.mProtoCluster = new Cluster( aData , mConfiguration.sigmabins2() ); } || mData;
 
   std::cout << "Constructed RoI with " << mData.size() << " points" << std::endl;  
 }
 
-void RoI::Preprocess( const double& aMaxR )
+void RoI::Preprocess( const double& aMaxR , const std::vector< double >& aSigmabins2 )
 {
   const double lMax2R  = 2.0 * aMaxR;
   const double lMax2R2 = lMax2R * lMax2R;
 
   ProgressBar2 lProgressBar( "Populating neighbourhood" , mData.size() );
-  [ & ]( const std::size_t& i ){ mData.at( i ).Preprocess( mData , i , lMax2R , lMax2R2 ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
+  [ & ]( const std::size_t& i ){ mData.at( i ).Preprocess( mData , i , lMax2R , lMax2R2 , aSigmabins2 ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
 }
 
 void RoI::ScanRT( const Configuration::tBounds& R , const Configuration::tBounds& T , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback ) 
 {
-  Preprocess( R.max );    
+  Preprocess( R.max , mConfiguration.sigmabins2() );    
 
   {
     ProgressBar2 lProgressBar( "Populating localization scores" , mData.size() );
@@ -62,7 +61,7 @@ void RoI::Clusterize( const double& R , const double& T , const std::function< v
   if( R < 0 ) throw std::runtime_error( "R must be specified and non-negative" );
   if( T < 0 ) throw std::runtime_error( "T must be specified and non-negative" );
 
-  Preprocess( R );    
+  Preprocess( R , mConfiguration.sigmabins2() );    
 
   RoIproxy lProxy( *this );
   lProxy.Clusterize( R ,  T , aCallback );
