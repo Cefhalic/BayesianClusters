@@ -4,7 +4,7 @@
 #include "BayesianClustering/Data.hpp"
 #include "BayesianClustering/Cluster.hpp"
 #include "BayesianClustering/RoIproxy.hpp"
-
+#include "BayesianClustering/RoI.hpp"
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 DataProxy::DataProxy( Data& aData ) :
@@ -16,7 +16,7 @@ void DataProxy::Clusterize( const PRECISION& a2R2 , RoIproxy& aRoI ) // We are a
 {
   if( mCluster || mExclude ) return;
 
-  aRoI.mClusters.emplace_back();
+  aRoI.mClusters.emplace_back( aRoI.mRoI.mConfiguration.sigmabins2() );
   Clusterize( a2R2 , aRoI , &aRoI.mClusters.back() );
 }
 

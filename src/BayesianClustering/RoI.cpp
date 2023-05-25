@@ -18,6 +18,8 @@ RoI::RoI( std::vector<Data>&& aData , const Configuration& aConfiguration ) :
   mConfiguration( aConfiguration )
 {
   std::sort( mData.begin() , mData.end() );
+  // [ & ]( Data& aData ){ aData.mProtoCluster = new Cluster( aData , mConfiguration.sigmabins2() ); } || mData;
+
   std::cout << "Constructed RoI with " << mData.size() << " points" << std::endl;  
 }
 

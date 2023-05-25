@@ -55,11 +55,11 @@ public:
   }; 
 
   //! Default constructor
-  Cluster();
+  Cluster( const std::vector< double >& aSigmabins2 );
   
   //! Construct a cluster from a single data-point
   //! \param aData A data-point with which to initialize the cluster
-  Cluster( const Data& aData );
+  Cluster( const Data& aData , const std::vector< double >& aSigmabins2 );
 
 
   //! Deleted copy constructor

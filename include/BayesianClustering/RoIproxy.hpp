@@ -85,7 +85,6 @@ public:
   //! The log-probability density associated with the last scan
   double mLogP;
 
-private:
   //! The underlying RoI this is a proxy to
   const RoI& mRoI;
 

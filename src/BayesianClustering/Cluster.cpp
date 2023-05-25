@@ -93,20 +93,20 @@ double Cluster::Parameter::log_score() const
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Cluster::Cluster(): mParams( CurrentConfiguration().sigmacount() ),
+Cluster::Cluster( const std::vector< double >& aSigmabins2 ): mParams( aSigmabins2.size() ),
 mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
 mParent( NULL ) ,
 mData()
 {}
 
-Cluster::Cluster( const Data& aData ): mParams( CurrentConfiguration().sigmacount() ),
+Cluster::Cluster( const Data& aData , const std::vector< double >& aSigmabins2 ): mParams( aSigmabins2.size() ),
 mClusterSize( 1 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
 mParent( NULL ) ,
 mData()
 { 
   const auto s2 = aData.s * aData.s;
   auto lIt( mParams.begin() ) ;
-  auto lSig2It( CurrentConfiguration().sigmabins2().begin() );
+  auto lSig2It( aSigmabins2.begin() );
 
   for( ; lIt != mParams.end() ; ++lIt , ++lSig2It )
   {

@@ -65,7 +65,7 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex , co
 
   // -------------------------------------------------------------------------------------
 
-  mProtoCluster = new Cluster( *this );
+  mProtoCluster = new Cluster( *this , CurrentConfiguration().sigmabins2() );
 
   // -------------------------------------------------------------------------------------
 }

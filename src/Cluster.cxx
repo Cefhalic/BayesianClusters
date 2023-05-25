@@ -59,6 +59,7 @@ int main(int argc, char **argv)
   SetCurrentConfiguration( lMasterConfig );
   for( auto& lRoI : ExtractRoIs( lDataset , Auto  ) )    
   {
+    std::cout << "+------------------------------------+" << std::endl;
     SetCurrentConfiguration( lRoI.mConfiguration );
     std::cout << "Clusterizing RoI with " << lRoI.mData.size() << " localizations" << std::endl;
     lRoI.Clusterize( 
@@ -67,7 +68,6 @@ int main(int argc, char **argv)
       &ReportClusters
     ); 
     lRoI.mData.clear();
-    std::cout << "+------------------------------------+" << std::endl;
   }
 
 }
