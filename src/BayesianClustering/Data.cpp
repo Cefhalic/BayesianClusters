@@ -7,7 +7,6 @@
 #include "BayesianClustering/Data.hpp"
 #include "BayesianClustering/Cluster.hpp"
 #include "BayesianClustering/RoI.hpp"
-#include "BayesianClustering/Configuration.hpp"
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Data::Data( const PRECISION& aX , const PRECISION& aY , const PRECISION& aS ) : 
@@ -73,7 +72,7 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex , co
 
 
 __attribute__((flatten))
-void Data::PreprocessLocalizationScores( std::vector<Data>& aData )
+void Data::PreprocessLocalizationScores( std::vector<Data>& aData , const Configuration::tBounds& Rbounds )
 {
   static constexpr double pi = atan(1)*4;
   const double lLocalizationConstant( Configuration::Instance.getArea() / ( pi * ( aData.size() - 1 ) ) ); 
@@ -82,8 +81,8 @@ void Data::PreprocessLocalizationScores( std::vector<Data>& aData )
   PRECISION lLocalizationSum( 0 ) , lLastLocalizationSum( 0 ) , lLocalizationScore( 0 );
   mLocalizationScores.reserve( CurrentConfiguration().Rbins() );
 
-  double R( CurrentConfiguration().minScanR() ) , R2( 0 );
-  for( uint32_t i(0) ; i!=CurrentConfiguration().Rbins() ; ++i , R+=CurrentConfiguration().dR() )
+  double R( Rbounds.min ) , R2( 0 );
+  for( uint32_t i(0) ; i!=Rbounds.bins ; ++i , R+=Rbounds.spacing )
   {
     R2 = R * R;
 

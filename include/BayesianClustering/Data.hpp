@@ -6,6 +6,7 @@
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Precision.hpp"
+#include "BayesianClustering/Configuration.hpp"
 
 class Cluster;
 
@@ -78,7 +79,7 @@ public:
   //! Calculate the localization score from the local neighbourhood
   //! \todo Remind myself how this works and what the difference is with below
   //! \param aData ?
-  void PreprocessLocalizationScores( std::vector<Data>& aData );
+  void PreprocessLocalizationScores( std::vector<Data>& aData , const Configuration::tBounds& Rbounds );
 
   //! Calculate the localization score from the local neighbourhood
   //! \todo Remind myself how this works and what the difference is with above

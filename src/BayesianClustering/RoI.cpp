@@ -36,7 +36,7 @@ void RoI::ScanRT( const Configuration::tBounds& R , const Configuration::tBounds
 
   {
     ProgressBar2 lProgressBar( "Populating localization scores" , mData.size() );
-    [&]( const std::size_t& i ){ mData.at( i ).PreprocessLocalizationScores( mData ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
+    [&]( const std::size_t& i ){ mData.at( i ).PreprocessLocalizationScores( mData , mConfiguration.Rbounds() ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
   }
 
   std::vector< RoIproxy > lRoIproxys;

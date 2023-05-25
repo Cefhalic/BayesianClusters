@@ -53,8 +53,8 @@ void JsonCallback( const RoIproxy& aRoI , const double& aR , const double& aT, s
   mtx.lock();
 
 
-  std::cout << "R " << aCurrentIJ.first  << " " << CurrentConfiguration().minScanR() + (aCurrentIJ.first  * CurrentConfiguration().dR()) << " " << aR << std::endl;
-  std::cout << "T " << aCurrentIJ.second << " " << CurrentConfiguration().maxScanT() - (aCurrentIJ.second * CurrentConfiguration().dT()) << " " << aT << std::endl;
+  // std::cout << "R " << aCurrentIJ.first  << " " << CurrentConfiguration().minScanR() + (aCurrentIJ.first  * CurrentConfiguration().dR()) << " " << aR << std::endl;
+  // std::cout << "T " << aCurrentIJ.second << " " << CurrentConfiguration().maxScanT() - (aCurrentIJ.second * CurrentConfiguration().dT()) << " " << aT << std::endl;
 
   // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aRoI.mLogP << ", NumClusteredPts:" << aRoI.mClusteredCount << ", NumBackgroundPts:" << aRoI.mBackgroundCount << ", Clusters:[\n";
   aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aRoI.mLogP << ", NumClusteredPts:" << aRoI.mClusteredCount << ", NumBackgroundPts:" << aRoI.mBackgroundCount << "}\n";
