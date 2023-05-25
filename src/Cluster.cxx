@@ -48,7 +48,6 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
   Configuration lMasterConfig;
   lMasterConfig.FromCommandline( argc , argv );
-  lMasterConfig.SetRBins( 0 , 0 , lMasterConfig.ClusterR() );
   std::cout << "+------------------------------------+" << std::endl;
 
   const std::string& lInputFilename = lMasterConfig.inputFile();

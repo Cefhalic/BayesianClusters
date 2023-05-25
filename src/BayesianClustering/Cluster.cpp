@@ -130,22 +130,20 @@ void Cluster::UpdateLogScore( const std::vector< double >& aSigmaBins , const st
   const std::size_t lSigmaCount( aSigmaBins.size() );
   thread_local static std::vector< double > MuIntegral( lSigmaCount , 1.0 );
   thread_local static std::vector< double > integralArguments( lSigmaCount , 1.0 );
-  double largestArg(-9E99);
-  double tempArg;
+  double lMaxValue(-9E99);
   for( std::size_t i(0) ; i!=lSigmaCount ; ++i ) {
-    tempArg =  mParams[i].log_score() + aLogProbabilitySigma[i];
-    if (tempArg > largestArg) largestArg = tempArg;
-    integralArguments[i] = tempArg;
+    double lValue =  mParams[i].log_score() + aLogProbabilitySigma[i];
+    if (lValue > lMaxValue) lMaxValue = lValue;
+    integralArguments[i] = lValue;
   }
   //pass again to set the MuIntegral Correctly
-  for( std::size_t i(0) ; i!=lSigmaCount ; ++i ) MuIntegral[i] = exp(integralArguments[i] - largestArg);
+  for( std::size_t i(0) ; i!=lSigmaCount ; ++i ) MuIntegral[i] = exp(integralArguments[i] - lMaxValue);
 
   thread_local static GSLInterpolator lInt( gsl_interp_linear , lSigmaCount );
   lInt.SetData( aSigmaBins , MuIntegral );
 
   const double Lower( aSigmaBins[0] ) , Upper( aSigmaBins[lSigmaCount-1] );
-  // mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + constant - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
-  mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + largestArg - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
+  mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + lMaxValue - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
   mClusterScore += log(0.25) -(mClusterSize * log2pi);
 }
 
