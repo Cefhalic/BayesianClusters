@@ -110,6 +110,8 @@ void OneStopGetClusters( const boost::python::object& aCallback )
 { 
   Event lEvent;
 
+  Configuration::Instance.SetRBins( 0 , 0 , Configuration::Instance.ClusterR() );
+
   lEvent.Clusterize( Configuration::Instance.ClusterR() , Configuration::Instance.ClusterT() , 
     [&]( const EventProxy& aEventProxy ){
 
