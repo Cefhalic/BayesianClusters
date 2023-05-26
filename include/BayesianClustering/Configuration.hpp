@@ -78,10 +78,6 @@ public:
   //! \param aPhysicalCentreX The x-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
   //! \param aPhysicalCentreY The y-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
 	void SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY );
-  
-  // //! Setter for the half-width of the scan window
-  // //! \param aScale The scale of the window in physical units (becomes ±1 in algorithm units)
-	// void SetZoom( const double& aScale );
 
   //! Setter for the size of the RoI window
   //! \param aWidthX The width of the window in physical units
@@ -136,10 +132,6 @@ public:
 
 
 public:
-  //! Getter for the scale-parameter squared
-  //! \return The scale-parameter squared
-	// inline const double& scale2() const { return mScale2; }
-
   //! Getter for the sigma count
   //! \return The sigma count
 	inline const std::size_t& sigmacount() const { return mSigmacount; }
@@ -254,65 +246,12 @@ public:
   //! \return The T value for a clusterization pass
   inline const double& ClusterT() const { return mClusterT; }
 
-
-  // //! Utility function to convert a normalized algorithm distance to physical distance 
-  // //! \param aAlgorithmUnits A normalized algorithm distance
-  // //! \return A physical distances 
-	// inline double toPhysicalUnits( const double& aAlgorithmUnits ) const 
-	// {
-	// 	return aAlgorithmUnits / mScale;
-	// }
-
-  // //! Utility function to convert physical distances to a normalized algorithm distances
-  // //! \param aPhysicalUnits A physical distance
-  // //! \return A normalized algorithm distances 
-	// inline double toAlgorithmUnits( const double& aPhysicalUnits ) const
-	// {
-	//   return aPhysicalUnits * mScale;
-	// }
-
-  // //! Utility function to convert a normalized algorithm x-coordinate to a physical x-coordinate
-  // //! \param aAlgorithmX A normalized x-coordinate
-  // //! \return A physical x-coordinate 
-	// inline double toPhysicalX( const double& aAlgorithmX ) const  
-	// {
-	// 	return toPhysicalUnits( aAlgorithmX ) + mPhysicalCentreX;
-	// }
-
-  // //! Utility function to convert a physical x-coordinate to a normalized algorithm x-coordinate
-  // //! \param aPhysicalX A physical x-coordinate
-  // //! \return A normalized x-coordinate 
-	// inline double toAlgorithmX( const double& aPhysicalX ) const
-	// {
-	// 	return toAlgorithmUnits( aPhysicalX - mPhysicalCentreX );
-	// }
-
-  // //! Utility function to convert a normalized algorithm y-coordinate to a physical y-coordinate
-  // //! \param aAlgorithmY A normalized y-coordinate
-  // //! \return A physical y-coordinate 
-	// inline double toPhysicalY( const double& aAlgorithmY ) const 
-	// {
-	// 	return toPhysicalUnits( aAlgorithmY ) + mPhysicalCentreY;
-	// }
-
-  // //! Utility function to convert a physical y-coordinate to a normalized algorithm y-coordinate
-  // //! \param aPhysicalY A physical y-coordinate
-  // //! \return A normalized y-coordinate 
-	// inline double toAlgorithmY( const double& aPhysicalY ) const
-	// {
-	// 	return toAlgorithmUnits( aPhysicalY - mPhysicalCentreY );
-	// }
-
   //! Getter for the x-coordinate of the physical centre
   //! \return The x-coordinate of the physical centre
   double getCentreX() const {return mPhysicalCentreX;}
   //! Getter for the y-coordinate of the physical centre
   //! \return The y-coordinate of the physical centre
   double getCentreY() const {return mPhysicalCentreY;}
-
-  //! Getter for the scaling factor applied to the dataset
-  //! \return The scaling factor applied to the dataset
-  // double getZoom() const {return 2.0 / mScale;}
 
   //! Getter for the width of the ROI window
   //! \return The width of the ROI window
@@ -339,12 +278,6 @@ public:
 
 
 private:
-  //! The scale parameter
-	// double mScale;
-  
-  //! The scale parameter squared
-  // double mScale2;
-
   //! The x-coordinate of the centre of the window in physical units
   double mPhysicalCentreX;
   //! The y-coordinate of the centre of the window in physical units 

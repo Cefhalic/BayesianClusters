@@ -42,13 +42,6 @@ void Configuration::SetCentre( const double& aPhysicalCentreX , const double& aP
   mPhysicalCentreY = aPhysicalCentreY;
 }
 
-// void Configuration::SetZoom( const double& aScale )
-// {
-// 	std::cout << "Zoom: " << aScale << std::endl;
-// 	mScale = 2.0 / aScale;
-// 	mScale2 = mScale * mScale;
-// }
-
 void Configuration::SetWidth( const double& aWidthX , const double& aWidthY )
 {
   std::cout << "Centre: x=" << aWidthX << ", y=" << aWidthY << std::endl;
@@ -59,8 +52,6 @@ void Configuration::SetWidth( const double& aWidthX , const double& aWidthY )
 
 void Configuration::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
 {
-	// if( mScale < 0 ) throw std::runtime_error( "Scale must be set before setting Sigma parameters" );
-
 	std::cout << "Sigma-integral: " << aSigmaMin << " to " << aSigmaMax << " in " << aSigmacount << " steps" << std::endl;
 
 	mSigmacount = aSigmacount;
@@ -179,7 +170,6 @@ void Configuration::FromVector( const std::vector< std::string >& aArgs )
     ( "cfg",          po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ config_file( lDesc , aArg ); } )                        , "Config file" )
     ( "centre",       po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetCentre( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Centre of ROI as 'x y' pair" )
     ( "width",        po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetWidth( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Width of ROI as 'x y' pair" )
-    // ( "zoom",         po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ SetZoom( StrToDist(aArg) ); } )                                  , "Dimension of ROI" )
     ( "sigma-bins",   po::value<tU>(&Nsig)                                                                                                                    , "Number of sigma bins" )
     ( "sigma-low",    po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigLo=StrToDist(aArg); } )                              , "Lower sigma integration bound" )
     ( "sigma-high",   po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigHi=StrToDist(aArg); } )                              , "High sigma integration bound" )
