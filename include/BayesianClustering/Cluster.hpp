@@ -61,6 +61,23 @@ public:
   //! \param aData A data-point with which to initialize the cluster
   Cluster( const Data& aData );
 
+
+  //! Deleted copy constructor
+  Cluster( const Cluster& aOther /*!< Anonymous argument */ ) = delete;
+
+  //! Deleted assignment operator
+  //! \return Reference to this, for chaining calls  
+  Cluster& operator = (const Cluster& aOther /*!< Anonymous argument */ ) = delete;
+
+  //! Default move constructor
+  Cluster( Cluster&& aOther /*!< Anonymous argument */ ) = default;
+
+  //! Default move-assignment constructor
+  //! \return Reference to this, for chaining calls  
+  Cluster& operator = ( Cluster&& aOther /*!< Anonymous argument */ ) = default;
+
+
+
   //! Add another cluster to this one
   //! \param aOther Another cluster of parameters to add to this one
   //! \return Reference to this, for chaining calls

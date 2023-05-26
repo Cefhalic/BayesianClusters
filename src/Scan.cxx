@@ -93,7 +93,7 @@ std::pair<double,double> bestRT(std::pair<int, int>& aMaxScorePosition, std::vec
   double outputR = Configuration::Instance.minScanR() + (lRIndex * Configuration::Instance.dR());
   double outputT = Configuration::Instance.maxScanT() - (lTIndex * Configuration::Instance.dT());
 
-  return std::make_pair(Configuration::Instance.toPhysicalUnits(outputR), Configuration::Instance.toPhysicalUnits(outputT));
+  return std::make_pair( outputR, outputT );
 }
 
 

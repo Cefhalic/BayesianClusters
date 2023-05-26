@@ -60,6 +60,8 @@ void Event::Clusterize( const double& R , const double& T , const std::function<
 /* ===== Function for loading a chunk of data from CSV file ===== */
 void __LoadCSV__( const std::string& aFilename , Event& aEvent , std::vector< Data >& aData , const std::size_t& aOffset , int aCount )
 {
+  const double lMaxX( Configuration::Instance.getWidthX() / 2 ) , lMaxY( Configuration::Instance.getWidthY() / 2 );
+
   auto f = fopen( aFilename.c_str() , "rb");
   if (fseek(f, aOffset, SEEK_SET)) throw std::runtime_error( "Fseek failed" ); // seek to offset from start_point
 
@@ -83,9 +85,9 @@ void __LoadCSV__( const std::string& aFilename , Event& aEvent , std::vector< Da
     if( *lPtr == EOF ) break;
     ReadUntil( ',' ); //"frame"
     ReadUntil( ',' ); //"x [nm]"
-    double x = Configuration::Instance.toAlgorithmX( strtod( ch , &lPtr ) * nanometer );
+    double x = ( strtod( ch , &lPtr ) * nanometer ) - Configuration::Instance.getCentreX();
     ReadUntil( ',' ); //"y [nm]"
-    double y = Configuration::Instance.toAlgorithmY( strtod( ch , &lPtr ) * nanometer );      
+    double y = ( strtod( ch , &lPtr ) * nanometer ) - Configuration::Instance.getCentreY();      
     ReadUntil( ',' ); //"sigma [nm]"   
     double sigma = strtod( ch , &lPtr );
     ReadUntil( ',' ); //"intensity [photon]"
@@ -93,9 +95,9 @@ void __LoadCSV__( const std::string& aFilename , Event& aEvent , std::vector< Da
     ReadUntil( ',' ); //"bkgstd [photon]"
     ReadUntil( ',' ); //"chi2"
     ReadUntil( '\n' ); //"uncertainty_xy [nm]"
-    double s = Configuration::Instance.toAlgorithmUnits( strtod( ch , &lPtr ) * nanometer );      
+    double s = strtod( ch , &lPtr ) * nanometer;      
     if ( ( sigma < 100 ) or ( sigma  > 300) ) continue;
-    if( fabs(x) < 1 and fabs(y) < 1 ) aData.emplace_back( x , y , s );
+    if( fabs(x) < lMaxX and fabs(y) < lMaxY ) aData.emplace_back( x , y , s );
   }
   
   fclose(f);
@@ -150,7 +152,7 @@ void Event::WriteCSV( const std::string& aFilename )
 
   ProgressBar lProgressBar( "Writing File" , mData.size() );
   for( auto& i : mData ){
-    fprintf( f , ",,%f,%f,,,,,,%f\n" , Configuration::Instance.toPhysicalX(i.x)/nanometer , Configuration::Instance.toPhysicalY(i.y)/nanometer , Configuration::Instance.toPhysicalUnits(i.s)/nanometer );
+    fprintf( f , ",,%f,%f,,,,,,%f\n" , (i.x + Configuration::Instance.getCentreX())/nanometer , (i.y + Configuration::Instance.getCentreY())/nanometer , i.s/nanometer );
     lProgressBar++;
   }
 

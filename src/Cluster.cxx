@@ -46,6 +46,7 @@ int main(int argc, char **argv)
   ProgressBar2 lBar( "| Cluster. Andrew W. Rose. 2022 |" , 1 );
   std::cout << "+------------------------------------+" << std::endl;
   Configuration::Instance.FromCommandline( argc , argv );
+  Configuration::Instance.SetRBins( 0 , 0 , Configuration::Instance.ClusterR() );
   std::cout << "+------------------------------------+" << std::endl;
 
   Event lEvent;  

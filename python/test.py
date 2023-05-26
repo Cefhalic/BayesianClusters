@@ -8,18 +8,20 @@ def Callback( clusters , background  ):
 
 	X , Y = [] , []
 	for point in background:
-		X.append( point.x )
-		Y.append( point.y )
+		X.append( 1e6 * point.x )
+		Y.append( 1e6 * point.y )
 
 	x , y , colours = [] , [] , []
 	for colour , cluster in enumerate( clusters ) :
 		for point in cluster:
-			x.append( point.x )
-			y.append( point.y )
+			x.append( 1e6 * point.x )
+			y.append( 1e6 * point.y )
 			colours.append( colour )
 
 	plt.scatter( X, Y, s=0.1 , marker='.' , c="black" )
 	plt.scatter( x, y, s=0.1 , marker='.' , c=colours , cmap="prism" )
+	plt.xlabel( r'$\mu$m' )
+	plt.ylabel( r'$\mu$m' )
 	plt.show()
 # ----------------------------------------------------------------------------
 

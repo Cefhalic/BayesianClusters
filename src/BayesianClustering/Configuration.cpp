@@ -18,8 +18,10 @@
 namespace po = boost::program_options;
 
 Configuration::Configuration() :
-	mScale(1) , mScale2(1),
+	// mScale(1) , mScale2(1),
   mPhysicalCentreX(0), mPhysicalCentreY(0),
+  mWidthX(0), mWidthY(0),
+  mArea(0),
 	mSigmacount(-1), mSigmaspacing(-1),
 	mMaxR(-1), mMaxR2(-1), mMax2R(-1), mMax2R2(-1),
 	mMinScanR(-1), mMaxScanR(-1), mMinScanT(-1), mMaxScanT(-1),
@@ -40,41 +42,36 @@ void Configuration::SetCentre( const double& aPhysicalCentreX , const double& aP
   mPhysicalCentreY = aPhysicalCentreY;
 }
 
-void Configuration::SetZoom( const double& aScale )
+void Configuration::SetWidth( const double& aWidthX , const double& aWidthY )
 {
-	std::cout << "Zoom: " << aScale << std::endl;
-	mScale = 2.0 / aScale;
-	mScale2 = mScale * mScale;
+  std::cout << "Centre: x=" << aWidthX << ", y=" << aWidthY << std::endl;
+  mWidthX = aWidthX;
+  mWidthY = aWidthY;
+  mArea = mWidthX * mWidthY;
 }
 
 void Configuration::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
 {
-	if( mScale < 0 ) throw std::runtime_error( "Scale must be set before setting Sigma parameters" );
-
 	std::cout << "Sigma-integral: " << aSigmaMin << " to " << aSigmaMax << " in " << aSigmacount << " steps" << std::endl;
 
 	mSigmacount = aSigmacount;
-	auto lSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
-	auto lSigmabins = [ & ]( const int& i ){ return ( i * lSigmaspacing ) + aSigmaMin;  } | range( mSigmacount );
-
-	mSigmabins = [ & ]( const double& i ){ return toAlgorithmUnits( i ); } | lSigmabins;
+	mSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
+	mSigmabins = [ & ]( const int& i ){ return ( i * mSigmaspacing ) + aSigmaMin;  } | range( mSigmacount );
 	mSigmabins2 = []( const double& i ){ return i * i; } | mSigmabins;
-	mProbabilitySigma = aInterpolator | lSigmabins;
+	mProbabilitySigma = aInterpolator | mSigmabins;
 	mLogProbabilitySigma = []( const double& w){ return log(w); } | mProbabilitySigma;
-
-	mSigmaspacing = toAlgorithmUnits( lSigmaspacing );
 }
 
 void Configuration::SetRBins( const std::size_t& aRbins , const double& aMinScanR , const double& aMaxScanR )
 {
 	mRbins = aRbins;
-	mMinScanR = toAlgorithmUnits( aMinScanR );
-	mMaxScanR = toAlgorithmUnits( aMaxScanR );
+	mMinScanR = aMinScanR;
+	mMaxScanR = aMaxScanR;
 	mDR = ( mMaxScanR - mMinScanR ) / mRbins;
 
-	std::cout << "R-bins: " << aRbins << " bins from " << aMinScanR << " to " << aMaxScanR << " in steps of " << toPhysicalUnits( mDR ) << std::endl;
+	std::cout << "R-bins: " << mRbins << " bins from " << mMinScanR << " to " << mMaxScanR << " in steps of " << mDR << std::endl;
 
-	mMaxR = toAlgorithmUnits( aMaxScanR );
+	mMaxR = aMaxScanR;
 	mMaxR2 = mMaxR * mMaxR;
 	mMax2R = 2.0 * mMaxR;
 	mMax2R2 = mMax2R * mMax2R;	
@@ -83,11 +80,11 @@ void Configuration::SetRBins( const std::size_t& aRbins , const double& aMinScan
 void Configuration::SetTBins( const std::size_t& aTbins , const double& aMinScanT , const double& aMaxScanT )
 {
 	mTbins = aTbins;
-	mMinScanT = toAlgorithmUnits( aMinScanT );
-	mMaxScanT = toAlgorithmUnits( aMaxScanT );
+	mMinScanT = aMinScanT;
+	mMaxScanT = aMaxScanT;
 	mDT = ( mMaxScanT - mMinScanT ) / mTbins;
 
-	std::cout << "T-bins: " << aTbins << " bins from " << aMinScanT << " to " << aMaxScanT << " in steps of " << toPhysicalUnits( mDT ) << std::endl;
+	std::cout << "T-bins: " << mTbins << " bins from " << mMinScanT << " to " << mMaxScanT << " in steps of " << mDT << std::endl;
 }
 
 void Configuration::SetPb( const double& aPB )
@@ -172,7 +169,7 @@ void Configuration::FromVector( const std::vector< std::string >& aArgs )
     ( "help",         po::bool_switch()                          ->notifier( [&]( const bool& aArg ){ if( aArg ) { std::cout << lDesc << std::endl; exit(0); } } ) , "produce help message" )
     ( "cfg",          po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ config_file( lDesc , aArg ); } )                        , "Config file" )
     ( "centre",       po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetCentre( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Centre of ROI as 'x y' pair" )
-    ( "zoom",         po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ SetZoom( StrToDist(aArg) ); } )                                  , "Dimension of ROI" )
+    ( "width",        po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetWidth( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Width of ROI as 'x y' pair" )
     ( "sigma-bins",   po::value<tU>(&Nsig)                                                                                                                    , "Number of sigma bins" )
     ( "sigma-low",    po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigLo=StrToDist(aArg); } )                              , "Lower sigma integration bound" )
     ( "sigma-high",   po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigHi=StrToDist(aArg); } )                              , "High sigma integration bound" )
@@ -195,8 +192,8 @@ void Configuration::FromVector( const std::vector< std::string >& aArgs )
     ( "input-file,i", po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ SetInputFile(aArg); } )                                , "input file")
     ( "output-file,o", po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ SetOutputFile(aArg); } )                               , "output file")
 
-    ( "r",            po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ mClusterR=toAlgorithmUnits( StrToDist(aArg) ); } )     , "R for clustering" )
-    ( "t",            po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ mClusterT=toAlgorithmUnits( StrToDist(aArg) ); } )     , "T for clustering" )
+    ( "r",            po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ mClusterR=StrToDist(aArg); } )                         , "R for clustering" )
+    ( "t",            po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ mClusterT=StrToDist(aArg); } )                         , "T for clustering" )
     ( "threads",      po::value<tZ>( &Nthreads )                                                                                                              , "Number of threads to use (default is value given by std::threads::hardware_concurrency())" )
   ;
 

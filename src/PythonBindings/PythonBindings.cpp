@@ -110,6 +110,8 @@ void OneStopGetClusters( const boost::python::object& aCallback )
 { 
   Event lEvent;
 
+  Configuration::Instance.SetRBins( 0 , 0 , Configuration::Instance.ClusterR() );
+
   lEvent.Clusterize( Configuration::Instance.ClusterR() , Configuration::Instance.ClusterT() , 
     [&]( const EventProxy& aEventProxy ){
 
@@ -191,7 +193,7 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   class_< EventProxy, boost::noncopyable >( "EventProxy", init< Event& >() )
     ;   
 
-  class_< Cluster >( "Cluster" )
+  class_< Cluster, boost::noncopyable >( "Cluster" )
     .def( "__iter__" , &Cluster_GetIterator )
     .def( "__len__" , &Cluster_GetSize )    
     ;        
