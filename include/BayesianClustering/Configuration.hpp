@@ -143,31 +143,31 @@ public:
   inline const tBounds& Tbounds() const { return mTbounds; }
 
 
-  //! Getter for the lowest value of R to scan 
-  //! \return The lowest value of R to scan 
-	inline const double& minScanR() const { return mRbounds.min; }
-  //! Getter for the highest value of R to scan 
-  //! \return The highest value of R to scan 
-	inline const double& maxScanR() const { return mRbounds.max; }
-  //! Getter for the lowest value of T to scan 
-  //! \return The lowest value of T to scan 
-	inline const double& minScanT() const { return mTbounds.min; }
-  //! Getter for the highest value of T to scan 
-  //! \return The highest value of T to scan 
-	inline const double& maxScanT() const { return mTbounds.max; }
+  // //! Getter for the lowest value of R to scan 
+  // //! \return The lowest value of R to scan 
+	// inline const double& minScanR() const { return mRbounds.min; }
+  // //! Getter for the highest value of R to scan 
+  // //! \return The highest value of R to scan 
+	// inline const double& maxScanR() const { return mRbounds.max; }
+  // //! Getter for the lowest value of T to scan 
+  // //! \return The lowest value of T to scan 
+	// inline const double& minScanT() const { return mTbounds.min; }
+  // //! Getter for the highest value of T to scan 
+  // //! \return The highest value of T to scan 
+	// inline const double& maxScanT() const { return mTbounds.max; }
 
-  //! Getter for the spacing of value of R to scan 
-  //! \return The spacing of value of R to scan 
-	inline const double& dR() const { return mRbounds.spacing; }
-  //! Getter for the number of R values to scan
-  //! \return The number of R values to scan
-	inline const std::size_t& Rbins() const { return mRbounds.bins; }
-  //! Getter for the spacing of value of T to scan 
-  //! \return The spacing of value of T to scan 
-	inline const double& dT() const { return mTbounds.spacing; }
-  //! Getter for the number of T values to scan
-  //! \return The number of T values to scan
-	inline const std::size_t& Tbins() const { return mTbounds.bins; }
+  // //! Getter for the spacing of value of R to scan 
+  // //! \return The spacing of value of R to scan 
+	// inline const double& dR() const { return mRbounds.spacing; }
+  // //! Getter for the number of R values to scan
+  // //! \return The number of R values to scan
+	// inline const std::size_t& Rbins() const { return mRbounds.bins; }
+  // //! Getter for the spacing of value of T to scan 
+  // //! \return The spacing of value of T to scan 
+	// inline const double& dT() const { return mTbounds.spacing; }
+  // //! Getter for the number of T values to scan
+  // //! \return The number of T values to scan
+	// inline const std::size_t& Tbins() const { return mTbounds.bins; }
 
   //! Logarithm of the P_b parameter  
   //! \return Logarithm of the P_b parameter 

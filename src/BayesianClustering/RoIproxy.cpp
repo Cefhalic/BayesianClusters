@@ -218,6 +218,8 @@ void RoIproxy::ValidateLogScore()
 
 void RoIproxy::UpdateLogScore()
 {
+  if( mRoI.mConfiguration.sigmabins().size() == 0 ) return;
+
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0;
   mLogP = 0.0;

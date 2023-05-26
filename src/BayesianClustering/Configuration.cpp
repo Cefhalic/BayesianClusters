@@ -60,8 +60,18 @@ void Configuration::SetSigmaParameters( const std::size_t& aSigmacount , const d
 	std::cout << "Sigma-integral: " << aSigmaMin << " to " << aSigmaMax << " in " << aSigmacount << " steps" << std::endl;
 
 	mSigmacount = aSigmacount;
-	mSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
-	mSigmabins = [ & ]( const int& i ){ return ( i * mSigmaspacing ) + aSigmaMin;  } | range( mSigmacount );
+
+  if( aSigmacount == 0 ){ 
+    mSigmabins.clear();
+    mSigmabins2.clear();
+    mProbabilitySigma.clear();
+    mLogProbabilitySigma.clear();
+    mSigmaspacing = 0;
+    return;
+  }
+
+  mSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
+  mSigmabins = [ & ]( const int& i ){ return ( i * mSigmaspacing ) + aSigmaMin;  } | range( mSigmacount );
 	mSigmabins2 = []( const double& i ){ return i * i; } | mSigmabins;
 	mProbabilitySigma = aInterpolator | mSigmabins;
 	mLogProbabilitySigma = []( const double& w){ return log(w); } | mProbabilitySigma;

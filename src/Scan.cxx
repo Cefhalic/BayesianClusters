@@ -123,7 +123,7 @@ int main(int argc, char **argv)
   {
     SetCurrentConfiguration( lRoI.mConfiguration );
 
-    std::vector<std::vector<double>> lRTScores( lMasterConfig.Rbins() , std::vector<double>( lMasterConfig.Tbins() /*, 1*/));
+    std::vector<std::vector<double>> lRTScores( lMasterConfig.Rbounds().bins , std::vector<double>( lMasterConfig.Tbounds().bins /*, 1*/));
     std::pair<int, int> lMaxScorePosition;
     double lMaxRTScore = -9E99;
     //the above will store our scores - it needs to end up in the callback

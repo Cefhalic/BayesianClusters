@@ -49,6 +49,7 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
   Configuration lMasterConfig;
   lMasterConfig.FromCommandline( argc , argv );
+  lMasterConfig.SetSigmaParameters( 0 , 0 , 0 , [&]( const double& ){ return 0.0; } ); 
   std::cout << "+------------------------------------+" << std::endl;
 
   const std::string& lInputFilename = lMasterConfig.inputFile();
