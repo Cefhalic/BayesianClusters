@@ -322,6 +322,10 @@ public:
   //! \return The height of the ROI window
   double getWidthY() const { return mWidthY; }
 
+  //! Getter for the height of the ROI window
+  //! \return The height of the ROI window
+  double getArea() const { return mArea; }
+
 public:
   //! A single global copy of the global variables
   static Configuration Instance;
@@ -350,6 +354,8 @@ private:
   double mWidthX;
   //! The width of the window in the y-direction in physical units
   double mWidthY;
+  //! The area of the window in physical units 
+  double mArea;
 
   //! The number of sigma bins
 	std::size_t mSigmacount;

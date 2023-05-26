@@ -21,6 +21,7 @@ Configuration::Configuration() :
 	// mScale(1) , mScale2(1),
   mPhysicalCentreX(0), mPhysicalCentreY(0),
   mWidthX(0), mWidthY(0),
+  mArea(0),
 	mSigmacount(-1), mSigmaspacing(-1),
 	mMaxR(-1), mMaxR2(-1), mMax2R(-1), mMax2R2(-1),
 	mMinScanR(-1), mMaxScanR(-1), mMinScanT(-1), mMaxScanT(-1),
@@ -53,6 +54,7 @@ void Configuration::SetWidth( const double& aWidthX , const double& aWidthY )
   std::cout << "Centre: x=" << aWidthX << ", y=" << aWidthY << std::endl;
   mWidthX = aWidthX;
   mWidthY = aWidthY;
+  mArea = mWidthX * mWidthY;
 }
 
 void Configuration::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
