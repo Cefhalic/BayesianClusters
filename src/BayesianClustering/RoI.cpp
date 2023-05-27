@@ -51,7 +51,7 @@ void RoI::ScanRT( const Configuration::tBounds& R , const Configuration::tBounds
 {
   std::mutex lMtx;
   std::vector< ScanEntry > lResults;
-  ScanRT( R , T , [&]( const RoIproxy& aRoI, const double& aR , const double& aT , std::pair<int,int> ) { lMtx.lock(); lResults.push_back( { mConfiguration.toPhysicalUnits(aR) , mConfiguration.toPhysicalUnits(aT) , aRoI.mLogP } ); lMtx.unlock(); } );
+  ScanRT( R , T , [&]( const RoIproxy& aRoI, const double& aR , const double& aT , std::pair<int,int> ) { lMtx.lock(); lResults.push_back( { aR , aT , aRoI.mLogP } ); lMtx.unlock(); } );
   std::sort( lResults.begin() , lResults.end() , []( const ScanEntry& a , const ScanEntry& b ){ if ( a.r < b.r ) return true; return ( a.t < b.t ); } );
   aCallback( lResults );
 }

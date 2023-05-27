@@ -80,11 +80,11 @@ void Configuration::SetSigmaParameters( const std::size_t& aSigmacount , const d
 void Configuration::SetRBins( const std::size_t& aRbins , const double& aMinScanR , const double& aMaxScanR )
 {
 	mRbounds.bins = aRbins;
-	mRbounds.min = toAlgorithmUnits( aMinScanR );
-	mRbounds.max = toAlgorithmUnits( aMaxScanR );
+	mRbounds.min = aMinScanR ;
+	mRbounds.max = aMaxScanR ;
 	mRbounds.spacing = ( mRbounds.max - mRbounds.min ) / mRbounds.bins;
 
-	std::cout << "R-bins: " << aRbins << " bins from " << aMinScanR << " to " << aMaxScanR << " in steps of " << toPhysicalUnits( mRbounds.spacing ) << std::endl;
+	std::cout << "R-bins: " << aRbins << " bins from " << aMinScanR << " to " << aMaxScanR << " in steps of " << mRbounds.spacing << std::endl;
 
 	mMaxR = aMaxScanR;
 	mMaxR2 = mMaxR * mMaxR;
@@ -95,11 +95,11 @@ void Configuration::SetRBins( const std::size_t& aRbins , const double& aMinScan
 void Configuration::SetTBins( const std::size_t& aTbins , const double& aMinScanT , const double& aMaxScanT )
 {
 	mTbounds.bins = aTbins;
-	mTbounds.min = toAlgorithmUnits( aMinScanT );
-	mTbounds.max = toAlgorithmUnits( aMaxScanT );
+	mTbounds.min = aMinScanT ;
+	mTbounds.max = aMaxScanT ;
 	mTbounds.spacing = ( mTbounds.max - mTbounds.min ) / mTbounds.bins;
 
-	std::cout << "T-bins: " << aTbins << " bins from " << aMinScanT << " to " << aMaxScanT << " in steps of " << toPhysicalUnits( mTbounds.spacing ) << std::endl;
+	std::cout << "T-bins: " << aTbins << " bins from " << aMinScanT << " to " << aMaxScanT << " in steps of " << mTbounds.spacing << std::endl;
 }
 
 void Configuration::SetPb( const double& aPB )
@@ -137,36 +137,6 @@ void Configuration::SetOutputFile( const std::string& aFileName )
   std::cout << "Output file: " << aFileName << std::endl;
 
   mOutputFile = aFileName;
-}
-
-
-
-void Configuration::Rezoom( const double& aScale )
-{
-  // std::cout << "Zoom: " << aScale << std::endl;
-
-  // double lScale = 2.0 / aScale;
-  // double lScaling = lScale / mScale;
-  // double lScaling2 = lScaling * lScaling;
-
-  // mSigmaspacing *= lScaling;
-  // mMaxR *= lScaling;
-  // mMaxR2 *= lScaling2;
-  // mMax2R *= lScaling;
-  // mMax2R2 *= lScaling2;
-
-  // mRbounds.min *= lScaling;
-  // mRbounds.max *= lScaling;
-  // mRbounds.spacing *= lScaling;
-
-  // mTbounds.min *= lScaling;
-  // mTbounds.max *= lScaling;
-  // mTbounds.spacing *= lScaling;
-
-  // mClusterR *= lScaling;
-  // mClusterT *= lScaling;
-
-  // mScale = lScale;
 }
 
 

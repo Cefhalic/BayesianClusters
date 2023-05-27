@@ -226,11 +226,6 @@ public:
   double getArea() const { return mArea; }
 
 
-
-  void Rezoom( const double& aScale );
-
-
-
 public:
   //! A single global copy of the global variables
   static Configuration* Current;

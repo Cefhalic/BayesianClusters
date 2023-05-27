@@ -104,10 +104,9 @@ std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFro
   std::vector< Data > lData;
   for( auto& k : aDataset )
   {
-    double x = CurrentConfiguration().toAlgorithmX( k.x );
-    double y = CurrentConfiguration().toAlgorithmY( k.y );      
-    double s = CurrentConfiguration().toAlgorithmUnits( k.s );
-    if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( x , y , s );
+    double x = k.x - CurrentConfiguration().getCentreX();
+    double y = k.x - CurrentConfiguration().getCentreY();     
+    if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( x , y , k.s );
   }
 
   lRet.emplace_back( std::move( lData ) , CurrentConfiguration() );
@@ -257,21 +256,19 @@ std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tAut
   {
     if( !lRecord.Ptrs.size() ) continue;
 
-    double lZoom = std::max( lRecord.X.second - lRecord.X.first , lRecord.Y.second - lRecord.Y.first );
+    // double lZoom = std::max( lRecord.X.second - lRecord.X.first , lRecord.Y.second - lRecord.Y.first );
     double lCentreX( ( lRecord.X.second + lRecord.X.first ) / 2.0 ) , lCentreY( ( lRecord.Y.second + lRecord.Y.first ) / 2.0 );
 
     Configuration lConfiguration( CurrentConfiguration() );
-    lConfiguration.Rezoom( lZoom );
     lConfiguration.SetCentre( lCentreX , lCentreY );
 
     std::vector< Data > lData;
 
     for( auto& k : lRecord.Ptrs )
     {
-      double x = lConfiguration.toAlgorithmX( k->x );
-      double y = lConfiguration.toAlgorithmY( k->y );      
-      double s = lConfiguration.toAlgorithmUnits( k->s );
-      lData.emplace_back( x , y , s );
+      double x = k->x - lConfiguration.getCentreX();
+      double y = k->y - lConfiguration.getCentreY();   
+      lData.emplace_back( x , y , k->s );
     }
   
     lRet.emplace_back( std::move( lData ) , lConfiguration );

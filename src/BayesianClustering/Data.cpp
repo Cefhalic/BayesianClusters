@@ -75,11 +75,11 @@ __attribute__((flatten))
 void Data::PreprocessLocalizationScores( std::vector<Data>& aData , const Configuration::tBounds& Rbounds )
 {
   static constexpr double pi = atan(1)*4;
-  const double lLocalizationConstant( Configuration::Instance.getArea() / ( pi * ( aData.size() - 1 ) ) ); 
+  const double lLocalizationConstant( CurrentConfiguration().getArea() / ( pi * ( aData.size() - 1 ) ) ); 
 
   auto lNeighbourit( mNeighbours.begin() );
   PRECISION lLocalizationSum( 0 ) , lLastLocalizationSum( 0 ) , lLocalizationScore( 0 );
-  mLocalizationScores.reserve( CurrentConfiguration().Rbins() );
+  mLocalizationScores.reserve( CurrentConfiguration().Rbounds().bins );
 
   double R( Rbounds.min ) , R2( 0 );
   for( uint32_t i(0) ; i!=Rbounds.bins ; ++i , R+=Rbounds.spacing )
@@ -108,7 +108,7 @@ PRECISION Data::CalculateLocalizationScore( const std::vector<Data>& aData , con
   static constexpr double pi = atan(1)*4;  
   auto R2 = R * R;
 
-  const double lLocalizationConstant( Configuration::Instance.getArea() / ( pi * ( aData.size() - 1 ) ) ); 
+  const double lLocalizationConstant( CurrentConfiguration().getArea() / ( pi * ( aData.size() - 1 ) ) ); 
   PRECISION lLocalizationSum( 0 );
 
   for( auto lNeighbourit( mNeighbours.begin() ) ; lNeighbourit != mNeighbours.end() ; ++lNeighbourit )
