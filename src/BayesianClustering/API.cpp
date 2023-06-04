@@ -101,12 +101,14 @@ std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFro
 {
   std::vector< RoI > lRet;
 
+  auto Xmax( CurrentConfiguration().getWidthX() / 2.0 ) , Ymax( CurrentConfiguration().getWidthY() / 2.0 )
+
   std::vector< Data > lData;
   for( auto& k : aDataset )
   {
     double x = k.x - CurrentConfiguration().getCentreX();
     double y = k.x - CurrentConfiguration().getCentreY();     
-    if( fabs(x) < 1 and fabs(y) < 1 ) lData.emplace_back( x , y , k.s );
+    if( fabs(x) < Xmax and fabs(y) < Ymax ) lData.emplace_back( x , y , k.s );
   }
 
   lRet.emplace_back( std::move( lData ) , CurrentConfiguration() );
