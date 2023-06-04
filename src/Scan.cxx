@@ -119,7 +119,7 @@ int main(int argc, char **argv)
   auto lDataset = LoadLocalizationFile( lInputFilename );
 
   SetCurrentConfiguration( lMasterConfig );
-  for( auto& lRoI : ExtractRoIs( lDataset , FromConfigFile ) )    
+  for( auto& lRoI : ExtractRoIs( lDataset , Auto ) )    
   {
     SetCurrentConfiguration( lRoI.mConfiguration );
 

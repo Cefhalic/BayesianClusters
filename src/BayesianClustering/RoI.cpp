@@ -15,7 +15,10 @@
 
 RoI::RoI( std::vector<Data>&& aData , const Configuration& aConfiguration ) : 
   mData( std::move( aData ) ),
-  mConfiguration( aConfiguration )
+  mConfiguration( aConfiguration ),
+  mPhysicalCentreX(0), mPhysicalCentreY(0),
+  mWidthX(0), mWidthY(0),
+  mArea(0)
 {
   std::sort( mData.begin() , mData.end() );
 
@@ -37,7 +40,7 @@ void RoI::ScanRT( const Configuration::tBounds& R , const Configuration::tBounds
 
   {
     ProgressBar2 lProgressBar( "Populating localization scores" , mData.size() );
-    [&]( const std::size_t& i ){ mData.at( i ).PreprocessLocalizationScores( mData , mConfiguration.Rbounds() ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
+    [&]( const std::size_t& i ){ mData.at( i ).PreprocessLocalizationScores( mData , mConfiguration.Rbounds() , getArea() ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
   }
 
   std::vector< RoIproxy > lRoIproxys;
@@ -67,5 +70,20 @@ void RoI::Clusterize( const double& R , const double& T , const std::function< v
   lProxy.Clusterize( R ,  T , aCallback );
 }
 
+
+void RoI::SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY )
+{
+  std::cout << "Centre: x=" << aPhysicalCentreX << ", y=" << aPhysicalCentreY << std::endl;
+  mPhysicalCentreX = aPhysicalCentreX;
+  mPhysicalCentreY = aPhysicalCentreY;
+}
+
+void RoI::SetWidth( const double& aWidthX , const double& aWidthY )
+{
+  std::cout << "Width: x=" << aWidthX << ", y=" << aWidthY << std::endl;
+  mWidthX = aWidthX;
+  mWidthY = aWidthY;
+  mArea = mWidthX * mWidthY;
+}
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

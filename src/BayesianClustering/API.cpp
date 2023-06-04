@@ -97,23 +97,23 @@ std::vector< Data > LoadLocalizationFile( const std::string& aFilename )
 
 
 
-std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFromConfigFile& aDummy )
-{
-  std::vector< RoI > lRet;
+// std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFromConfigFile& aDummy )
+// {
+//   std::vector< RoI > lRet;
 
-  auto Xmax( CurrentConfiguration().getWidthX() / 2.0 ) , Ymax( CurrentConfiguration().getWidthY() / 2.0 )
+//   auto Xmax( CurrentConfiguration().getWidthX() / 2.0 ) , Ymax( CurrentConfiguration().getWidthY() / 2.0 )
 
-  std::vector< Data > lData;
-  for( auto& k : aDataset )
-  {
-    double x = k.x - CurrentConfiguration().getCentreX();
-    double y = k.x - CurrentConfiguration().getCentreY();     
-    if( fabs(x) < Xmax and fabs(y) < Ymax ) lData.emplace_back( x , y , k.s );
-  }
+//   std::vector< Data > lData;
+//   for( auto& k : aDataset )
+//   {
+//     double x = k.x - CurrentConfiguration().getCentreX();
+//     double y = k.x - CurrentConfiguration().getCentreY();     
+//     if( fabs(x) < Xmax and fabs(y) < Ymax ) lData.emplace_back( x , y , k.s );
+//   }
 
-  lRet.emplace_back( std::move( lData ) , CurrentConfiguration() );
-  return lRet;
-}
+//   lRet.emplace_back( std::move( lData ) , CurrentConfiguration() );
+//   return lRet;
+// }
 
 
 
@@ -258,22 +258,23 @@ std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tAut
   {
     if( !lRecord.Ptrs.size() ) continue;
 
-    // double lZoom = std::max( lRecord.X.second - lRecord.X.first , lRecord.Y.second - lRecord.Y.first );
     double lCentreX( ( lRecord.X.second + lRecord.X.first ) / 2.0 ) , lCentreY( ( lRecord.Y.second + lRecord.Y.first ) / 2.0 );
+    double lWidthX( lRecord.X.second - lRecord.X.first ) , lWidthY( lRecord.Y.second - lRecord.Y.first );
 
     Configuration lConfiguration( CurrentConfiguration() );
-    lConfiguration.SetCentre( lCentreX , lCentreY );
 
     std::vector< Data > lData;
 
     for( auto& k : lRecord.Ptrs )
     {
-      double x = k->x - lConfiguration.getCentreX();
-      double y = k->y - lConfiguration.getCentreY();   
+      double x = k->x - lCentreX;
+      double y = k->y - lCentreY;   
       lData.emplace_back( x , y , k->s );
     }
   
     lRet.emplace_back( std::move( lData ) , lConfiguration );
+    lRet.back().SetCentre( lCentreX , lCentreY );
+    lRet.back().SetWidth( lWidthX , lWidthY );
   }
 
   return lRet;

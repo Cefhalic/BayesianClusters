@@ -79,14 +79,14 @@ public:
   //! Calculate the localization score from the local neighbourhood
   //! \todo Remind myself how this works and what the difference is with below
   //! \param aData ?
-  void PreprocessLocalizationScores( std::vector<Data>& aData , const Configuration::tBounds& Rbounds );
+  void PreprocessLocalizationScores( std::vector<Data>& aData , const Configuration::tBounds& Rbounds , const double& aArea );
 
   //! Calculate the localization score from the local neighbourhood
   //! \todo Remind myself how this works and what the difference is with above
   //! \param aData ?
   //! \param R ?  
   //! \return The localization score
-  PRECISION CalculateLocalizationScore( const std::vector<Data>& aData , const double& R ) const;
+  PRECISION CalculateLocalizationScore( const std::vector<Data>& aData , const double& R , const double& aArea ) const;
 
 public:
   //! The x-position of the data-point

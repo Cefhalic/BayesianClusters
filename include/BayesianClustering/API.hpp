@@ -21,7 +21,7 @@ class tFromConfigFile{}; static const tFromConfigFile FromConfigFile;
 class tAuto{}; static const tAuto Auto;
 
 
-std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFromConfigFile& aDummy ); 
+// std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFromConfigFile& aDummy ); 
 std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tAuto& aDummy ); 
 
 

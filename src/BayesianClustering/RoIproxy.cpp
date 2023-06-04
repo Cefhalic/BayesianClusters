@@ -141,7 +141,7 @@ void RoIproxy::Clusterize( const double& R , const double& T , const std::functi
     for( auto& k : mData )
     { 
       k.mCluster = NULL;
-      k.mExclude = ( k.mData->CalculateLocalizationScore( mRoI.mData , R ) < T ) ;
+      k.mExclude = ( k.mData->CalculateLocalizationScore( mRoI.mData , R , mRoI.getArea() ) < T ) ;
     }
 
     for( auto& k : mData ) k.Clusterize( twoR2 , *this );

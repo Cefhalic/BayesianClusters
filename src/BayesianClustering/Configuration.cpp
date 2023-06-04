@@ -23,11 +23,11 @@ Configuration* Configuration::Current( NULL );
 
 
 Configuration::Configuration() :
-  mPhysicalCentreX(0), mPhysicalCentreY(0),
-  mWidthX(0), mWidthY(0),
-  mArea(0),
+  // mPhysicalCentreX(0), mPhysicalCentreY(0),
+  // mWidthX(0), mWidthY(0),
+  // mArea(0),
 	mSigmacount(-1), mSigmaspacing(-1),
-	mMaxR(-1), mMaxR2(-1), mMax2R(-1), mMax2R2(-1),
+	// mMaxR(-1), mMaxR2(-1), mMax2R(-1), mMax2R2(-1),
 	// mMinScanR(-1), mMaxScanR(-1), mMinScanT(-1), mMaxScanT(-1),
 	// mDR(-1), mDT(-1),
 	// mRbins(-1),  mTbins(-1),
@@ -40,20 +40,20 @@ Configuration::Configuration() :
 {}
 
 
-void Configuration::SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY )
-{
-	std::cout << "Centre: x=" << aPhysicalCentreX << ", y=" << aPhysicalCentreY << std::endl;
-  mPhysicalCentreX = aPhysicalCentreX;
-  mPhysicalCentreY = aPhysicalCentreY;
-}
+// void Configuration::SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY )
+// {
+// 	std::cout << "Centre: x=" << aPhysicalCentreX << ", y=" << aPhysicalCentreY << std::endl;
+//   mPhysicalCentreX = aPhysicalCentreX;
+//   mPhysicalCentreY = aPhysicalCentreY;
+// }
 
-void Configuration::SetWidth( const double& aWidthX , const double& aWidthY )
-{
-  std::cout << "Centre: x=" << aWidthX << ", y=" << aWidthY << std::endl;
-  mWidthX = aWidthX;
-  mWidthY = aWidthY;
-  mArea = mWidthX * mWidthY;
-}
+// void Configuration::SetWidth( const double& aWidthX , const double& aWidthY )
+// {
+//   std::cout << "Width: x=" << aWidthX << ", y=" << aWidthY << std::endl;
+//   mWidthX = aWidthX;
+//   mWidthY = aWidthY;
+//   mArea = mWidthX * mWidthY;
+// }
 
 void Configuration::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
 {
@@ -86,10 +86,10 @@ void Configuration::SetRBins( const std::size_t& aRbins , const double& aMinScan
 
 	std::cout << "R-bins: " << aRbins << " bins from " << aMinScanR << " to " << aMaxScanR << " in steps of " << mRbounds.spacing << std::endl;
 
-	mMaxR = aMaxScanR;
-	mMaxR2 = mMaxR * mMaxR;
-	mMax2R = 2.0 * mMaxR;
-	mMax2R2 = mMax2R * mMax2R;	
+	// mMaxR = aMaxScanR;
+	// mMaxR2 = mMaxR * mMaxR;
+	// mMax2R = 2.0 * mMaxR;
+	// mMax2R2 = mMax2R * mMax2R;	
 }
 
 void Configuration::SetTBins( const std::size_t& aTbins , const double& aMinScanT , const double& aMaxScanT )
@@ -184,8 +184,8 @@ void Configuration::FromVector( const std::vector< std::string >& aArgs )
   lDesc.add_options()
     ( "help",         po::bool_switch()                          ->notifier( [&]( const bool& aArg ){ if( aArg ) { std::cout << lDesc << std::endl; exit(0); } } ) , "produce help message" )
     ( "cfg",          po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ config_file( lDesc , aArg ); } )                        , "Config file" )
-    ( "centre",       po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetCentre( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Centre of ROI as 'x y' pair" )
-    ( "width",        po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetWidth( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Width of ROI as 'x y' pair" )
+    // ( "centre",       po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetCentre( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Centre of ROI as 'x y' pair" )
+    // ( "width",        po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetWidth( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Width of ROI as 'x y' pair" )
     ( "sigma-bins",   po::value<tU>(&Nsig)                                                                                                                    , "Number of sigma bins" )
     ( "sigma-low",    po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigLo=StrToDist(aArg); } )                              , "Lower sigma integration bound" )
     ( "sigma-high",   po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigHi=StrToDist(aArg); } )                              , "High sigma integration bound" )

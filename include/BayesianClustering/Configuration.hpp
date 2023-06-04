@@ -26,15 +26,15 @@ public:
   //! Default constructor
 	Configuration();
 
-  //! Setter for the centre of the scan window
-  //! \param aPhysicalCentreX The x-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
-  //! \param aPhysicalCentreY The y-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
-	void SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY );
+  // //! Setter for the centre of the scan window
+  // //! \param aPhysicalCentreX The x-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
+  // //! \param aPhysicalCentreY The y-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
+	// void SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY );
 
-  //! Setter for the size of the RoI window
-  //! \param aWidthX The width of the window in physical units
-  //! \param aWidthY The height of the window in physical units
-  void SetWidth( const double& aWidthX , const double& aWidthY );
+  // //! Setter for the size of the RoI window
+  // //! \param aWidthX The width of the window in physical units
+  // //! \param aWidthY The height of the window in physical units
+  // void SetWidth( const double& aWidthX , const double& aWidthY );
 
   //! Setter for the sigma-bins to be integrated over
   //! \param aSigmacount   The number of sigma bins
@@ -122,18 +122,18 @@ public:
   //! \return The log-probability of sigma_i
 	inline const double& log_probability_sigma( const std::size_t& i ) const { return mLogProbabilitySigma[i]; }
 
-  //! Getter for the maximum value of R
-  //! \return The maximum value of R
-	inline const double& maxR() const { return mMaxR; }
-  //! Getter for the maximum value of R squared
-  //! \return The maximum value of R squared
-	inline const double& maxR2() const { return mMaxR2; }
-  //! Getter for the maximum value of 2R
-  //! \return The maximum value of 2R
-	inline const double& max2R() const { return mMax2R; }
-  //! Getter for the maximum value of 2R squared
-  //! \return The maximum value of 2R squared
-	inline const double& max2R2() const { return mMax2R2; }
+  // //! Getter for the maximum value of R
+  // //! \return The maximum value of R
+	// inline const double& maxR() const { return mMaxR; }
+  // //! Getter for the maximum value of R squared
+  // //! \return The maximum value of R squared
+	// inline const double& maxR2() const { return mMaxR2; }
+  // //! Getter for the maximum value of 2R
+  // //! \return The maximum value of 2R
+	// inline const double& max2R() const { return mMax2R; }
+  // //! Getter for the maximum value of 2R squared
+  // //! \return The maximum value of 2R squared
+	// inline const double& max2R2() const { return mMax2R2; }
 
   //! Getter for the bounds of R to scan 
   //! \return The lbounds of R to scan 
@@ -206,24 +206,24 @@ public:
   //! \return The T value for a clusterization pass
   inline const double& ClusterT() const { return mClusterT; }
 
-  //! Getter for the x-coordinate of the physical centre
-  //! \return The x-coordinate of the physical centre
-  double getCentreX() const {return mPhysicalCentreX;}
-  //! Getter for the y-coordinate of the physical centre
-  //! \return The y-coordinate of the physical centre
-  double getCentreY() const {return mPhysicalCentreY;}
+  // //! Getter for the x-coordinate of the physical centre
+  // //! \return The x-coordinate of the physical centre
+  // double getCentreX() const {return mPhysicalCentreX;}
+  // //! Getter for the y-coordinate of the physical centre
+  // //! \return The y-coordinate of the physical centre
+  // double getCentreY() const {return mPhysicalCentreY;}
 
-  //! Getter for the width of the ROI window
-  //! \return The width of the ROI window
-  double getWidthX() const { return mWidthX; }
+  // //! Getter for the width of the ROI window
+  // //! \return The width of the ROI window
+  // double getWidthX() const { return mWidthX; }
 
-  //! Getter for the height of the ROI window
-  //! \return The height of the ROI window
-  double getWidthY() const { return mWidthY; }
+  // //! Getter for the height of the ROI window
+  // //! \return The height of the ROI window
+  // double getWidthY() const { return mWidthY; }
 
-  //! Getter for the height of the ROI window
-  //! \return The height of the ROI window
-  double getArea() const { return mArea; }
+  // //! Getter for the height of the ROI window
+  // //! \return The height of the ROI window
+  // double getArea() const { return mArea; }
 
 
 public:
@@ -239,17 +239,17 @@ public:
 
 
 private:
-  //! The x-coordinate of the centre of the window in physical units
-  double mPhysicalCentreX;
-  //! The y-coordinate of the centre of the window in physical units 
-  double mPhysicalCentreY;
+  // //! The x-coordinate of the centre of the window in physical units
+  // double mPhysicalCentreX;
+  // //! The y-coordinate of the centre of the window in physical units 
+  // double mPhysicalCentreY;
 
-  //! The width of the window in the x-direction in physical units
-  double mWidthX;
-  //! The width of the window in the y-direction in physical units
-  double mWidthY;
-  //! The area of the window in physical units 
-  double mArea;
+  // //! The width of the window in the x-direction in physical units
+  // double mWidthX;
+  // //! The width of the window in the y-direction in physical units
+  // double mWidthY;
+  // //! The area of the window in physical units 
+  // double mArea;
 
   //! The number of sigma bins
 	std::size_t mSigmacount;
@@ -264,14 +264,14 @@ private:
   //! The log-probability of a gievn sigma
   std::vector< double > mLogProbabilitySigma;
 
-  //! The maximum value of R
-	double mMaxR;
-  //! The maximum value of R squared
-  double mMaxR2;
-  //! The maximum value of 2R  
-  double mMax2R;
-  //! The maximum value of 2R squared
-  double mMax2R2;
+  // //! The maximum value of R
+	// double mMaxR;
+  // //! The maximum value of R squared
+  // double mMaxR2;
+  // //! The maximum value of 2R  
+  // double mMax2R;
+  // //! The maximum value of 2R squared
+  // double mMax2R2;
 
   //! The bounds of R to scan 
   tBounds mRbounds;

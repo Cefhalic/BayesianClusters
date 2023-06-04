@@ -72,10 +72,10 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex , co
 
 
 __attribute__((flatten))
-void Data::PreprocessLocalizationScores( std::vector<Data>& aData , const Configuration::tBounds& Rbounds )
+void Data::PreprocessLocalizationScores( std::vector<Data>& aData , const Configuration::tBounds& Rbounds , const double& aArea )
 {
   static constexpr double pi = atan(1)*4;
-  const double lLocalizationConstant( CurrentConfiguration().getArea() / ( pi * ( aData.size() - 1 ) ) ); 
+  const double lLocalizationConstant( aArea / ( pi * ( aData.size() - 1 ) ) ); 
 
   auto lNeighbourit( mNeighbours.begin() );
   PRECISION lLocalizationSum( 0 ) , lLastLocalizationSum( 0 ) , lLocalizationScore( 0 );
@@ -103,12 +103,12 @@ void Data::PreprocessLocalizationScores( std::vector<Data>& aData , const Config
 }
 
 
-PRECISION Data::CalculateLocalizationScore( const std::vector<Data>& aData , const double& R ) const
+PRECISION Data::CalculateLocalizationScore( const std::vector<Data>& aData , const double& R , const double& aArea ) const
 {
   static constexpr double pi = atan(1)*4;  
   auto R2 = R * R;
 
-  const double lLocalizationConstant( CurrentConfiguration().getArea() / ( pi * ( aData.size() - 1 ) ) ); 
+  const double lLocalizationConstant( aArea / ( pi * ( aData.size() - 1 ) ) ); 
   PRECISION lLocalizationSum( 0 );
 
   for( auto lNeighbourit( mNeighbours.begin() ) ; lNeighbourit != mNeighbours.end() ; ++lNeighbourit )
