@@ -26,16 +26,6 @@ public:
   //! Default constructor
 	Configuration();
 
-  // //! Setter for the centre of the scan window
-  // //! \param aPhysicalCentreX The x-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
-  // //! \param aPhysicalCentreY The y-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
-	// void SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY );
-
-  // //! Setter for the size of the RoI window
-  // //! \param aWidthX The width of the window in physical units
-  // //! \param aWidthY The height of the window in physical units
-  // void SetWidth( const double& aWidthX , const double& aWidthY );
-
   //! Setter for the sigma-bins to be integrated over
   //! \param aSigmacount   The number of sigma bins
   //! \param aSigmaMin     The lowest sigma bin
@@ -122,19 +112,6 @@ public:
   //! \return The log-probability of sigma_i
 	inline const double& log_probability_sigma( const std::size_t& i ) const { return mLogProbabilitySigma[i]; }
 
-  // //! Getter for the maximum value of R
-  // //! \return The maximum value of R
-	// inline const double& maxR() const { return mMaxR; }
-  // //! Getter for the maximum value of R squared
-  // //! \return The maximum value of R squared
-	// inline const double& maxR2() const { return mMaxR2; }
-  // //! Getter for the maximum value of 2R
-  // //! \return The maximum value of 2R
-	// inline const double& max2R() const { return mMax2R; }
-  // //! Getter for the maximum value of 2R squared
-  // //! \return The maximum value of 2R squared
-	// inline const double& max2R2() const { return mMax2R2; }
-
   //! Getter for the bounds of R to scan 
   //! \return The lbounds of R to scan 
   inline const tBounds& Rbounds() const { return mRbounds; }
@@ -142,32 +119,6 @@ public:
   //! \return The lbounds of T to scan 
   inline const tBounds& Tbounds() const { return mTbounds; }
 
-
-  // //! Getter for the lowest value of R to scan 
-  // //! \return The lowest value of R to scan 
-	// inline const double& minScanR() const { return mRbounds.min; }
-  // //! Getter for the highest value of R to scan 
-  // //! \return The highest value of R to scan 
-	// inline const double& maxScanR() const { return mRbounds.max; }
-  // //! Getter for the lowest value of T to scan 
-  // //! \return The lowest value of T to scan 
-	// inline const double& minScanT() const { return mTbounds.min; }
-  // //! Getter for the highest value of T to scan 
-  // //! \return The highest value of T to scan 
-	// inline const double& maxScanT() const { return mTbounds.max; }
-
-  // //! Getter for the spacing of value of R to scan 
-  // //! \return The spacing of value of R to scan 
-	// inline const double& dR() const { return mRbounds.spacing; }
-  // //! Getter for the number of R values to scan
-  // //! \return The number of R values to scan
-	// inline const std::size_t& Rbins() const { return mRbounds.bins; }
-  // //! Getter for the spacing of value of T to scan 
-  // //! \return The spacing of value of T to scan 
-	// inline const double& dT() const { return mTbounds.spacing; }
-  // //! Getter for the number of T values to scan
-  // //! \return The number of T values to scan
-	// inline const std::size_t& Tbins() const { return mTbounds.bins; }
 
   //! Logarithm of the P_b parameter  
   //! \return Logarithm of the P_b parameter 
@@ -206,51 +157,12 @@ public:
   //! \return The T value for a clusterization pass
   inline const double& ClusterT() const { return mClusterT; }
 
-  // //! Getter for the x-coordinate of the physical centre
-  // //! \return The x-coordinate of the physical centre
-  // double getCentreX() const {return mPhysicalCentreX;}
-  // //! Getter for the y-coordinate of the physical centre
-  // //! \return The y-coordinate of the physical centre
-  // double getCentreY() const {return mPhysicalCentreY;}
-
-  // //! Getter for the width of the ROI window
-  // //! \return The width of the ROI window
-  // double getWidthX() const { return mWidthX; }
-
-  // //! Getter for the height of the ROI window
-  // //! \return The height of the ROI window
-  // double getWidthY() const { return mWidthY; }
-
-  // //! Getter for the height of the ROI window
-  // //! \return The height of the ROI window
-  // double getArea() const { return mArea; }
-
 
 public:
   //! A single global copy of the global variables
   static Configuration* Current;
 
-//   //! Getter for the singleton instance
-//   //! \return The singleton instance
-//   inline static Configuration& getInstance()
-//   {
-//     return Instance;
-//   }
-
-
 private:
-  // //! The x-coordinate of the centre of the window in physical units
-  // double mPhysicalCentreX;
-  // //! The y-coordinate of the centre of the window in physical units 
-  // double mPhysicalCentreY;
-
-  // //! The width of the window in the x-direction in physical units
-  // double mWidthX;
-  // //! The width of the window in the y-direction in physical units
-  // double mWidthY;
-  // //! The area of the window in physical units 
-  // double mArea;
-
   //! The number of sigma bins
 	std::size_t mSigmacount;
   //! The spacing of sigma bins
@@ -264,36 +176,10 @@ private:
   //! The log-probability of a gievn sigma
   std::vector< double > mLogProbabilitySigma;
 
-  // //! The maximum value of R
-	// double mMaxR;
-  // //! The maximum value of R squared
-  // double mMaxR2;
-  // //! The maximum value of 2R  
-  // double mMax2R;
-  // //! The maximum value of 2R squared
-  // double mMax2R2;
-
   //! The bounds of R to scan 
   tBounds mRbounds;
   //! The bounds of T to scan 
   tBounds mTbounds;
-
-  // //! The lowest value of R to scan 
-	// double mMinScanR;
-  // //! The largest value of R to scan
-  // double mMaxScanR;
-  // //! The lowest value of T to scan
-  // double mMinScanT;
-  // //! The largest value of T to scan
-  // double mMaxScanT;
-  // //! The spacing of value of R to scan 
-	// double mDR;
-  // //! The spacing of value of T to scan 
-  // double mDT;
-  // //! The number of R values to scan 
-	// std::size_t mRbins;
-  // //! The number of T values to scan 
-	// std::size_t mTbins;
 
   //! The alpha parameter
 	double mAlpha;

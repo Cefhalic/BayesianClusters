@@ -23,14 +23,7 @@ Configuration* Configuration::Current( NULL );
 
 
 Configuration::Configuration() :
-  // mPhysicalCentreX(0), mPhysicalCentreY(0),
-  // mWidthX(0), mWidthY(0),
-  // mArea(0),
 	mSigmacount(-1), mSigmaspacing(-1),
-	// mMaxR(-1), mMaxR2(-1), mMax2R(-1), mMax2R2(-1),
-	// mMinScanR(-1), mMaxScanR(-1), mMinScanT(-1), mMaxScanT(-1),
-	// mDR(-1), mDT(-1),
-	// mRbins(-1),  mTbins(-1),
   mRbounds{-1,-1,-1,UINT_MAX} , mTbounds{-1,-1,-1,UINT_MAX},
 	mLogPb(-1), mLogPbDagger(-1), 
 	mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
@@ -38,22 +31,6 @@ Configuration::Configuration() :
   mInputFile(""), mOutputFile(""),
   mClusterR( -1 ), mClusterT(-1)
 {}
-
-
-// void Configuration::SetCentre( const double& aPhysicalCentreX , const double& aPhysicalCentreY )
-// {
-// 	std::cout << "Centre: x=" << aPhysicalCentreX << ", y=" << aPhysicalCentreY << std::endl;
-//   mPhysicalCentreX = aPhysicalCentreX;
-//   mPhysicalCentreY = aPhysicalCentreY;
-// }
-
-// void Configuration::SetWidth( const double& aWidthX , const double& aWidthY )
-// {
-//   std::cout << "Width: x=" << aWidthX << ", y=" << aWidthY << std::endl;
-//   mWidthX = aWidthX;
-//   mWidthY = aWidthY;
-//   mArea = mWidthX * mWidthY;
-// }
 
 void Configuration::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
 {
@@ -85,11 +62,6 @@ void Configuration::SetRBins( const std::size_t& aRbins , const double& aMinScan
 	mRbounds.spacing = ( mRbounds.max - mRbounds.min ) / mRbounds.bins;
 
 	std::cout << "R-bins: " << aRbins << " bins from " << aMinScanR << " to " << aMaxScanR << " in steps of " << mRbounds.spacing << std::endl;
-
-	// mMaxR = aMaxScanR;
-	// mMaxR2 = mMaxR * mMaxR;
-	// mMax2R = 2.0 * mMaxR;
-	// mMax2R2 = mMax2R * mMax2R;	
 }
 
 void Configuration::SetTBins( const std::size_t& aTbins , const double& aMinScanT , const double& aMaxScanT )
