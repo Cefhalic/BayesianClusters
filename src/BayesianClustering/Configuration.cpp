@@ -25,8 +25,8 @@ ScanConfiguration* ScanConfiguration::Current( NULL );
 ScanConfiguration::ScanConfiguration() :
 	mSigmacount(-1), mSigmaspacing(-1),
   mRbounds{-1,-1,-1,UINT_MAX} , mTbounds{-1,-1,-1,UINT_MAX},
-	mLogPb(-1), mLogPbDagger(-1), 
-	mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1)
+  mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
+	mLogPb(-1), mLogPbDagger(-1)
 {}
 
 void ScanConfiguration::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
@@ -145,10 +145,10 @@ void ScanConfiguration::FromVector( const std::vector< std::string >& aArgs )
   typedef std::string tS;
   typedef std::vector<std::string> tVS;
   typedef unsigned tU;
-  typedef std::vector<unsigned> tVU;
+  // typedef std::vector<unsigned> tVU;
   typedef double tD;
   typedef std::vector<double> tVD;
-  typedef std::size_t tZ;
+  // typedef std::size_t tZ;
 
   tD sigLo , sigHi , rLo , rHi , tLo , tHi;
   tU Nsig(0) , Nr(0) , Nt(0);
@@ -206,15 +206,15 @@ void AuxConfiguration::FromCommandline( int argc , char **argv )
 void AuxConfiguration::FromVector( const std::vector< std::string >& aArgs )
 {
   typedef std::string tS;
-  typedef std::vector<std::string> tVS;
-  typedef unsigned tU;
-  typedef std::vector<unsigned> tVU;
-  typedef double tD;
+  // typedef std::vector<std::string> tVS;
+  // typedef unsigned tU;
+  // typedef std::vector<unsigned> tVU;
+  // typedef double tD;
   typedef std::vector<double> tVD;
   typedef std::size_t tZ;
 
-  tD sigLo , sigHi , rLo , rHi , tLo , tHi;
-  tU Nsig(0) , Nr(0) , Nt(0);
+  // tD sigLo , sigHi , rLo , rHi , tLo , tHi;
+  // tU Nsig(0) , Nr(0) , Nt(0);
   tVD SigKeys, SigVals;
 
   // po::positional_options_description lPositional;

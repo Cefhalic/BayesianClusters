@@ -30,7 +30,7 @@ LIBBOOSTPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_
 
 FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREFIX}/include/boost   \
         -lgsl -lgslcblas -lboost_program_options -lm -lpthread  \
-        -g -std=c++14 -march=native -O3 -MMD -MP -fPIC
+        -g -std=c++14 -march=native -O3 -MMD -MP -fPIC -Wall
       
 PYTHONFLAGS = -I${CONDA_PREFIX}/include/${LIBPYTHON} -l${LIBBOOSTPYTHON} -l${LIBPYTHON} \
               -Wno-deprecated-declarations # Hide the annoying boost auto_ptr=>unique_ptr warning     

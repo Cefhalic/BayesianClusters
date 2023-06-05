@@ -93,6 +93,10 @@ public:
   //! \return The height of the ROI window
   double getArea() const { return mArea; }  
 
+public:
+  //! The collection of raw data points
+  std::vector<Data> mData; 
+
 private:
   //! The x-coordinate of the centre of the window in physical units
   double mPhysicalCentreX;
@@ -106,9 +110,5 @@ private:
   //! The area of the window in physical units 
   double mArea;  
 
-
-public:
-  //! The collection of raw data points
-  std::vector<Data> mData; 
 };
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

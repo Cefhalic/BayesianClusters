@@ -190,16 +190,16 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
     int ClusterL(0) , ClusterR(0) , ClusterU(0) , ClusterD(0);
 
     for( int k(i-1) ; k>=0 ; --k )
-      if( ClusterL = lHist2[k][j] ) break;
+      if( (ClusterL = lHist2[k][j]) ) break;
 
     for( int k(i+1) ; k!=512 ; ++k )
-      if( ClusterR = lHist2[k][j] ) break;
+      if( (ClusterR = lHist2[k][j]) ) break;
 
     for( int k(j-1) ; k>=0 ; --k )
-      if( ClusterD = lHist2[i][k] ) break;
+      if( (ClusterD = lHist2[i][k]) ) break;
 
     for( int k(j+1) ; k!=512 ; ++k )
-      if( ClusterU = lHist2[i][k] ) break;
+      if( (ClusterU = lHist2[i][k]) ) break;
 
     if( ClusterU == ClusterL and ClusterR == ClusterL and ClusterD == ClusterL ) lRecords[ lHist2[i][j] = ClusterL ].Size++;
   }

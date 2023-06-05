@@ -45,7 +45,7 @@ void RoI::ScanRT( const ScanConfiguration& aScanConfig , const std::function< vo
 
   std::vector< RoIproxy > lRoIproxys;
   lRoIproxys.reserve( Nthreads );
-  for( int i(0) ; i!=Nthreads ; ++i ) lRoIproxys.emplace_back( *this );
+  for( std::size_t i(0) ; i!=Nthreads ; ++i ) lRoIproxys.emplace_back( *this );
   ProgressBar2 lProgressBar( "Scan over RT"  , 0 );
   [&]( const std::size_t& i ){ lRoIproxys.at(i).ScanRT( aScanConfig , aCallback , Nthreads , i ); } || range( Nthreads );
 }
