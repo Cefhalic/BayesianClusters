@@ -23,19 +23,19 @@ ScanConfiguration* ScanConfiguration::Current( NULL );
 
 
 ScanConfiguration::ScanConfiguration() :
-	mSigmacount(-1), mSigmaspacing(-1),
-  mRbounds{-1,-1,-1,UINT_MAX} , mTbounds{-1,-1,-1,UINT_MAX},
+  mSigmacount(-1), mSigmaspacing(-1),
+  mRbounds{-1,-1,-1,UINT_MAX}, mTbounds{-1,-1,-1,UINT_MAX},
   mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
-	mLogPb(-1), mLogPbDagger(-1)
+  mLogPb(-1), mLogPbDagger(-1)
 {}
 
-void ScanConfiguration::SetSigmaParameters( const std::size_t& aSigmacount , const double& aSigmaMin , const double& aSigmaMax , const std::function< double( const double& ) >& aInterpolator )
+void ScanConfiguration::SetSigmaParameters( const std::size_t& aSigmacount, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator )
 {
-	std::cout << "Sigma-integral: " << aSigmaMin << " to " << aSigmaMax << " in " << aSigmacount << " steps" << std::endl;
+  std::cout << "Sigma-integral: " << aSigmaMin << " to " << aSigmaMax << " in " << aSigmacount << " steps" << std::endl;
 
-	mSigmacount = aSigmacount;
+  mSigmacount = aSigmacount;
 
-  if( aSigmacount == 0 ){ 
+  if( aSigmacount == 0 ) {
     mSigmabins.clear();
     mSigmabins2.clear();
     mProbabilitySigma.clear();
@@ -45,45 +45,51 @@ void ScanConfiguration::SetSigmaParameters( const std::size_t& aSigmacount , con
   }
 
   mSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
-  mSigmabins = [ & ]( const int& i ){ return ( i * mSigmaspacing ) + aSigmaMin;  } | range( mSigmacount );
-	mSigmabins2 = []( const double& i ){ return i * i; } | mSigmabins;
-	mProbabilitySigma = aInterpolator | mSigmabins;
-	mLogProbabilitySigma = []( const double& w){ return log(w); } | mProbabilitySigma;
+  mSigmabins = [ & ]( const int& i ) {
+    return ( i * mSigmaspacing ) + aSigmaMin;
+  } | range( mSigmacount );
+  mSigmabins2 = []( const double& i ) {
+    return i * i;
+  } | mSigmabins;
+  mProbabilitySigma = aInterpolator | mSigmabins;
+  mLogProbabilitySigma = []( const double& w) {
+    return log(w);
+  } | mProbabilitySigma;
 }
 
-void ScanConfiguration::SetRBins( const std::size_t& aRbins , const double& aMinScanR , const double& aMaxScanR )
+void ScanConfiguration::SetRBins( const std::size_t& aRbins, const double& aMinScanR, const double& aMaxScanR )
 {
-	mRbounds.bins = aRbins;
-	mRbounds.min = aMinScanR ;
-	mRbounds.max = aMaxScanR ;
-	mRbounds.spacing = ( mRbounds.max - mRbounds.min ) / mRbounds.bins;
+  mRbounds.bins = aRbins;
+  mRbounds.min = aMinScanR ;
+  mRbounds.max = aMaxScanR ;
+  mRbounds.spacing = ( mRbounds.max - mRbounds.min ) / mRbounds.bins;
 
-	std::cout << "R-bins: " << aRbins << " bins from " << aMinScanR << " to " << aMaxScanR << " in steps of " << mRbounds.spacing << std::endl;
+  std::cout << "R-bins: " << aRbins << " bins from " << aMinScanR << " to " << aMaxScanR << " in steps of " << mRbounds.spacing << std::endl;
 }
 
-void ScanConfiguration::SetTBins( const std::size_t& aTbins , const double& aMinScanT , const double& aMaxScanT )
+void ScanConfiguration::SetTBins( const std::size_t& aTbins, const double& aMinScanT, const double& aMaxScanT )
 {
-	mTbounds.bins = aTbins;
-	mTbounds.min = aMinScanT ;
-	mTbounds.max = aMaxScanT ;
-	mTbounds.spacing = ( mTbounds.max - mTbounds.min ) / mTbounds.bins;
+  mTbounds.bins = aTbins;
+  mTbounds.min = aMinScanT ;
+  mTbounds.max = aMaxScanT ;
+  mTbounds.spacing = ( mTbounds.max - mTbounds.min ) / mTbounds.bins;
 
-	std::cout << "T-bins: " << aTbins << " bins from " << aMinScanT << " to " << aMaxScanT << " in steps of " << mTbounds.spacing << std::endl;
+  std::cout << "T-bins: " << aTbins << " bins from " << aMinScanT << " to " << aMaxScanT << " in steps of " << mTbounds.spacing << std::endl;
 }
 
 void ScanConfiguration::SetPb( const double& aPB )
 {
-	std::cout << "Pb: " << aPB << std::endl;
-	mLogPb = log( aPB );
-	mLogPbDagger = log( 1-aPB );
+  std::cout << "Pb: " << aPB << std::endl;
+  mLogPb = log( aPB );
+  mLogPbDagger = log( 1-aPB );
 }
 
 void ScanConfiguration::SetAlpha( const double& aAlpha )
 {
-	std::cout << "Alpha: " << aAlpha << std::endl;
-	mAlpha = aAlpha;
-	mLogAlpha = log( aAlpha );
-	mLogGammaAlpha = boost::math::lgamma( aAlpha );
+  std::cout << "Alpha: " << aAlpha << std::endl;
+  mAlpha = aAlpha;
+  mLogAlpha = log( aAlpha );
+  mLogGammaAlpha = boost::math::lgamma( aAlpha );
 }
 
 
@@ -103,14 +109,14 @@ void AuxConfiguration::SetValidate( const bool& aValidate )
 }
 
 void AuxConfiguration::SetInputFile( const std::string& aFileName )
-{ 
+{
   std::cout << "Input file: " << aFileName << std::endl;
 
   mInputFile = aFileName;
 }
 
 void AuxConfiguration::SetOutputFile( const std::string& aFileName )
-{ 
+{
   std::cout << "Output file: " << aFileName << std::endl;
 
   mOutputFile = aFileName;
@@ -121,24 +127,24 @@ void AuxConfiguration::SetOutputFile( const std::string& aFileName )
 //! Utility function for parsing a config file containing "commandline" parameters
 //! \param aDesc A boost program-options description for parsing the values
 //! \param aFilename The name of the config file
-void config_file( const po::options_description& aDesc , const std::string& aFilename )
+void config_file( const po::options_description& aDesc, const std::string& aFilename )
 {
   std::ifstream lFstr( aFilename.c_str() );
-  std::string lStr( (std::istreambuf_iterator<char>(lFstr)) , std::istreambuf_iterator<char>() );
+  std::string lStr( (std::istreambuf_iterator<char>(lFstr)), std::istreambuf_iterator<char>() );
 
-  std::vector<std::string> lStrs( 1 , "Config-file" );
-  boost::split( lStrs , lStr , boost::is_any_of( " \t\r\n" ) );
+  std::vector<std::string> lStrs( 1, "Config-file" );
+  boost::split( lStrs, lStr, boost::is_any_of( " \t\r\n" ) );
 
   po::variables_map lVm;
-  po::store( po::command_line_parser( lStrs ).options( aDesc ).allow_unregistered().run() , lVm );
+  po::store( po::command_line_parser( lStrs ).options( aDesc ).allow_unregistered().run(), lVm );
   po::notify( lVm );
 }
 
 
 
-void ScanConfiguration::FromCommandline( int argc , char **argv )
+void ScanConfiguration::FromCommandline( int argc, char** argv )
 {
-  std::vector< std::string > lTemp( argv+1 , argv+argc );
+  std::vector< std::string > lTemp( argv+1, argv+argc );
   FromVector( lTemp );
 }
 
@@ -152,45 +158,72 @@ void ScanConfiguration::FromVector( const std::vector< std::string >& aArgs )
   typedef std::vector<double> tVD;
   // typedef std::size_t tZ;
 
-  tD sigLo , sigHi , rLo , rHi , tLo , tHi;
-  tU Nsig(0) , Nr(0) , Nt(0);
+  tD sigLo, sigHi, rLo, rHi, tLo, tHi;
+  tU Nsig(0), Nr(0), Nt(0);
   tVD SigKeys, SigVals;
 
   po::options_description lDesc("General options");
   lDesc.add_options()
-    ( "help",         po::bool_switch()                          ->notifier( [&]( const bool& aArg ){ if( aArg ) { std::cout << lDesc << std::endl; exit(0); } } ) , "produce help message" )
-    ( "cfg",          po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ config_file( lDesc , aArg ); } )                        , "Config file" )
-    ( "sigma-bins",   po::value<tU>(&Nsig)                                                                                                                    , "Number of sigma bins" )
-    ( "sigma-low",    po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigLo=StrToDist(aArg); } )                              , "Lower sigma integration bound" )
-    ( "sigma-high",   po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ sigHi=StrToDist(aArg); } )                              , "High sigma integration bound" )
-    ( "sigma-curve",  po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ for( auto& i : aArg ) { 
-                                                                                                        std::vector<std::string> lStrs; 
-                                                                                                        boost::split( lStrs , i , [](char c){return c==':';} ); 
-                                                                                                        SigKeys.push_back( StrToDist( lStrs.at(0) ) ); 
-                                                                                                        SigVals.push_back( std::stod( lStrs.at(1) ) ); 
-                                                                                                      } 
-                                                                                                    } )                                                       , "Parameterized sigma probability curve (list of colon-separated size-probability pairs)" )           
-    ( "r-bins",       po::value<tU>(&Nr)                                                                                                                      , "Number of R bins" )
-    ( "r-low",        po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ rLo=StrToDist(aArg); } )                               , "Lower R bound" )
-    ( "r-high",       po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ rHi=StrToDist(aArg); } )                               , "High R bound" )
-    ( "t-bins",       po::value<tU>(&Nt)                                                                                                                      , "Number of T bins" )
-    ( "t-low",        po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ tLo=StrToDist(aArg); } )                               , "Lower T bound" )
-    ( "t-high",       po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ tHi=StrToDist(aArg); } )                               , "High T bound" )
-    ( "pb",           po::value<tD>()                             ->notifier( [&]( const   tD& aArg ){ SetPb(aArg); } )                                       , "pb parameter" )
-    ( "alpha",        po::value<tD>()                             ->notifier( [&]( const   tD& aArg ){ SetAlpha(aArg); } )                                    , "alpha parameter" )
-;
+  ( "help",         po::bool_switch()                          ->notifier( [&]( const bool& aArg ) {
+    if( aArg ) {
+      std::cout << lDesc << std::endl;
+      exit(0);
+    }
+  } ), "produce help message" )
+  ( "cfg",          po::value<tS>()                            ->notifier( [&]( const   tS& aArg ) {
+    config_file( lDesc, aArg );
+  } ), "Config file" )
+  ( "sigma-bins",   po::value<tU>(&Nsig), "Number of sigma bins" )
+  ( "sigma-low",    po::value<tS>()                            ->notifier( [&]( const   tS& aArg ) {
+    sigLo=StrToDist(aArg);
+  } ), "Lower sigma integration bound" )
+  ( "sigma-high",   po::value<tS>()                            ->notifier( [&]( const   tS& aArg ) {
+    sigHi=StrToDist(aArg);
+  } ), "High sigma integration bound" )
+  ( "sigma-curve",  po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ) {
+    for( auto& i : aArg ) {
+      std::vector<std::string> lStrs;
+      boost::split( lStrs, i, [](char c) {
+        return c==':';
+      } );
+      SigKeys.push_back( StrToDist( lStrs.at(0) ) );
+      SigVals.push_back( std::stod( lStrs.at(1) ) );
+    }
+  } ), "Parameterized sigma probability curve (list of colon-separated size-probability pairs)" )
+  ( "r-bins",       po::value<tU>(&Nr), "Number of R bins" )
+  ( "r-low",        po::value<tS>()                             ->notifier( [&]( const   tS& aArg ) {
+    rLo=StrToDist(aArg);
+  } ), "Lower R bound" )
+  ( "r-high",       po::value<tS>()                             ->notifier( [&]( const   tS& aArg ) {
+    rHi=StrToDist(aArg);
+  } ), "High R bound" )
+  ( "t-bins",       po::value<tU>(&Nt), "Number of T bins" )
+  ( "t-low",        po::value<tS>()                             ->notifier( [&]( const   tS& aArg ) {
+    tLo=StrToDist(aArg);
+  } ), "Lower T bound" )
+  ( "t-high",       po::value<tS>()                             ->notifier( [&]( const   tS& aArg ) {
+    tHi=StrToDist(aArg);
+  } ), "High T bound" )
+  ( "pb",           po::value<tD>()                             ->notifier( [&]( const   tD& aArg ) {
+    SetPb(aArg);
+  } ), "pb parameter" )
+  ( "alpha",        po::value<tD>()                             ->notifier( [&]( const   tD& aArg ) {
+    SetAlpha(aArg);
+  } ), "alpha parameter" )
+  ;
 
   po::variables_map lVm;
-  po::store( po::command_line_parser( aArgs ).options( lDesc ).allow_unregistered().run() , lVm );
-  po::notify( lVm );    
- 
-  if( Nr ) SetRBins( Nr , rLo , rHi );
-  if( Nt ) SetTBins( Nt , tLo, tHi );
+  po::store( po::command_line_parser( aArgs ).options( lDesc ).allow_unregistered().run(), lVm );
+  po::notify( lVm );
 
-  if( Nsig )
-  {
-    GSLInterpolator lInterpolator( gsl_interp_cspline, SigKeys , SigVals );
-    SetSigmaParameters( Nsig , sigLo , sigHi , [&]( const double& aPt ){ return lInterpolator.Eval( aPt ); } );  
+  if( Nr ) SetRBins( Nr, rLo, rHi );
+  if( Nt ) SetTBins( Nt, tLo, tHi );
+
+  if( Nsig ) {
+    GSLInterpolator lInterpolator( gsl_interp_cspline, SigKeys, SigVals );
+    SetSigmaParameters( Nsig, sigLo, sigHi, [&]( const double& aPt ) {
+      return lInterpolator.Eval( aPt );
+    } );
   }
 
 }
@@ -199,9 +232,9 @@ void ScanConfiguration::FromVector( const std::vector< std::string >& aArgs )
 
 
 
-void AuxConfiguration::FromCommandline( int argc , char **argv )
+void AuxConfiguration::FromCommandline( int argc, char** argv )
 {
-  std::vector< std::string > lTemp( argv+1 , argv+argc );
+  std::vector< std::string > lTemp( argv+1, argv+argc );
   FromVector( lTemp );
 }
 
@@ -224,19 +257,34 @@ void AuxConfiguration::FromVector( const std::vector< std::string >& aArgs )
 
   po::options_description lDesc("General options");
   lDesc.add_options()
-    ( "help",         po::bool_switch()                          ->notifier( [&]( const bool& aArg ){ if( aArg ) { std::cout << lDesc << std::endl; exit(0); } } ) , "produce help message" )
-    // ( "centre",       po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetCentre( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Centre of ROI as 'x y' pair" )
-    // ( "width",        po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetWidth( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Width of ROI as 'x y' pair" )
-    ( "validate,v",   po::bool_switch()                           ->notifier( [&]( const bool& aArg ){ SetValidate( aArg ); } )                               , "validate clusters" )
-    ( "input-file,i", po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ SetInputFile(aArg); } )                                , "input file")
-    ( "output-file,o", po::value<tS>()                            ->notifier( [&]( const   tS& aArg ){ SetOutputFile(aArg); } )                               , "output file")
+  ( "help",         po::bool_switch()                          ->notifier( [&]( const bool& aArg ) {
+    if( aArg ) {
+      std::cout << lDesc << std::endl;
+      exit(0);
+    }
+  } ), "produce help message" )
+  // ( "centre",       po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetCentre( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Centre of ROI as 'x y' pair" )
+  // ( "width",        po::value<tVS>()->composing()->multitoken()->notifier( [&]( const  tVS& aArg ){ SetWidth( StrToDist(aArg.at(0)) , StrToDist(aArg.at(1)) ); } ) , "Width of ROI as 'x y' pair" )
+  ( "validate,v",   po::bool_switch()                           ->notifier( [&]( const bool& aArg ) {
+    SetValidate( aArg );
+  } ), "validate clusters" )
+  ( "input-file,i", po::value<tS>()                             ->notifier( [&]( const   tS& aArg ) {
+    SetInputFile(aArg);
+  } ), "input file")
+  ( "output-file,o", po::value<tS>()                            ->notifier( [&]( const   tS& aArg ) {
+    SetOutputFile(aArg);
+  } ), "output file")
 
-    ( "r",            po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ mClusterR=StrToDist(aArg); } )                         , "R for clustering" )
-    ( "t",            po::value<tS>()                             ->notifier( [&]( const   tS& aArg ){ mClusterT=StrToDist(aArg); } )                         , "T for clustering" )
-    ( "threads",      po::value<tZ>( &Nthreads )                                                                                                              , "Number of threads to use (default is value given by std::threads::hardware_concurrency())" )
+  ( "r",            po::value<tS>()                             ->notifier( [&]( const   tS& aArg ) {
+    mClusterR=StrToDist(aArg);
+  } ), "R for clustering" )
+  ( "t",            po::value<tS>()                             ->notifier( [&]( const   tS& aArg ) {
+    mClusterT=StrToDist(aArg);
+  } ), "T for clustering" )
+  ( "threads",      po::value<tZ>( &Nthreads ), "Number of threads to use (default is value given by std::threads::hardware_concurrency())" )
   ;
 
   po::variables_map lVm;
-  po::store( po::command_line_parser( aArgs ).options( lDesc ).allow_unregistered() /*.positional( lPositional )*/ .run() , lVm );
-  po::notify( lVm );    
+  po::store( po::command_line_parser( aArgs ).options( lDesc ).allow_unregistered() /*.positional( lPositional )*/ .run(), lVm );
+  po::notify( lVm );
 }

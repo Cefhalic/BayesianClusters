@@ -14,7 +14,7 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
-  
+
 /* ===== Local utilities ===== */
 #include "Utilities/ProgressBar.hpp"
 #include "Utilities/ListComprehension.hpp"
@@ -24,20 +24,18 @@
 //! \param aProxy The RoI to report
 void ReportClusters( const RoIproxy& aProxy )
 {
-  std::map< const Cluster* , std::vector< const Data* > > lClusters;
+  std::map< const Cluster*, std::vector< const Data* > > lClusters;
 
-  for( auto& i : aProxy.mData )
-  { 
+  for( auto& i : aProxy.mData ) {
     lClusters[ i.mCluster ? i.mCluster->GetParent() : NULL ].push_back( i.mData );
   }
 
   std::cout << lClusters.size() << " Clusters" << std::endl;
 
-  for( auto& i : lClusters )
-  { 
+  for( auto& i : lClusters ) {
     if( i.first ) std::cout << " > Cluster of " << i.second.size() << " localizations" << std::endl;
-    else          std::cout << " > " << i.second.size() << " background localizations" << std::endl;    
-  } 
+    else          std::cout << " > " << i.second.size() << " background localizations" << std::endl;
+  }
 
 }
 
@@ -45,10 +43,10 @@ void ReportClusters( const RoIproxy& aProxy )
 //! \param aRoI        The current RoI
 //! \param aR          The current R position of the scan
 //! \param aT          The current T position of the scan
-void RoIcallback( RoI& aRoI , const double& aR , const double& aT )
+void RoIcallback( RoI& aRoI, const double& aR, const double& aT )
 {
-    std::cout << "Clusterizing RoI with " << aRoI.mData.size() << " localizations" << std::endl;
-    aRoI.Clusterize( aR , aT , &ReportClusters ); 
+  std::cout << "Clusterizing RoI with " << aRoI.mData.size() << " localizations" << std::endl;
+  aRoI.Clusterize( aR, aT, &ReportClusters );
 }
 
 
@@ -56,20 +54,22 @@ void RoIcallback( RoI& aRoI , const double& aR , const double& aT )
 //! \param argc The number of commandline arguments
 //! \param argv The commandline arguments
 //! \return     The exit code
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
 
   std::cout << "+------------------------------------+" << std::endl;
-  ProgressBar2 lBar( "| Cluster. Andrew W. Rose. 2022 |" , 1 );
+  ProgressBar2 lBar( "| Cluster. Andrew W. Rose. 2022 |", 1 );
   std::cout << "+------------------------------------+" << std::endl;
   AuxConfiguration lMasterConfig;
-  lMasterConfig.FromCommandline( argc , argv );
+  lMasterConfig.FromCommandline( argc, argv );
   std::cout << "+------------------------------------+" << std::endl;
 
   const std::string& lInputFilename = lMasterConfig.inputFile();
-  if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
+  if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" );
   auto lDataset = LocalizationFile( lInputFilename );
 
-  lDataset.ExtractRoIs( [&]( RoI& aRoI ){ RoIcallback( aRoI , lMasterConfig.ClusterR() , lMasterConfig.ClusterT() ); } );
+  lDataset.ExtractRoIs( [&]( RoI& aRoI ) {
+    RoIcallback( aRoI, lMasterConfig.ClusterR(), lMasterConfig.ClusterT() );
+  } );
 
 }

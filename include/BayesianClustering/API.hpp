@@ -13,17 +13,17 @@ class RoI;
 // class Configuration;
 
 // //! API to load a datafile
-// //! \param aFilename The name of the file to load   
+// //! \param aFilename The name of the file to load
 // //! \return The vector of datapoints
-// std::vector< Data > LoadLocalizationFile( const std::string& aFilename ); 
+// std::vector< Data > LoadLocalizationFile( const std::string& aFilename );
 
 
 // class tFromConfigFile{}; static const tFromConfigFile FromConfigFile;
 // class tAuto{}; static const tAuto Auto;
 
 
-// // std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFromConfigFile& aDummy ); 
-// std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tAuto& aDummy ); 
+// // std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFromConfigFile& aDummy );
+// std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tAuto& aDummy );
 
 
 
@@ -32,36 +32,36 @@ class RoI;
 // class BaseHandler
 // {
 // public:
-// 	BaseHandler() : mPrevious( NULL ) , mNext( NULL )
-// 	{}
+//  BaseHandler() : mPrevious( NULL ) , mNext( NULL )
+//  {}
 
-// 	template < typename T >
-// 	BaseHandler& operator>> ( T&& aNext )
-// 	{
-// 		mNext = new T( std::move( aNext ) );
-// 		return *mNext;
-// 	}
+//  template < typename T >
+//  BaseHandler& operator>> ( T&& aNext )
+//  {
+//    mNext = new T( std::move( aNext ) );
+//    return *mNext;
+//  }
 
-// 	virtual ~BaseHandler()
-// 	{ 
-// 		if( mNext ) delete mNext;
-// 		mNext = NULL;
-// 	}
+//  virtual ~BaseHandler()
+//  {
+//    if( mNext ) delete mNext;
+//    mNext = NULL;
+//  }
 
-// 	virtual void run()
-// 	{
-// 		if( mPrevious ) mPrevious -> run();
-// 		else throw std::runtime( "No previous defined" );
-// 	}
+//  virtual void run()
+//  {
+//    if( mPrevious ) mPrevious -> run();
+//    else throw std::runtime( "No previous defined" );
+//  }
 
-// 	Handler<T>& Do
+//  Handler<T>& Do
 
 // protected:
-// 	BaseHandler* mPrevious;
+//  BaseHandler* mPrevious;
 
 // private:
-// 	virtual void Dummy() = 0;
-// 	BaseHandler* mNext;
+//  virtual void Dummy() = 0;
+//  BaseHandler* mNext;
 // };
 
 
@@ -69,14 +69,14 @@ class RoI;
 // class Handler : public BaseHandler
 // {
 // public:
-// 	Handler() = default;
+//  Handler() = default;
 
-// 	virtual ~Handler() = default;
+//  virtual ~Handler() = default;
 
-// 	virtual void handle( T& aArg ) = 0;
+//  virtual void handle( T& aArg ) = 0;
 
 // private:
-// 	void Dummy(){};
+//  void Dummy(){};
 // };
 
 

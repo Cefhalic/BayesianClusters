@@ -23,8 +23,8 @@
 // //! \return The python data in an STL vector
 // template<typename T>
 // inline std::vector< T > py_list_to_std_vector( const boost::python::object& aIterable )
-// { 
-//   return std::vector< T >( boost::python::stl_input_iterator< T >( aIterable ) , boost::python::stl_input_iterator< T >() ); 
+// {
+//   return std::vector< T >( boost::python::stl_input_iterator< T >( aIterable ) , boost::python::stl_input_iterator< T >() );
 // }
 
 // //! Utility function to convert an STL vector to python list
@@ -58,7 +58,7 @@
 //   //! Return the current value and advance the iterator
 //   //! \return The current value
 //   const U& next()
-//   {    
+//   {
 //     if ( mIt == mEnd ) {
 //       PyErr_SetString(PyExc_StopIteration, "No more data.");
 //       throw_error_already_set();
@@ -87,7 +87,7 @@
 //   //! Return the current value and advance the iterator
 //   //! \return The current value
 //   const U& next()
-//   {    
+//   {
 //     if ( mIt == mEnd ) {
 //       PyErr_SetString(PyExc_StopIteration, "No more data.");
 //       throw_error_already_set();
@@ -109,13 +109,13 @@
 // //! Run a 1-pass clustering for a specified R & T and pass the results to a callback function
 // //! \param aCallback A callback to which results are passed
 // void OneStopGetClusters( const std::string& aFilename , const boost::python::object& aCallback )
-// { 
+// {
 //   RoI lRoI = LoadLocalizationFile( aFilename );
 //   RoI lRoI( lRoI );
 
 //   Configuration::Instance.SetRBins( 0 , 0 , Configuration::Instance.ClusterR() );
 
-//   lRoI.Clusterize( Configuration::Instance.ClusterR() , Configuration::Instance.ClusterT() , 
+//   lRoI.Clusterize( Configuration::Instance.ClusterR() , Configuration::Instance.ClusterT() ,
 //     [&]( const RoIproxy& aRoIproxy ){
 
 //       boost::python::list lClusters;
@@ -127,14 +127,14 @@
 //       }
 
 //       for( auto& i : aRoIproxy.mData )
-//       { 
+//       {
 //         if( i.mCluster ) i.mCluster->GetParent()->mData.push_back( i.mData );
 //         else             lBackground.append( boost::ref( i.mData ) );
 //       }
 
 //       aCallback( lClusters , lBackground );
 //     }
-//   ); 
+//   );
 // }
 
 // //! Utility function to get a python iterator over all the data points in a clusters
@@ -146,7 +146,7 @@
 // //! \param aCluster The cluster we are inspecting
 // //! \return The number of data points in the clusters
 // std::size_t Cluster_GetSize( Cluster& aCluster )
-// { 
+// {
 //   return aCluster.mData.size();
 // }
 
@@ -159,7 +159,7 @@
 // //! \param aRoI The RoI we are inspecting
 // //! \return The number of data points in the RoI
 // std::size_t RoI_GetSize( RoI& aRoI )
-// { 
+// {
 //   return aRoI.mData.size();
 // }
 
@@ -179,42 +179,42 @@
 
 //   def( "OneStopGetClusters", &OneStopGetClusters );
 
-// 	class_< Configuration >( "Configuration" )
+//  class_< Configuration >( "Configuration" )
 //     .def( "FromVector" , &ConfigFromVector ).staticmethod("FromVector")
 //     ;
 
-// 	class_< RoI, boost::noncopyable >( "RoI", init<const RoI&>() )
+//  class_< RoI, boost::noncopyable >( "RoI", init<const RoI&>() )
 //     .def( "__iter__" , &RoI_GetIterator )
-//     .def( "__len__" , &RoI_GetSize ) 
-//     .def( "Preprocess" , &RoI::Preprocess )       
+//     .def( "__len__" , &RoI_GetSize )
+//     .def( "Preprocess" , &RoI::Preprocess )
 //     ;
 
 //   class_< PyIterator<Data> >( "DataIterator", no_init )
 //     .def("__next__" , &PyIterator<Data>::next , return_value_policy<reference_existing_object>() )
-//     ;        
+//     ;
 
 //   class_< RoIproxy, boost::noncopyable >( "RoIproxy", init< RoI& >() )
-//     ;   
+//     ;
 
 //   class_< Cluster >( "Cluster" )
 //     .def( "__iter__" , &Cluster_GetIterator )
-//     .def( "__len__" , &Cluster_GetSize )    
-//     ;        
+//     .def( "__len__" , &Cluster_GetSize )
+//     ;
 
 //   class_< PyIterator<Data*> >( "DataPtrIterator", no_init )
 //     .def("__next__" , &PyIterator<Data*>::next , return_value_policy<reference_existing_object>() )
-//     ;        
+//     ;
 
 //   class_< Data, boost::noncopyable >( "Data" , no_init )
 //     .def_readonly("x", &Data::x)
 //     .def_readonly("y", &Data::y)
-//     // .def( "NearestNeighbour" , &Data_GetNearestNeighbour )      
-//     ;   
+//     // .def( "NearestNeighbour" , &Data_GetNearestNeighbour )
+//     ;
 
 //   class_< DataProxy, boost::noncopyable >( "DataProxy", init< Data& >() )
-//     ;   
+//     ;
 
 //   class_< RoI, boost::noncopyable >( "RoI" )
-//     ;     
+//     ;
 // }
 

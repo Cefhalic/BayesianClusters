@@ -15,29 +15,27 @@
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 RoIproxy::RoIproxy( RoI& aRoI ) :
-  mBackgroundCount( 0 ) , mRoI( aRoI )
+  mBackgroundCount( 0 ), mRoI( aRoI )
 {
   mClusters.reserve( aRoI.mData.size() );  // Reserve as much space for clusters as there are data points - prRoI pointers being invalidated!
   mData.reserve( aRoI.mData.size() );
   for( auto& i : aRoI.mData ) mData.emplace_back( i );
 }
 
-void RoIproxy::CheckClusterization( const double& R , const double& T )
+void RoIproxy::CheckClusterization( const double& R, const double& T )
 {
   const auto lRlimit = 4.0 * R * R;
 
   uint32_t lClusterCount( 0 );
 
-  for( auto& i : mClusters )
-  {
+  for( auto& i : mClusters ) {
     if( i.mClusterSize ) ++lClusterCount;
   }
 
-  if( lClusterCount != mClusterCount )
-  {
+  if( lClusterCount != mClusterCount ) {
     std::cout << "\nR = " << R << ", T = " << T << " | #Clusters = " << mClusterCount << " | Expected #Clusters = " << lClusterCount << std::endl;
     throw std::runtime_error( "Check failed" );
-  }  
+  }
 
   uint32_t lBackgroundCount( 0 );
   uint32_t lPointsInClusters( 0 );
@@ -47,63 +45,62 @@ void RoIproxy::CheckClusterization( const double& R , const double& T )
   uint32_t lNeighbourNotClustered( 0 );
   uint32_t lWrongNeighbour( 0 );
 
-  for( auto& i : mData )
-  {
-    if( i.mExclude ){ 
+  for( auto& i : mData ) {
+    if( i.mExclude ) {
       lBackgroundCount++;
       continue;
     }
-    
+
     lExpected++;
-    if( ! i.GetCluster() ){ lNotClustered++ ; continue; }
-    for( auto& j : i.mData->mNeighbours )
-    {
+    if( ! i.GetCluster() ) {
+      lNotClustered++ ;
+      continue;
+    }
+    for( auto& j : i.mData->mNeighbours ) {
       if( j.first > lRlimit ) break;
-      auto& lNeighbour( GetData( j.second ) );  
+      auto& lNeighbour( GetData( j.second ) );
 
       if( lNeighbour.mExclude ) continue;
 
-      if( ! i.mCluster ){ lNeighbourNotClustered++; continue; }
-      if ( lNeighbour.mCluster->GetParent() != i.mCluster )
-      { 
-        lWrongNeighbour++;
-        continue; 
+      if( ! i.mCluster ) {
+        lNeighbourNotClustered++;
+        continue;
       }
-    }    
+      if ( lNeighbour.mCluster->GetParent() != i.mCluster ) {
+        lWrongNeighbour++;
+        continue;
+      }
+    }
   }
 
   for( auto& i : mClusters ) lPointsInClusters += i.mClusterSize;
 
-  if( lBackgroundCount != mBackgroundCount )
-  {
+  if( lBackgroundCount != mBackgroundCount ) {
     std::cout << "\nR = " << R << ", T = " << T << " | Background = " << mBackgroundCount  << " | Expected Background = " << lBackgroundCount << std::endl;
-    throw std::runtime_error( "Check failed" ); 
-  }  
+    throw std::runtime_error( "Check failed" );
+  }
 
-  if( lPointsInClusters + lBackgroundCount != mData.size() )
-  {
+  if( lPointsInClusters + lBackgroundCount != mData.size() ) {
     std::cout << "\nR = " << R << ", T = " << T << " | Points In Clusters = " << lPointsInClusters  << " | Background = " << lBackgroundCount << " | Total = " << mData.size() << std::endl;
-    throw std::runtime_error( "Check failed" ); 
-  }  
+    throw std::runtime_error( "Check failed" );
+  }
 
-  if( lNotClustered or lNeighbourNotClustered or lWrongNeighbour )
-  {
+  if( lNotClustered or lNeighbourNotClustered or lWrongNeighbour ) {
     std::cout << "\nR = " << R << ", T = " << T << " | Not Clustered = " << lNotClustered << "/" << lExpected << " | Neighbour Not Clustered = " << lNeighbourNotClustered << " | Wrong Neighbour = " << lWrongNeighbour << std::endl;
     throw std::runtime_error( "Check failed" );
   }
 }
 
 __attribute__((flatten))
-void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset , const bool& aValidate )
+void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( const RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback, const uint8_t& aParallelization, const uint8_t& aOffset, const bool& aValidate )
 {
   auto& R = aScanConfig.Rbounds();
   auto& T = aScanConfig.Tbounds();
 
   double dR( aParallelization * R.spacing );
-  double lR( R.min + ( aOffset * R.spacing ) ) , twoR2( 0 ) , lT( 0 );
+  double lR( R.min + ( aOffset * R.spacing ) ), twoR2( 0 ), lT( 0 );
 
-  for( uint32_t i( aOffset ) ; i<R.bins ; i+=aParallelization , lR+=dR )
-  {
+  for( uint32_t i( aOffset ) ; i<R.bins ; i+=aParallelization, lR+=dR ) {
     twoR2 = 4.0 * lR * lR;
     lT = T.max;
 
@@ -112,22 +109,21 @@ void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig , const std::functio
 
     std::pair<int,int> lCurrentIJ;
 
-    for( uint32_t j(0) ; j!=T.bins ; ++j , lT-=T.spacing )
-    {
+    for( uint32_t j(0) ; j!=T.bins ; ++j, lT-=T.spacing ) {
       for( auto& k : mData ) k.mExclude = ( k.mData->mLocalizationScores[ i ] < lT ) ;
-      for( auto& k : mData ) k.Clusterize( twoR2 , *this );
+      for( auto& k : mData ) k.Clusterize( twoR2, *this );
       UpdateLogScore( aScanConfig );
 
-      if( aValidate ){
-        CheckClusterization( lR , lT ) ;
+      if( aValidate ) {
+        CheckClusterization( lR, lT ) ;
         ValidateLogScore( aScanConfig );
       }
 
       //place to store current ij
       lCurrentIJ.first = i;
       lCurrentIJ.second = j;
- 
-      aCallback( *this , lR , lT, lCurrentIJ );
+
+      aCallback( *this, lR, lT, lCurrentIJ );
     }
   }
 
@@ -136,20 +132,19 @@ void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig , const std::functio
 }
 
 
-void RoIproxy::Clusterize( const double& R , const double& T , const std::function< void( const RoIproxy& ) >& aCallback )
+void RoIproxy::Clusterize( const double& R, const double& T, const std::function< void( const RoIproxy& ) >& aCallback )
 {
   {
-    ProgressBar2 lProgressBar( "Clusterize"  , 0 );  
+    ProgressBar2 lProgressBar( "Clusterize", 0 );
     auto twoR2 = 4.0 * R * R;
 
     mClusters.clear();
-    for( auto& k : mData )
-    { 
+    for( auto& k : mData ) {
       k.mCluster = NULL;
-      k.mExclude = ( k.mData->CalculateLocalizationScore( mRoI.mData , R , mRoI.getArea() ) < T ) ;
+      k.mExclude = ( k.mData->CalculateLocalizationScore( mRoI.mData, R, mRoI.getArea() ) < T ) ;
     }
 
-    for( auto& k : mData ) k.Clusterize( twoR2 , *this );
+    for( auto& k : mData ) k.Clusterize( twoR2, *this );
 
     // UpdateLogScore();
   }
@@ -160,11 +155,9 @@ void RoIproxy::Clusterize( const double& R , const double& T , const std::functi
 
 void RoIproxy::ValidateLogScore( const ScanConfiguration& aScanConfig )
 {
-  for ( auto& i : mClusters)
-  {
+  for ( auto& i : mClusters) {
     if (i.mClusterSize == 0 ) continue;
-    for (auto& j : i.mParams)
-    {
+    for (auto& j : i.mParams) {
       j.weightedCentreX = j.Bx / j.A;
       j.weightedCentreY = j.By / j.A;
     }
@@ -174,7 +167,7 @@ void RoIproxy::ValidateLogScore( const ScanConfiguration& aScanConfig )
   Data* datapoint;
   double x, y;
 
-  for (auto& i : mData){
+  for (auto& i : mData) {
     parent = i.GetCluster();
     datapoint = i.mData; //i is of type DataProxy, with member variable mData, which is of type Data*
 
@@ -185,14 +178,14 @@ void RoIproxy::ValidateLogScore( const ScanConfiguration& aScanConfig )
     y = datapoint->y;
     auto s = datapoint->s;
     auto s2 = s * s; //bad naming! please redo
-    double weightedCentre, weightedCentreX, weightedCentreY; 
+    double weightedCentre, weightedCentreX, weightedCentreY;
 
     //update S2 for each sigma hypothesis
-    //we need to recalculate w here i think 
-    
+    //we need to recalculate w here i think
+
     auto lIt(parent->mParams.begin());
     auto lSig2It( aScanConfig.sigmabins2().begin() );
-    for ( ; lIt != parent->mParams.end() ; ++lIt, ++lSig2It){
+    for ( ; lIt != parent->mParams.end() ; ++lIt, ++lSig2It) {
       //we need to add on w_i here - which comes with each point in the cluster
       double w = 1.0 / (s2 + *lSig2It); //these are found in the protoclusters, inside datapoint
       // weightedCentreX = lIt -> nuBarX - x;
@@ -200,18 +193,16 @@ void RoIproxy::ValidateLogScore( const ScanConfiguration& aScanConfig )
       weightedCentreX = (lIt -> weightedCentreX) - x;
       weightedCentreY = (lIt -> weightedCentreY) - y;
       weightedCentre = weightedCentreX*weightedCentreX + weightedCentreY*weightedCentreY;
-      lIt->S2 += w*weightedCentre; 
+      lIt->S2 += w*weightedCentre;
+    }
   }
-}
-  //NEXT - we perform an alternate log_score 
+  //NEXT - we perform an alternate log_score
   //and compare it with the usual log_score
 
   double fastLogScore, valLogScore;
-  for (auto& i : mClusters)
-  {
+  for (auto& i : mClusters) {
     if (i.mClusterSize == 0) continue;
-    for( std::size_t j(0) ; j!=aScanConfig.sigmacount() ; ++j )
-    {
+    for( std::size_t j(0) ; j!=aScanConfig.sigmacount() ; ++j ) {
       fastLogScore = i.mParams[j].log_score();
       valLogScore = i.mParams[j].alt_log_score();
       if (abs(fastLogScore - valLogScore) > 5) throw std::runtime_error("logscore check failed");
@@ -228,23 +219,22 @@ void RoIproxy::UpdateLogScore( const ScanConfiguration& aScanConfig )
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0;
   mLogP = 0.0;
-  for( auto& i: mClusters ) // here we operate on each of the identified clusters
-  {
+  for( auto& i: mClusters ) { // here we operate on each of the identified clusters
     if( i.mClusterSize == 0 ) continue;
-    
+
     i.UpdateLogScore( aScanConfig );
     mClusterCount += 1;
     mClusteredCount += i.mClusterSize;
     mLogP += i.mClusterScore;
     lLogPl += boost::math::lgamma( i.mClusterSize ); //this was omitted before - why?
   }
-  
+
   mBackgroundCount = mData.size() - mClusteredCount;
-  lLogPl += ( mBackgroundCount * aScanConfig.logPb() ) 
-         + ( mClusteredCount * aScanConfig.logPbDagger() )
-         + ( aScanConfig.logAlpha() * mClusterCount )
-         + aScanConfig.logGammaAlpha()
-         - boost::math::lgamma( aScanConfig.alpha() + mClusteredCount );  
+  lLogPl += ( mBackgroundCount * aScanConfig.logPb() )
+            + ( mClusteredCount * aScanConfig.logPbDagger() )
+            + ( aScanConfig.logAlpha() * mClusterCount )
+            + aScanConfig.logGammaAlpha()
+            - boost::math::lgamma( aScanConfig.alpha() + mClusteredCount );
 
   mLogP += (-log(4.0) * mBackgroundCount) + lLogPl;
 }

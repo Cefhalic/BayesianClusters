@@ -29,11 +29,11 @@ inline double normal_cdf( const double& x, const double& sigma = 1, const double
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Cluster::Parameter::Parameter() : 
-A(0.0) , Bx(0.0) , By(0.0) , C(0.0) , logF(0.0),
-S2(0.0)
+Cluster::Parameter::Parameter() :
+  A(0.0), Bx(0.0), By(0.0), C(0.0), logF(0.0),
+  S2(0.0)
 {}
-    
+
 Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& aOther )
 {
   A += aOther.A;
@@ -51,19 +51,19 @@ double Cluster::Parameter::alt_log_score() const
 
   double log_sum;
   auto inv_A( 1.0 / A ); // "A" is equivalent to nTilde
-  auto sqrt_A( sqrt( A ) ); 
+  auto sqrt_A( sqrt( A ) );
   double lLogMuIntegral;
   double lNubarX = Bx * inv_A; //NuBarX is Bx, nTilde is A
   double lNubarY = By * inv_A;
 
-  lLogMuIntegral = log2pi + log(inv_A) 
-                  +log( normal_cdf(sqrt_A * (1 - lNubarX)) -
-                        normal_cdf(sqrt_A * (-1 - lNubarX)))
-                  +log( normal_cdf(sqrt_A * (1 - lNubarY)) -
-                        normal_cdf(sqrt_A * (-1 - lNubarY)));
+  lLogMuIntegral = log2pi + log(inv_A)
+                   +log( normal_cdf(sqrt_A * (1 - lNubarX)) -
+                         normal_cdf(sqrt_A * (-1 - lNubarX)))
+                   +log( normal_cdf(sqrt_A * (1 - lNubarY)) -
+                         normal_cdf(sqrt_A * (-1 - lNubarY)));
 
   log_sum = logF
-            -S2 / 2.0 
+            -S2 / 2.0
             +lLogMuIntegral;
   return log_sum;
 }
@@ -71,8 +71,8 @@ double Cluster::Parameter::alt_log_score() const
 __attribute__((flatten))
 double Cluster::Parameter::log_score() const
 {
-  auto sqrt_A( sqrt( A ) ) , inv_A( 1.0 / A );
-  auto Dx( Bx * inv_A ) , Dy( By * inv_A );
+  auto sqrt_A( sqrt( A ) ), inv_A( 1.0 / A );
+  auto Dx( Bx * inv_A ), Dy( By * inv_A );
   auto E( C - ( Bx * Dx ) - ( By * Dy ) );
 
   double log_sum = logF - double( log( A ) ) - ( 0.5 * E );
@@ -91,22 +91,21 @@ double Cluster::Parameter::log_score() const
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Cluster::Cluster( const std::size_t& aParamSize ): mParams( aParamSize ),
-mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
-mParent( NULL ) ,
-mData()
+  mClusterSize( 0 ), mLastClusterSize( 0 ), mClusterScore( 0.0 ),
+  mParent( NULL ),
+  mData()
 {}
 
-Cluster::Cluster( const Data& aData , const std::vector< double >& aSigmabins2 ): mParams( aSigmabins2.size() ),
-mClusterSize( 1 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
-mParent( NULL ) ,
-mData()
-{ 
+Cluster::Cluster( const Data& aData, const std::vector< double >& aSigmabins2 ): mParams( aSigmabins2.size() ),
+  mClusterSize( 1 ), mLastClusterSize( 0 ), mClusterScore( 0.0 ),
+  mParent( NULL ),
+  mData()
+{
   const auto s2 = aData.s * aData.s;
   auto lIt( mParams.begin() ) ;
   auto lSig2It( aSigmabins2.begin() );
 
-  for( ; lIt != mParams.end() ; ++lIt , ++lSig2It )
-  {
+  for( ; lIt != mParams.end() ; ++lIt, ++lSig2It ) {
     double w = 1.0 / ( s2 + *lSig2It );
     lIt->A = w;
     lIt->Bx = (w * aData.x);
@@ -128,8 +127,8 @@ void Cluster::UpdateLogScore( const ScanConfiguration& aScanConfig )
   mLastClusterSize = mClusterSize;
 
   const std::size_t lSigmaCount( lSigmaBins.size() );
-  thread_local static std::vector< double > MuIntegral( lSigmaCount , 1.0 );
-  thread_local static std::vector< double > integralArguments( lSigmaCount , 1.0 );
+  thread_local static std::vector< double > MuIntegral( lSigmaCount, 1.0 );
+  thread_local static std::vector< double > integralArguments( lSigmaCount, 1.0 );
   double lMaxValue(-9E99);
   for( std::size_t i(0) ; i!=lSigmaCount ; ++i ) {
     double lValue =  mParams[i].log_score() + lLogProbabilitySigma[i];
@@ -139,11 +138,11 @@ void Cluster::UpdateLogScore( const ScanConfiguration& aScanConfig )
   //pass again to set the MuIntegral Correctly
   for( std::size_t i(0) ; i!=lSigmaCount ; ++i ) MuIntegral[i] = exp(integralArguments[i] - lMaxValue);
 
-  thread_local static GSLInterpolator lInt( gsl_interp_linear , lSigmaCount );
-  lInt.SetData( lSigmaBins , MuIntegral );
+  thread_local static GSLInterpolator lInt( gsl_interp_linear, lSigmaCount );
+  lInt.SetData( lSigmaBins, MuIntegral );
 
-  const double Lower( lSigmaBins[0] ) , Upper( lSigmaBins[lSigmaCount-1] );
-  mClusterScore = double( log( lInt.Integ( Lower , Upper ) ) ) + lMaxValue - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));  
+  const double Lower( lSigmaBins[0] ), Upper( lSigmaBins[lSigmaCount-1] );
+  mClusterScore = double( log( lInt.Integ( Lower, Upper ) ) ) + lMaxValue - double( log( 4.0 ) ) + (log2pi * (1.0-mClusterSize));
   mClusterScore += log(0.25) -(mClusterSize * log2pi);
 }
 
@@ -152,7 +151,7 @@ Cluster& Cluster::operator+= ( const Cluster& aOther )
   auto lIt( mParams.begin() );
   auto lIt2( aOther.mParams.begin() );
 
-  for( ; lIt != mParams.end() ; ++lIt , ++lIt2 ) *lIt += *lIt2;
+  for( ; lIt != mParams.end() ; ++lIt, ++lIt2 ) *lIt += *lIt2;
   mClusterSize += aOther.mClusterSize;
   return *this;
 }

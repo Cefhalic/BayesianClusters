@@ -39,7 +39,7 @@
 //   for( auto& k : aDataset )
 //   {
 //     double x = k.x - CurrentConfiguration().getCentreX();
-//     double y = k.x - CurrentConfiguration().getCentreY();     
+//     double y = k.x - CurrentConfiguration().getCentreY();
 //     if( fabs(x) < Xmax and fabs(y) < Ymax ) lData.emplace_back( x , y , k.s );
 //   }
 
