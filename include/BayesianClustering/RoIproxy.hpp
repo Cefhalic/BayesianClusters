@@ -41,9 +41,11 @@ public:
   void CheckClusterization( const double& R , const double& T );
   
   //! Run an RT-scan
+  //! \param aScanConfig      The configuration parameters for the scan
   //! \param aCallback        A callback for each RT-scan result
   //! \param aParallelization The stride with which we will iterate across RT parameters
   //! \param aOffset          The starting point for the strides as we iterate across RT parameters
+  //! \param aValidate        Run validation of the score calculation
   void ScanRT( const ScanConfiguration& aScanConfig , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization = 1 , const uint8_t& aOffset = 0, const bool& aValidate = false );
 
   //! Run clusterization for a specific choice of R and T
@@ -53,9 +55,11 @@ public:
   void Clusterize( const double& R , const double& T , const std::function< void( const RoIproxy& ) >& aCallback );
 
   //! Update log-probability after a scan
+  //! \param aScanConfig      The configuration parameters for the scan
   void UpdateLogScore( const ScanConfiguration& aScanConfig );
 
   //! Sean's validation code for testing when the running log-score fails
+  //! \param aScanConfig      The configuration parameters for the scan
   void ValidateLogScore( const ScanConfiguration& aScanConfig );
 
   //! Get the proxy for the Nth neighbour of this data-point

@@ -42,8 +42,9 @@ public:
   
   //! Recursive clusterization function
   //! \param a2R2     The clusterization radius
-  //! \param aRoI   The RoI-proxy in which we are running  
+  //! \param aRoI     The RoI-proxy in which we are running  
   //! \param aCluster The cluster we are building
+  //! \param d        The recursion depth
   void Clusterize( const PRECISION& a2R2 , RoIproxy& aRoI , Cluster* aCluster , const std::size_t& d = 0 );
   
   //! Get a pointer to this data-proxy's ultimate parent cluster (or null if unclustered

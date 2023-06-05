@@ -6,11 +6,12 @@
 #include <functional>
 #include <stdexcept>
 
-//! Class for storing the configuration parameters
+//! Class for storing the scan configuration parameters
 class ScanConfiguration
 {
 public:
 
+  //! A struct to store the bounds of a scan in either R or T
   struct tBounds
   {
     //! The lowest value of R to scan 
@@ -163,6 +164,8 @@ private:
 
 };
 
+
+//! Class for storing the auxilliary configuration parameters
 class AuxConfiguration
 {
 public:  
@@ -226,15 +229,3 @@ public:
   //! The value of T for clustering
   double mClusterT;
 };
-
-
-// inline ScanConfiguration& CurrentScanConfiguration()
-// {
-//   if( ! ScanConfiguration::Current ) throw std::runtime_error( "Current configuration not set" );
-//   return *ScanConfiguration::Current;
-// }
-
-// inline void SetCurrentScanConfiguration( ScanConfiguration& aConfiguration )
-// {
-//   ScanConfiguration::Current = & aConfiguration;
-// }

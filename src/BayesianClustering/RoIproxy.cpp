@@ -231,7 +231,7 @@ void RoIproxy::UpdateLogScore( const ScanConfiguration& aScanConfig )
   {
     if( i.mClusterSize == 0 ) continue;
     
-    i.UpdateLogScore( aScanConfig.sigmabins() , aScanConfig.log_probability_sigma() );
+    i.UpdateLogScore( aScanConfig );
     mClusterCount += 1;
     mClusteredCount += i.mClusterSize;
     mLogP += i.mClusterScore;

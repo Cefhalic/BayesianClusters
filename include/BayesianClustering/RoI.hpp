@@ -18,13 +18,19 @@ class RoI
 {
 public:
 
+  //! A struct for storing a result of an individual scan configuration
   struct ScanEntry
   {
-    double r , t;
+    //! The R parameter
+    double r;
+    //! The T parameter
+    double t;
+    //! The score 
     PRECISION score;
   };
 
   //! Default Constructor
+  //! \param aData The set of data-points in the RoI
   RoI( std::vector<Data>&& aData );
 
   //! Deleted copy constructor
@@ -42,13 +48,17 @@ public:
   RoI& operator= ( RoI&& aOther /*!< Anonymous argument */ ) = default;
 
   //! All the necessary pre-processing to get the RoI ready for an RT-scan
+  //! \param aMaxR The maximum radius out to which we should pre-process
+  //! \param aSigmabins2 The number of sigma bins
   void Preprocess( const double& aMaxR , const std::vector< double >& aSigmabins2 );
   
   //! Run the scan
+  //! \param aScanConfig      The configuration parameters for the scan
   //! \param aCallback A callback for each RT-scan result
   void ScanRT( const ScanConfiguration& aScanConfig , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback );
 
   //! Run the scan
+  //! \param aScanConfig      The configuration parameters for the scan
   //! \param aCallback A callback for each RT-scan result
   void ScanRT( const ScanConfiguration& aScanConfig , const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback  );
 

@@ -35,13 +35,13 @@ public:
   //! Default destructor
   ~LocalizationFile() = default;
 
-
 public:
-
+  //! Automatically extract the RoIs
+  //! \param aCallback A handler for each RoI found
   void ExtractRoIs( const std::function< void( RoI& ) >& aCallback );
 
 private:
-  //! The locaalization scores, one per R-bin
+  //! The localizations in the file
   std::vector< Data > mData;
 };
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

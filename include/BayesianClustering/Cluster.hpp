@@ -45,7 +45,6 @@ public:
     //! Parameter logF defined in the math
     PRECISION logF;
 
-
     //! Parameters added by Sean for validation
     PRECISION weightedCentreX;
     //! Parameters added by Sean for validation
@@ -55,10 +54,12 @@ public:
   }; 
 
   //! Default constructor
+  //! \param aParamSize The number of sigma-bins
   Cluster( const std::size_t& aParamSize );
 
   //! Construct a cluster from a single data-point
-  //! \param aData A data-point with which to initialize the cluster
+  //! \param aData       A data-point with which to initialize the cluster
+  //! \param aSigmabins2 The sigma-bins for initializing clusters 
   Cluster( const Data& aData , const std::vector< double >& aSigmabins2 );
 
 
@@ -88,7 +89,8 @@ public:
   Cluster* GetParent();
 
   //! Update log-probability after a scan
-  void UpdateLogScore( const std::vector< double >& aSigmaBins , const std::vector< double >& aLogProbabilitySigma );
+  //! \param aScanConfig  The configuration parameters for the scan
+  void UpdateLogScore( const ScanConfiguration& aScanConfig );
 
   //! Get the points after clustering
   //! \return Reference to a list of points in the cluster after clustering

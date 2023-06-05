@@ -72,19 +72,25 @@ public:
   }
 
   //! All the necessary pre-processing to get this data-point ready for an RT-scan
-  //! \param aData  The collection of data-points 
-  //! \param aIndex The index of the current data-point
+  //! \param aData   The collection of data-points 
+  //! \param aIndex  The index of the current data-point
+  //! \param aMax2R  Twice the maximum radius out to which we will cluster    
+  //! \param aMax2R2 Square of twice the maximum radius out to which we will cluster 
+  //! \param aSigmabins2 The sigma-bins for initializing clusters 
   void Preprocess( std::vector<Data>& aData , const std::size_t& aIndex , const double& aMax2R , const double& aMax2R2 , const std::vector< double >& aSigmabins2 );
 
   //! Calculate the localization score from the local neighbourhood
   //! \todo Remind myself how this works and what the difference is with below
-  //! \param aData ?
+  //! \param aData        ?
+  //! \param aScanConfig  The configuration parameters for the scan
+  //! \param aArea        The area of the window for normalizing the log score
   void PreprocessLocalizationScores( std::vector<Data>& aData , const ScanConfiguration& aScanConfig , const double& aArea );
 
   //! Calculate the localization score from the local neighbourhood
   //! \todo Remind myself how this works and what the difference is with above
   //! \param aData ?
   //! \param R ?  
+  //! \param aArea        The area of the window for normalizing the log score
   //! \return The localization score
   PRECISION CalculateLocalizationScore( const std::vector<Data>& aData , const double& R , const double& aArea ) const;
 
