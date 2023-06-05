@@ -122,7 +122,7 @@ mData()
 void Cluster::UpdateLogScore( const ScanConfiguration& aScanConfig )
 {
   const auto& lSigmaBins           = aScanConfig.sigmabins();
-  const auto& lLogProbabilitySigma = aScanConfig.log_probability_sigma()
+  const auto& lLogProbabilitySigma = aScanConfig.log_probability_sigma();
 
   static constexpr double pi = atan(1)*4;
   static constexpr double log2pi = log( 2*pi );
@@ -135,7 +135,7 @@ void Cluster::UpdateLogScore( const ScanConfiguration& aScanConfig )
   thread_local static std::vector< double > integralArguments( lSigmaCount , 1.0 );
   double lMaxValue(-9E99);
   for( std::size_t i(0) ; i!=lSigmaCount ; ++i ) {
-    double lValue =  mParams[i].log_score() + aLogProbabilitySigma[i];
+    double lValue =  mParams[i].log_score() + lLogProbabilitySigma[i];
     if (lValue > lMaxValue) lMaxValue = lValue;
     integralArguments[i] = lValue;
   }
