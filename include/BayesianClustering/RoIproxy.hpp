@@ -88,10 +88,5 @@ public:
   //! The underlying RoI this is a proxy to
   const RoI& mRoI;
 
-  // //max score we see in this RoI wrapper
-  // double mMaxRTScore;
-
-  // //the coords at which we find it 
-  // std::vector<uint32_t> mMaxScorePosition;
 };
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

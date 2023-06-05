@@ -121,7 +121,6 @@ void AuxConfiguration::SetOutputFile( const std::string& aFileName )
 
 void config_file( const po::options_description& aDesc , const std::string& aFilename )
 {
-  // std::cout << __FILE__ << " " << __LINE__ << " " << __PRETTY_FUNCTION__ << std::endl;
   std::ifstream lFstr( aFilename.c_str() );
   std::string lStr( (std::istreambuf_iterator<char>(lFstr)) , std::istreambuf_iterator<char>() );
 
@@ -137,14 +136,12 @@ void config_file( const po::options_description& aDesc , const std::string& aFil
 
 void ScanConfiguration::FromCommandline( int argc , char **argv )
 {
-  // std::cout << __FILE__ << " " << __LINE__ << " " << __PRETTY_FUNCTION__ << std::endl;
   std::vector< std::string > lTemp( argv+1 , argv+argc );
   FromVector( lTemp );
 }
 
 void ScanConfiguration::FromVector( const std::vector< std::string >& aArgs )
 {
-  // std::cout << __FILE__ << " " << __LINE__ << " " << __PRETTY_FUNCTION__ << std::endl;
   typedef std::string tS;
   typedef std::vector<std::string> tVS;
   typedef unsigned tU;
@@ -202,14 +199,12 @@ void ScanConfiguration::FromVector( const std::vector< std::string >& aArgs )
 
 void AuxConfiguration::FromCommandline( int argc , char **argv )
 {
-  // std::cout << __FILE__ << " " << __LINE__ << " " << __PRETTY_FUNCTION__ << std::endl;
   std::vector< std::string > lTemp( argv+1 , argv+argc );
   FromVector( lTemp );
 }
 
 void AuxConfiguration::FromVector( const std::vector< std::string >& aArgs )
 {
-  // std::cout << __FILE__ << " " << __LINE__ << " " << __PRETTY_FUNCTION__ << std::endl;
   typedef std::string tS;
   typedef std::vector<std::string> tVS;
   typedef unsigned tU;
