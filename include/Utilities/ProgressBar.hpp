@@ -1,3 +1,4 @@
+//! \file ProgressBar.hpp
 #pragma once
 
 #include <chrono>

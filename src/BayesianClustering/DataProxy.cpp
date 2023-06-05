@@ -1,3 +1,4 @@
+//! \file DataProxy.cpp
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/DataProxy.hpp"
@@ -9,6 +10,7 @@
 /* ===== C++ ===== */
 #include <iostream>
 
+//! The maximum depth for recursive clustering
 #define RECURSION_LIMIT 75000
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

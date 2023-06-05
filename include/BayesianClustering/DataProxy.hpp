@@ -1,3 +1,4 @@
+//! \file DataProxy.hpp
 #pragma once
 
 /* ===== C++ ===== */

@@ -1,4 +1,4 @@
-
+//! \file Configuration.cpp
 
 /* ===== Local utilities ===== */
 #include "Utilities/GSLInterpolator.hpp"
@@ -118,7 +118,9 @@ void AuxConfiguration::SetOutputFile( const std::string& aFileName )
 
 
 
-
+//! Utility function for parsing a config file containing "commandline" parameters
+//! \param aDesc A boost program-options description for parsing the values
+//! \param aFilename The name of the config file
 void config_file( const po::options_description& aDesc , const std::string& aFilename )
 {
   std::ifstream lFstr( aFilename.c_str() );

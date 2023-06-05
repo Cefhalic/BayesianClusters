@@ -1,3 +1,5 @@
+//! \file Scan.cxx
+
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/LocalizationFile.hpp"
 #include "BayesianClustering/Cluster.hpp"
@@ -16,10 +18,19 @@
 #include "Utilities/ProgressBar.hpp"
 
 
-std::mutex mtx; // mutex for critical section
+//! mutex for critical section
+std::mutex mtx; 
 
 
-
+// //! A callback for writing the cluster info to XML file
+// //! aRoI              The current RoIproxy
+// //! aR                The current R position of the scan
+// //! aT                The current T position of the scan
+// //! aCurrentIJ        The current position of the scan in integer units
+// //! aOutput           The output stream
+// //! aRTscores         A 2D map of scores to fill
+// //! aMaxScorePosition The position of the maximum score
+// //! aMaxRTScore       The maximum score
 // void XmlCallback( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int>& aCurrentIJ , std::stringstream& aOutput, 
 //                   std::vector<std::vector<double>>& aRTScores, std::pair<int,int>& aMaxScorePosition, double& aMaxRTScore )
 // {
@@ -47,6 +58,15 @@ std::mutex mtx; // mutex for critical section
 // }
 
 
+//! A callback for writing the cluster info to JSON file
+//! \param aRoI              The current RoIproxy
+//! \param aR                The current R position of the scan
+//! \param aT                The current T position of the scan
+//! \param aCurrentIJ        The current position of the scan in integer units
+//! \param aOutput           The output stream
+//! \param aRTScores         A 2D map of scores to fill
+//! \param aMaxScorePosition The position of the maximum score
+//! \param aMaxRTScore       The maximum score
 void JsonCallback( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int,int>& aCurrentIJ , std::stringstream& aOutput, 
                   std::vector<std::vector<double>>& aRTScores, std::pair<int,int>& aMaxScorePosition, double& aMaxRTScore )
 {
@@ -103,6 +123,10 @@ void JsonCallback( const RoIproxy& aRoI , const double& aR , const double& aT, s
 // }
 
 
+//! A callback for handling each RoI
+//! \param aRoI        The current RoI
+//! \param aOutFile    The name of the output file
+//! \param aScanConfig The configuration parameters for the scan
 void RoIcallback( RoI& aRoI , const std::string& aOutFile , const ScanConfiguration& aScanConfig )
 {
   std::cout << "Scanning RoI with " << aRoI.mData.size() << " localizations" << std::endl;
@@ -149,7 +173,10 @@ void RoIcallback( RoI& aRoI , const std::string& aOutFile , const ScanConfigurat
 
 
 
-/* ===== Main function ===== */
+//! The main function
+//! \param argc The number of commandline arguments
+//! \param argv The commandline arguments
+//! \return     The exit code
 int main(int argc, char **argv)
 {
   std::cout << "+------------------------------------+" << std::endl;

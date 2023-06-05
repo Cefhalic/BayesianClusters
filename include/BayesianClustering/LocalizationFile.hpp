@@ -1,3 +1,4 @@
+//! \file LocalizationFile.hpp
 #pragma once
 
 /* ===== C++ ===== */

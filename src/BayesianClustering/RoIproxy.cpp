@@ -1,3 +1,4 @@
+//! \file RoIproxy.cpp
 
 /* ===== BOOST libraries ===== */
 #include <boost/math/special_functions/gamma.hpp>

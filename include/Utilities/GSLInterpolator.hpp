@@ -1,3 +1,4 @@
+//! \file GSLInterpolator.hpp
 // Andrew W. Rose, 2022
 // based on an original implementation by
 // Authors: L. Moneta, A. Zsenei 08/2005, Copyright (c) 2004 ROOT Foundation, CERN/PH-SFT 

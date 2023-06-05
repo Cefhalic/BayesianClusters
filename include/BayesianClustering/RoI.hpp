@@ -1,3 +1,4 @@
+//! \file RoI.hpp
 #pragma once
 
 /* ===== C++ ===== */

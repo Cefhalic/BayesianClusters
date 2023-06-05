@@ -1,3 +1,4 @@
+//! \file Vectorize.hpp
 #pragma once
 
 #include <boost/asio/post.hpp>

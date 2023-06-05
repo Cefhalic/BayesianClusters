@@ -1,3 +1,4 @@
+//! \file API.cpp
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/API.hpp"

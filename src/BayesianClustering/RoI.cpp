@@ -1,3 +1,4 @@
+//! \file RoI.cpp
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/RoI.hpp"

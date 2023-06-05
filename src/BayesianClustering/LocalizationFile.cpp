@@ -1,3 +1,4 @@
+//! \file LocalizationFile.cpp
 
 /* ===== C++ ===== */
 #include <iostream>
@@ -13,7 +14,11 @@
 #include "Utilities/Units.hpp"
 
 
-/* ===== Function for loading a chunk of data from CSV file ===== */
+//! Multithreading handler for loading a chunk of data from CSV file
+//! \param aFilename The name of the file to open
+//! \param aData     A vector into which to fill data
+//! \param aOffset   The offset into the file
+//! \param aCount    The (approximate) number of bytes to be handled by this handler
 void __LoadCSV__( const std::string& aFilename , std::vector< Data >& aData , const std::size_t& aOffset , int aCount )
 {
   aData.reserve( aCount / 50.0 ); // The minimum line-length appears to be mid-50's bytes long, so by reserving this many entries, we should never have to reallocate
@@ -91,8 +96,14 @@ LocalizationFile::LocalizationFile( const std::string& aFilename )
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//! Typedef an array for histogramming a Localization File
 typedef std::array< std::array< int , 512 > , 512 > tArray;
 
+//! Recursively search histogram for continuously connected regions over threshold
+//! \param aHist The histogram being searched 
+//! \param aRoIid The id of the region being allocated
+//! \param i The horizontal index of the current cell in the histogram 
+//! \param j The vertical index of the current cell in the histogram 
 void __RecursiveSearch__( tArray& aHist , const int& aRoIid  , const int& i , const int& j )
 {
   aHist[i][j] = aRoIid;

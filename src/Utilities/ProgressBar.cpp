@@ -1,4 +1,4 @@
-
+//! \file ProgressBar.cpp
 
 #include <iostream>
 

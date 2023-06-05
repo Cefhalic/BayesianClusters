@@ -1,3 +1,4 @@
+//! \file ListComprehension.hpp
 #pragma once
 
 #include <numeric>
@@ -12,6 +13,7 @@
 //! \tparam U          Template magic to determine the return-type of the function, given the type of the data in the container 
 //! \param  aExpr      A function-call to be applied to each element of the container
 //! \param  aContainer A container holding the arguments to be fed to the expression
+//! \return A vector of the results of the vectorized operations
 template< typename tContainer , typename tExpr , typename T = typename std::remove_reference<tContainer>::type::value_type , typename U = decltype( std::declval<tExpr>().operator()( std::declval<T>() ) ) >
 inline 
 typename std::enable_if< not std::is_same<U, void>::value, std::vector< U > >::type
@@ -23,7 +25,6 @@ operator| ( tExpr&& aExpr , tContainer&& aContainer )
   return lRet;
 }
 
-
 //! Super nerd template magic emulating list comprehension for function with void return type
 //! \tparam tContainer A container type
 //! \tparam tExpr      A function-call type
@@ -31,6 +32,7 @@ operator| ( tExpr&& aExpr , tContainer&& aContainer )
 //! \tparam U          Template magic to determine the return-type of the function, given the type of the data in the container 
 //! \param  aExpr      A function-call to be applied to each element of the container
 //! \param  aContainer A container holding the arguments to be fed to the expression
+//! \return Specialization of the vectorization for functions returning void
 template< typename tContainer , typename tExpr , typename T = typename std::remove_reference<tContainer>::type::value_type , typename U = decltype( std::declval<tExpr>().operator()( std::declval<T>() ) ) >
 inline 
 typename std::enable_if< std::is_same<U, void>::value, void >::type
@@ -44,6 +46,7 @@ operator| ( tExpr&& aExpr , tContainer&& aContainer )
 //! \tparam tContainerType Template magic to determine the type of the data in the container
 //! \param  aPtr           A pointer-to-member-variable to be applied to each element of the container
 //! \param  aContainer     A container holding the objects whose member variable is to be extracted
+//! \return A vector of the results of the vectorized operations
 template<typename tContainer, typename tType , typename tContainerType = typename std::remove_reference<tContainer>::type::value_type >
 inline std::vector< tType > operator| ( tType tContainerType::* aPtr , tContainer&& aContainer )
 {

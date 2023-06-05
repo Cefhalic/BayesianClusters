@@ -1,4 +1,4 @@
-// //! \file PythonBindings.cpp
+//! \file PythonBindings.cpp
 // //! Self-contained sourcefile for producing python-bindings
 
 // #include <boost/python.hpp>

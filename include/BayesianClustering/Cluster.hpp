@@ -1,3 +1,4 @@
+//! \file Cluster.hpp
 #pragma once
 
 /* ===== C++ ===== */
@@ -63,7 +64,6 @@ public:
   //! \param aSigmabins2 The sigma-bins for initializing clusters 
   Cluster( const Data& aData , const std::vector< double >& aSigmabins2 );
 
-
   //! Deleted copy constructor
   Cluster( const Cluster& aOther /*!< Anonymous argument */ ) = delete;
 
@@ -78,8 +78,6 @@ public:
   //! \return Reference to this, for chaining calls  
   Cluster& operator = ( Cluster&& aOther /*!< Anonymous argument */ ) = default;
 
-
-
   //! Add another cluster to this one
   //! \param aOther Another cluster of parameters to add to this one
   //! \return Reference to this, for chaining calls
@@ -92,10 +90,6 @@ public:
   //! Update log-probability after a scan
   //! \param aScanConfig  The configuration parameters for the scan
   void UpdateLogScore( const ScanConfiguration& aScanConfig );
-
-  //! Get the points after clustering
-  //! \return Reference to a list of points in the cluster after clustering
-  // std::vector< Data* >& GetPoints();
 
 public:
   //! The collection of parameters, each corresponding to a different sigma hypothesis 

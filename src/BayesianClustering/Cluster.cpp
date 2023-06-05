@@ -1,3 +1,4 @@
+//! \file Cluster.cpp
 
 /* ===== Local utilities ===== */
 #include "Utilities/GSLInterpolator.hpp"
@@ -12,8 +13,12 @@
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Copied from the CERN ROOT implementaion
-// Swap ROOT::Math::erfc and ROOT::Math::erf for the boost::math version
+//! Evaluate the Gaussian normal_cdf at a given position
+//! Copied from the CERN ROOT implementaion, swap ROOT::Math::erfc and ROOT::Math::erf for the boost::math version
+//! \param x The position to evaluate the normal_cdf at
+//! \param sigma The standard-deviation of the Gaussian
+//! \param x0 The mean of the Gaussian
+//! \return the value of the Gaussian normal_cdf at x
 inline double normal_cdf( const double& x, const double& sigma = 1, const double& x0 = 0 )
 {
   double z = ( x - x0 ) / ( sigma * sqrt(2) );
@@ -39,14 +44,6 @@ Cluster::Parameter& Cluster::Parameter::operator+= ( const Cluster::Parameter& a
   return *this;
 }
 
-inline double CDF( const double& aArg )
-{
-  // Above 8 or below -8 are indistinguishable from 0 and 1 respectively
-  // if( aArg > 8.0 ) return 1.0;
-  // if( aArg < -8.0 ) return 0.0;
-  return normal_cdf( aArg );
-}
-
 double Cluster::Parameter::alt_log_score() const
 {
   const double pi = atan(1)*4;
@@ -60,10 +57,10 @@ double Cluster::Parameter::alt_log_score() const
   double lNubarY = By * inv_A;
 
   lLogMuIntegral = log2pi + log(inv_A) 
-                  +log((CDF(sqrt_A * (1 - lNubarX)) -
-                      CDF(sqrt_A * (-1 - lNubarX))))
-                  +log(CDF(sqrt_A * (1 - lNubarY)) -
-                      CDF(sqrt_A * (-1 - lNubarY)));
+                  +log( normal_cdf(sqrt_A * (1 - lNubarX)) -
+                        normal_cdf(sqrt_A * (-1 - lNubarX)))
+                  +log( normal_cdf(sqrt_A * (1 - lNubarY)) -
+                        normal_cdf(sqrt_A * (-1 - lNubarY)));
 
   log_sum = logF
             -S2 / 2.0 
@@ -81,9 +78,9 @@ double Cluster::Parameter::log_score() const
   double log_sum = logF - double( log( A ) ) - ( 0.5 * E );
 
   // We place explicit bounds checks to prRoI calls to expensive functions
-  auto Gx = CDF( sqrt_A * (1.0-Dx) ) - CDF( sqrt_A * (-1.0-Dx) );
+  auto Gx = normal_cdf( sqrt_A * (1.0-Dx) ) - normal_cdf( sqrt_A * (-1.0-Dx) );
   if( Gx != 1.0 ) log_sum += log( Gx );
-  auto Gy = CDF( sqrt_A * (1.0-Dy) ) - CDF( sqrt_A * (-1.0-Dy) );
+  auto Gy = normal_cdf( sqrt_A * (1.0-Dy) ) - normal_cdf( sqrt_A * (-1.0-Dy) );
   if( Gy != 1.0 ) log_sum += log( Gy );
 
   return log_sum;
@@ -165,11 +162,5 @@ Cluster* Cluster::GetParent()
   if( mParent ) return mParent = mParent->GetParent();
   return this;
 }
-
-// std::vector< Data* >& Cluster::GetPoints()
-// {
-//   if( !mDataMapped ) throw std::runtime_error( "Points have not been mapped. Run RoIproxy::MapPoints() first." );
-//   return mData;
-// }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -1,3 +1,5 @@
+//! \file Cluster.cxx
+
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/LocalizationFile.hpp"
 #include "BayesianClustering/Cluster.hpp"
@@ -19,7 +21,7 @@
 
 
 //! Callback to report clusters
-// \param aRoI The RoI to draw
+//! \param aProxy The RoI to report
 void ReportClusters( const RoIproxy& aProxy )
 {
   std::map< const Cluster* , std::vector< const Data* > > lClusters;
@@ -39,7 +41,10 @@ void ReportClusters( const RoIproxy& aProxy )
 
 }
 
-
+//! A callback for handling each RoI
+//! \param aRoI        The current RoI
+//! \param aR          The current R position of the scan
+//! \param aT          The current T position of the scan
 void RoIcallback( RoI& aRoI , const double& aR , const double& aT )
 {
     std::cout << "Clusterizing RoI with " << aRoI.mData.size() << " localizations" << std::endl;
@@ -47,7 +52,10 @@ void RoIcallback( RoI& aRoI , const double& aR , const double& aT )
 }
 
 
-/* ===== Main function ===== */
+//! The main function
+//! \param argc The number of commandline arguments
+//! \param argv The commandline arguments
+//! \return     The exit code
 int main(int argc, char **argv)
 {
 

@@ -1,3 +1,4 @@
+//! \file Configuration.hpp
 #pragma once
 
 /* ===== C++ ===== */

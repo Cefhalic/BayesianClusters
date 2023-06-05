@@ -1,3 +1,5 @@
+//! \file Units.cpp
+
 /* ===== Local utilities ===== */
 #include "Utilities/Units.hpp"
 
