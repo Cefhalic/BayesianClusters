@@ -1,5 +1,5 @@
 /* ===== Cluster sources ===== */
-#include "BayesianClustering/API.hpp"
+#include "BayesianClustering/LocalizationFile.hpp"
 #include "BayesianClustering/Cluster.hpp"
 #include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/RoIproxy.hpp"
@@ -103,6 +103,51 @@ void JsonCallback( const RoIproxy& aRoI , const double& aR , const double& aT, s
 // }
 
 
+void RoIcallback( RoI& aRoI , const std::string& aOutFile , const ScanConfiguration& aScanConfig )
+{
+  std::cout << "Scanning RoI with " << aRoI.mData.size() << " localizations" << std::endl;
+
+  std::vector<std::vector<double>> lRTScores( aScanConfig.Rbounds().bins , std::vector<double>( aScanConfig.Tbounds().bins /*, 1*/));
+  std::pair<int, int> lMaxScorePosition;
+  double lMaxRTScore = -9E99;
+  // the above will store our scores - it needs to end up in the callback
+
+  if( aOutFile.size() == 0 )
+  {
+    std::cout << "Warning: Running scan without callback" << std::endl;
+    aRoI.ScanRT( aScanConfig , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ){} ); // Null callback
+    return;
+  }
+  // else if( lOutputFilename.size() > 4 and lOutputFilename.substr(lOutputFilename.size() - 4) == ".xml" )
+  // {
+  //   std::stringstream lOutput;
+  //   aRoI.ScanRT( lAuxConfig.Rbounds() , lAuxConfig.Tbounds() , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ XmlCallback( aRoI , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
+  //   std::ofstream lOutFile( aOutFile );
+  //   lOutFile << "<Results>\n" << lOutput.str() << "</Results>\n";
+  // }
+  else if( aOutFile.size() > 5 and aOutFile.substr(aOutFile.size() - 5) == ".json" )
+  {
+    std::stringstream lOutput;
+    aRoI.ScanRT( aScanConfig , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ JsonCallback( aRoI , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
+    std::ofstream lOutFile( aOutFile );
+    lOutFile << "{\nResults:[\n" << lOutput.str() << "]\n}";
+  }
+  else
+  {
+    throw std::runtime_error( "No handler for specified output-file" );
+  }
+
+  std::cout << "max score was: " << lMaxRTScore << std::endl;
+  std::cout << "at position (" << lMaxScorePosition.first << ", " << lMaxScorePosition.second << ")"<< std::endl;
+  std::cout << "out of a possible " << aScanConfig.Rbounds().bins << " R Bins"
+  << " and " << aScanConfig.Tbounds().bins << " T Bins" << std::endl;
+  // std::pair<double,double> a;
+  // a = bestRT(lMaxScorePosition, lRTScores);
+  // std::cout << "best R value is: " << a.first << " and the best T value is: " << a.second << std::endl;
+
+}
+
+
 
 /* ===== Main function ===== */
 int main(int argc, char **argv)
@@ -110,64 +155,19 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
   ProgressBar2 lBar( "| Cluster Scan. Andrew W. Rose. 2022 |" , 1 );
   std::cout << "+------------------------------------+" << std::endl;
-  AuxConfiguration lMasterConfig;  
-  lMasterConfig.FromCommandline( argc , argv );
+  AuxConfiguration lAuxConfig;  
+  lAuxConfig.FromCommandline( argc , argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  const std::string& lInputFilename = lMasterConfig.inputFile();
+  const std::string& lInputFilename = lAuxConfig.inputFile();
   if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
-  auto lDataset = LoadLocalizationFile( lInputFilename );
+  auto lDataset = LocalizationFile( lInputFilename );
 
-  ScanConfiguration lMasterConfig2;  
-  lMasterConfig2.FromCommandline( argc , argv );
+  const std::string& lOutputFilename = lAuxConfig.outputFile();
 
-  // SetCurrentScanConfiguration( lMasterConfig2 );
-  for( auto& lRoI : ExtractRoIs( lDataset , Auto ) )    
-  {
-    std::cout << "+------------------------------------+" << std::endl;
-    std::cout << "Scanning RoI with " << lRoI.mData.size() << " localizations" << std::endl;
+  ScanConfiguration lScanConfig;  
+  lScanConfig.FromCommandline( argc , argv );
 
-    // SetCurrentScanConfiguration( lRoI.mConfiguration );
+  lDataset.ExtractRoIs( [&]( RoI& aRoI ){ RoIcallback( aRoI , lOutputFilename , lScanConfig ); } );    
 
-    std::vector<std::vector<double>> lRTScores( lMasterConfig2.Rbounds().bins , std::vector<double>( lMasterConfig2.Tbounds().bins /*, 1*/));
-    std::pair<int, int> lMaxScorePosition;
-    double lMaxRTScore = -9E99;
-    //the above will store our scores - it needs to end up in the callback
-
-    const std::string& lOutputFilename = lMasterConfig.outputFile();
-
-    if( lOutputFilename.size() == 0 )
-    {
-      std::cout << "Warning: Running scan without callback" << std::endl;
-      lRoI.ScanRT( lMasterConfig2 , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ){} ); // Null callback
-      continue;
-    }
-    // else if( lOutputFilename.size() > 4 and lOutputFilename.substr(lOutputFilename.size() - 4) == ".xml" )
-    // {
-    //   std::stringstream lOutput;
-    //   lRoI.ScanRT( lMasterConfig.Rbounds() , lMasterConfig.Tbounds() , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ XmlCallback( aRoI , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
-    //   std::ofstream lOutFile( lOutputFilename );
-    //   lOutFile << "<Results>\n" << lOutput.str() << "</Results>\n";
-    // }
-    else if( lOutputFilename.size() > 5 and lOutputFilename.substr(lOutputFilename.size() - 5) == ".json" )
-    {
-      std::stringstream lOutput;
-      lRoI.ScanRT( lMasterConfig2 , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ JsonCallback( aRoI , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
-      std::ofstream lOutFile( lOutputFilename );
-      lOutFile << "{\nResults:[\n" << lOutput.str() << "]\n}";
-    }
-    else
-    {
-      throw std::runtime_error( "No handler for specified output-file" );
-    }
-
-    // std::cout << "max score was: " << lMaxRTScore << std::endl;
-    // std::cout << "at position (" << lMaxScorePosition.first << ", " << lMaxScorePosition.second << ")"<< std::endl;
-    // std::cout << "out of a possible " << CurrentConfiguration().Rbins() << " R Bins"
-    // << " and " << CurrentConfiguration().Tbins() << " T Bins" << std::endl;
-    // std::pair<double,double> a;
-    // a = bestRT(lMaxScorePosition, lRTScores);
-    // std::cout << "best R value is: " << a.first << " and the best T value is: " << a.second << std::endl;
-
-  }
 }

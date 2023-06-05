@@ -13,15 +13,14 @@
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-RoI::RoI( std::vector<Data>&& aData ): // , const ScanConfiguration& aConfiguration ) : 
+RoI::RoI( std::vector<Data>&& aData ):
   mData( std::move( aData ) ),
-  // mConfiguration( aConfiguration ),
   mPhysicalCentreX(0), mPhysicalCentreY(0),
   mWidthX(0), mWidthY(0),
   mArea(0)
 {
   std::sort( mData.begin() , mData.end() );
-
+  std::cout << "+------------------------------------+" << std::endl;
   std::cout << "Constructed RoI with " << mData.size() << " points" << std::endl;  
 }
 

@@ -25,7 +25,7 @@ public:
   };
 
   //! Default Constructor
-  RoI( std::vector<Data>&& aData ); //, const Configuration& aConfiguration );  
+  RoI( std::vector<Data>&& aData );
 
   //! Deleted copy constructor
   RoI( const RoI& aOther /*!< Anonymous argument */ ) = delete;
@@ -46,7 +46,7 @@ public:
   
   //! Run the scan
   //! \param aCallback A callback for each RT-scan result
-  void ScanRT( const ScanConfiguration& aScanConfig , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback  );
+  void ScanRT( const ScanConfiguration& aScanConfig , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback );
 
   //! Run the scan
   //! \param aCallback A callback for each RT-scan result
@@ -110,8 +110,5 @@ private:
 public:
   //! The collection of raw data points
   std::vector<Data> mData; 
-
-  //! Each RoI should have it's own configuration
-  // Configuration mConfiguration;
 };
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

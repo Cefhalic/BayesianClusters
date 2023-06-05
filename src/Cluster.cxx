@@ -1,5 +1,5 @@
 /* ===== Cluster sources ===== */
-#include "BayesianClustering/API.hpp"
+#include "BayesianClustering/LocalizationFile.hpp"
 #include "BayesianClustering/Cluster.hpp"
 #include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/RoIproxy.hpp"
@@ -40,6 +40,13 @@ void ReportClusters( const RoIproxy& aProxy )
 }
 
 
+void RoIcallback( RoI& aRoI , const double& aR , const double& aT )
+{
+    std::cout << "Clusterizing RoI with " << aRoI.mData.size() << " localizations" << std::endl;
+    aRoI.Clusterize( aR , aT , &ReportClusters ); 
+}
+
+
 /* ===== Main function ===== */
 int main(int argc, char **argv)
 {
@@ -53,19 +60,8 @@ int main(int argc, char **argv)
 
   const std::string& lInputFilename = lMasterConfig.inputFile();
   if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
-  auto lDataset = LoadLocalizationFile( lInputFilename );
+  auto lDataset = LocalizationFile( lInputFilename );
 
-  std::cout << "+------------------------------------+" << std::endl;
-  for( auto& lRoI : ExtractRoIs( lDataset , Auto  ) )    
-  {
-    std::cout << "+------------------------------------+" << std::endl;
-    std::cout << "Clusterizing RoI with " << lRoI.mData.size() << " localizations" << std::endl;
-    lRoI.Clusterize( 
-      lMasterConfig.ClusterR() , 
-      lMasterConfig.ClusterT() , 
-      &ReportClusters
-    ); 
-    lRoI.mData.clear();
-  }
+  lDataset.ExtractRoIs( [&]( RoI& aRoI ){ RoIcallback( aRoI , lMasterConfig.ClusterR() , lMasterConfig.ClusterT() ); } );
 
 }
