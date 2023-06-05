@@ -9,7 +9,7 @@
 
 class Data;
 class RoI;
-class Configuration;
+// class Configuration;
 
 //! API to load a datafile
 //! \param aFilename The name of the file to load   

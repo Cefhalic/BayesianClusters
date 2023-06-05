@@ -93,7 +93,7 @@ double Cluster::Parameter::log_score() const
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Cluster::Cluster( const std::vector< double >& aSigmabins2 ): mParams( aSigmabins2.size() ),
+Cluster::Cluster( const std::size_t& aParamSize ): mParams( aParamSize ),
 mClusterSize( 0 ) , mLastClusterSize( 0 ) , mClusterScore( 0.0 ) , 
 mParent( NULL ) ,
 mData()

@@ -110,7 +110,7 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
   ProgressBar2 lBar( "| Cluster Scan. Andrew W. Rose. 2022 |" , 1 );
   std::cout << "+------------------------------------+" << std::endl;
-  Configuration lMasterConfig;  
+  AuxConfiguration lMasterConfig;  
   lMasterConfig.FromCommandline( argc , argv );
   std::cout << "+------------------------------------+" << std::endl;
 
@@ -118,12 +118,18 @@ int main(int argc, char **argv)
   if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
   auto lDataset = LoadLocalizationFile( lInputFilename );
 
-  SetCurrentConfiguration( lMasterConfig );
+  ScanConfiguration lMasterConfig2;  
+  lMasterConfig2.FromCommandline( argc , argv );
+
+  // SetCurrentScanConfiguration( lMasterConfig2 );
   for( auto& lRoI : ExtractRoIs( lDataset , Auto ) )    
   {
-    SetCurrentConfiguration( lRoI.mConfiguration );
+    std::cout << "+------------------------------------+" << std::endl;
+    std::cout << "Scanning RoI with " << lRoI.mData.size() << " localizations" << std::endl;
 
-    std::vector<std::vector<double>> lRTScores( lMasterConfig.Rbounds().bins , std::vector<double>( lMasterConfig.Tbounds().bins /*, 1*/));
+    // SetCurrentScanConfiguration( lRoI.mConfiguration );
+
+    std::vector<std::vector<double>> lRTScores( lMasterConfig2.Rbounds().bins , std::vector<double>( lMasterConfig2.Tbounds().bins /*, 1*/));
     std::pair<int, int> lMaxScorePosition;
     double lMaxRTScore = -9E99;
     //the above will store our scores - it needs to end up in the callback
@@ -133,7 +139,7 @@ int main(int argc, char **argv)
     if( lOutputFilename.size() == 0 )
     {
       std::cout << "Warning: Running scan without callback" << std::endl;
-      lRoI.ScanRT( lMasterConfig.Rbounds() , lMasterConfig.Tbounds() , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ){} ); // Null callback
+      lRoI.ScanRT( lMasterConfig2 , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ){} ); // Null callback
       continue;
     }
     // else if( lOutputFilename.size() > 4 and lOutputFilename.substr(lOutputFilename.size() - 4) == ".xml" )
@@ -146,7 +152,7 @@ int main(int argc, char **argv)
     else if( lOutputFilename.size() > 5 and lOutputFilename.substr(lOutputFilename.size() - 5) == ".json" )
     {
       std::stringstream lOutput;
-      lRoI.ScanRT( lMasterConfig.Rbounds() , lMasterConfig.Tbounds() , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ JsonCallback( aRoI , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
+      lRoI.ScanRT( lMasterConfig2 , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ JsonCallback( aRoI , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
       std::ofstream lOutFile( lOutputFilename );
       lOutFile << "{\nResults:[\n" << lOutput.str() << "]\n}";
     }

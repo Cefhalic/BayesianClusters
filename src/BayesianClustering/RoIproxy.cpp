@@ -93,8 +93,11 @@ void RoIproxy::CheckClusterization( const double& R , const double& T )
 }
 
 __attribute__((flatten))
-void RoIproxy::ScanRT( const Configuration::tBounds& R , const Configuration::tBounds& T , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset )
+void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization , const uint8_t& aOffset , const bool& aValidate )
 {
+  auto& R = aScanConfig.Rbounds();
+  auto& T = aScanConfig.Tbounds();
+
   double dR( aParallelization * R.spacing );
   double lR( R.min + ( aOffset * R.spacing ) ) , twoR2( 0 ) , lT( 0 );
 
@@ -112,10 +115,11 @@ void RoIproxy::ScanRT( const Configuration::tBounds& R , const Configuration::tB
     {
       for( auto& k : mData ) k.mExclude = ( k.mData->mLocalizationScores[ i ] < lT ) ;
       for( auto& k : mData ) k.Clusterize( twoR2 , *this );
-      UpdateLogScore();
-      if( mRoI.mConfiguration.validate() ){
+      UpdateLogScore( aScanConfig );
+
+      if( aValidate ){
         CheckClusterization( lR , lT ) ;
-        ValidateLogScore();
+        ValidateLogScore( aScanConfig );
       }
 
       //place to store current ij
@@ -146,14 +150,14 @@ void RoIproxy::Clusterize( const double& R , const double& T , const std::functi
 
     for( auto& k : mData ) k.Clusterize( twoR2 , *this );
 
-    UpdateLogScore();
+    // UpdateLogScore();
   }
 
   aCallback( *this );
 }
 
 
-void RoIproxy::ValidateLogScore()
+void RoIproxy::ValidateLogScore( const ScanConfiguration& aScanConfig )
 {
   for ( auto& i : mClusters)
   {
@@ -186,7 +190,7 @@ void RoIproxy::ValidateLogScore()
     //we need to recalculate w here i think 
     
     auto lIt(parent->mParams.begin());
-    auto lSig2It( mRoI.mConfiguration.sigmabins2().begin() );
+    auto lSig2It( aScanConfig.sigmabins2().begin() );
     for ( ; lIt != parent->mParams.end() ; ++lIt, ++lSig2It){
       //we need to add on w_i here - which comes with each point in the cluster
       double w = 1.0 / (s2 + *lSig2It); //these are found in the protoclusters, inside datapoint
@@ -205,7 +209,7 @@ void RoIproxy::ValidateLogScore()
   for (auto& i : mClusters)
   {
     if (i.mClusterSize == 0) continue;
-    for( std::size_t j(0) ; j!=mRoI.mConfiguration.sigmacount() ; ++j )
+    for( std::size_t j(0) ; j!=aScanConfig.sigmacount() ; ++j )
     {
       fastLogScore = i.mParams[j].log_score();
       valLogScore = i.mParams[j].alt_log_score();
@@ -216,9 +220,9 @@ void RoIproxy::ValidateLogScore()
 }
 
 
-void RoIproxy::UpdateLogScore()
+void RoIproxy::UpdateLogScore( const ScanConfiguration& aScanConfig )
 {
-  if( mRoI.mConfiguration.sigmabins().size() == 0 ) return;
+  if( aScanConfig.sigmabins().size() == 0 ) return;
 
   mClusterCount = mClusteredCount = 0;
   double lLogPl = 0.0;
@@ -227,7 +231,7 @@ void RoIproxy::UpdateLogScore()
   {
     if( i.mClusterSize == 0 ) continue;
     
-    i.UpdateLogScore( mRoI.mConfiguration.sigmabins() , mRoI.mConfiguration.log_probability_sigma() );
+    i.UpdateLogScore( aScanConfig.sigmabins() , aScanConfig.log_probability_sigma() );
     mClusterCount += 1;
     mClusteredCount += i.mClusterSize;
     mLogP += i.mClusterScore;
@@ -235,11 +239,11 @@ void RoIproxy::UpdateLogScore()
   }
   
   mBackgroundCount = mData.size() - mClusteredCount;
-  lLogPl += ( mBackgroundCount * mRoI.mConfiguration.logPb() ) 
-         + ( mClusteredCount * mRoI.mConfiguration.logPbDagger() )
-         + ( mRoI.mConfiguration.logAlpha() * mClusterCount )
-         + mRoI.mConfiguration.logGammaAlpha()
-         - boost::math::lgamma( mRoI.mConfiguration.alpha() + mClusteredCount );  
+  lLogPl += ( mBackgroundCount * aScanConfig.logPb() ) 
+         + ( mClusteredCount * aScanConfig.logPbDagger() )
+         + ( aScanConfig.logAlpha() * mClusterCount )
+         + aScanConfig.logGammaAlpha()
+         - boost::math::lgamma( aScanConfig.alpha() + mClusteredCount );  
 
   mLogP += (-log(4.0) * mBackgroundCount) + lLogPl;
 }

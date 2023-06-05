@@ -7,7 +7,7 @@
 #include <stdexcept>
 
 //! Class for storing the configuration parameters
-class Configuration
+class ScanConfiguration
 {
 public:
 
@@ -24,7 +24,7 @@ public:
   };
 
   //! Default constructor
-	Configuration();
+	ScanConfiguration();
 
   //! Setter for the sigma-bins to be integrated over
   //! \param aSigmacount   The number of sigma bins
@@ -51,17 +51,6 @@ public:
   //! Setter for the alpha parameter
   //! \param aAlpha The alpha parameter
   void SetAlpha( const double& aAlpha );
-  
-  //! Set whether to validate clusterization
-  //! \param aValidate Whether to validate clusterization
-	void SetValidate( const bool& aValidate );
-
-  //! Setter for the input file 
-  //! \param aFileName The name of the file 
-  void SetInputFile( const std::string& aFileName );
-  //! Setter for the output file 
-  //! \param aFileName The name of the file
-  void SetOutputFile( const std::string& aFileName );
 
   //! Parse the parameters when passed in as commandline arguments
   //! \param argc The number of commandline arguments
@@ -137,30 +126,9 @@ public:
   //! \return The logarithm of the gamma function of alpha parameter  
 	inline const double& logGammaAlpha() const { return mLogGammaAlpha; }
 
-  //! Getter for whether or not to run the validation on the clustering 
-  //! \return Whether or not to run the validation on the clustering 
-	inline const bool& validate() const { return mValidate; }
-
-
-  //! Getter for the input file 
-  //! \return The name of the input RoI file
-  inline const std::string& inputFile() const { return mInputFile; }
-  //! Getter for the output file 
-  //! \return The name of the output file
-  inline const std::string& outputFile() const { return mOutputFile; }
-
-
-  //! Getter for the R value for a clusterization pass
-  //! \return The R value for a clusterization pass
-  inline const double& ClusterR() const { return mClusterR; }
-  //! Getter for the T value for a clusterization pass
-  //! \return The T value for a clusterization pass
-  inline const double& ClusterT() const { return mClusterT; }
-
-
 public:
   //! A single global copy of the global variables
-  static Configuration* Current;
+  static ScanConfiguration* Current;
 
 private:
   //! The number of sigma bins
@@ -193,6 +161,57 @@ private:
   //! Logarithm of the( 1- P_b ) parameter  
   double mLogPbDagger;
 
+};
+
+class AuxConfiguration
+{
+public:  
+    //! Default constructor
+  AuxConfiguration();
+
+  //! Set whether to validate clusterization
+  //! \param aValidate Whether to validate clusterization
+  void SetValidate( const bool& aValidate );
+
+  //! Setter for the input file 
+  //! \param aFileName The name of the file 
+  void SetInputFile( const std::string& aFileName );
+  //! Setter for the output file 
+  //! \param aFileName The name of the file
+  void SetOutputFile( const std::string& aFileName );
+
+
+  //! Getter for whether or not to run the validation on the clustering 
+  //! \return Whether or not to run the validation on the clustering 
+  inline const bool& validate() const { return mValidate; }
+
+
+  //! Getter for the input file 
+  //! \return The name of the input RoI file
+  inline const std::string& inputFile() const { return mInputFile; }
+  //! Getter for the output file 
+  //! \return The name of the output file
+  inline const std::string& outputFile() const { return mOutputFile; }
+
+
+  //! Getter for the R value for a clusterization pass
+  //! \return The R value for a clusterization pass
+  inline const double& ClusterR() const { return mClusterR; }
+  //! Getter for the T value for a clusterization pass
+  //! \return The T value for a clusterization pass
+  inline const double& ClusterT() const { return mClusterT; }
+
+
+  //! Parse the parameters when passed in as commandline arguments
+  //! \param argc The number of commandline arguments
+  //! \param argv The commandline arguments
+  void FromCommandline( int argc , char **argv );
+
+  //! Parse the parameters when passed in as commandline arguments
+  //! \param aArgs The commandline arguments
+  void FromVector( const std::vector< std::string >& aArgs );
+
+  
   //! Whether or not to run the validation on the clustering 
 	bool mValidate;
 
@@ -209,13 +228,13 @@ private:
 };
 
 
-inline Configuration& CurrentConfiguration()
-{
-  if( ! Configuration::Current ) throw std::runtime_error( "Current configuration not set" );
-  return *Configuration::Current;
-}
+// inline ScanConfiguration& CurrentScanConfiguration()
+// {
+//   if( ! ScanConfiguration::Current ) throw std::runtime_error( "Current configuration not set" );
+//   return *ScanConfiguration::Current;
+// }
 
-inline void SetCurrentConfiguration( Configuration& aConfiguration )
-{
-  Configuration::Current = & aConfiguration;
-}
+// inline void SetCurrentScanConfiguration( ScanConfiguration& aConfiguration )
+// {
+//   ScanConfiguration::Current = & aConfiguration;
+// }

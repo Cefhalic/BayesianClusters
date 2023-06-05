@@ -16,7 +16,7 @@ void DataProxy::Clusterize( const PRECISION& a2R2 , RoIproxy& aRoI ) // We are a
 {
   if( mCluster || mExclude ) return;
 
-  aRoI.mClusters.emplace_back( aRoI.mRoI.mConfiguration.sigmabins2() );
+  aRoI.mClusters.emplace_back( mData->mProtoCluster->mParams.size() );
   Clusterize( a2R2 , aRoI , &aRoI.mClusters.back() );
 }
 

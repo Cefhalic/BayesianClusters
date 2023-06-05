@@ -44,7 +44,7 @@ public:
   //! \param aCallback        A callback for each RT-scan result
   //! \param aParallelization The stride with which we will iterate across RT parameters
   //! \param aOffset          The starting point for the strides as we iterate across RT parameters
-  void ScanRT( const Configuration::tBounds& R , const Configuration::tBounds& T , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization = 1 , const uint8_t& aOffset = 0 );
+  void ScanRT( const ScanConfiguration& aScanConfig , const std::function< void( const RoIproxy& , const double& , const double& , std::pair<int,int>  ) >& aCallback , const uint8_t& aParallelization = 1 , const uint8_t& aOffset = 0, const bool& aValidate = false );
 
   //! Run clusterization for a specific choice of R and T
   //! \param R The R parameter for clusterization
@@ -53,10 +53,10 @@ public:
   void Clusterize( const double& R , const double& T , const std::function< void( const RoIproxy& ) >& aCallback );
 
   //! Update log-probability after a scan
-  void UpdateLogScore();
+  void UpdateLogScore( const ScanConfiguration& aScanConfig );
 
   //! Sean's validation code for testing when the running log-score fails
-  void ValidateLogScore();
+  void ValidateLogScore( const ScanConfiguration& aScanConfig );
 
   //! Get the proxy for the Nth neighbour of this data-point
   //! \return A reference to the neighbour data-proxy

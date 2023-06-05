@@ -261,7 +261,7 @@ std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tAut
     double lCentreX( ( lRecord.X.second + lRecord.X.first ) / 2.0 ) , lCentreY( ( lRecord.Y.second + lRecord.Y.first ) / 2.0 );
     double lWidthX( lRecord.X.second - lRecord.X.first ) , lWidthY( lRecord.Y.second - lRecord.Y.first );
 
-    Configuration lConfiguration( CurrentConfiguration() );
+    //Configuration lConfiguration( CurrentConfiguration() );
 
     std::vector< Data > lData;
 
@@ -272,7 +272,7 @@ std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tAut
       lData.emplace_back( x , y , k->s );
     }
   
-    lRet.emplace_back( std::move( lData ) , lConfiguration );
+    lRet.emplace_back( std::move( lData ) );//, lConfiguration );
     lRet.back().SetCentre( lCentreX , lCentreY );
     lRet.back().SetWidth( lWidthX , lWidthY );
   }

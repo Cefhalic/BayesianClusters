@@ -47,9 +47,8 @@ int main(int argc, char **argv)
   std::cout << "+------------------------------------+" << std::endl;
   ProgressBar2 lBar( "| Cluster. Andrew W. Rose. 2022 |" , 1 );
   std::cout << "+------------------------------------+" << std::endl;
-  Configuration lMasterConfig;
+  AuxConfiguration lMasterConfig;
   lMasterConfig.FromCommandline( argc , argv );
-  lMasterConfig.SetSigmaParameters( 0 , 0 , 0 , [&]( const double& ){ return 0.0; } ); 
   std::cout << "+------------------------------------+" << std::endl;
 
   const std::string& lInputFilename = lMasterConfig.inputFile();
@@ -57,15 +56,13 @@ int main(int argc, char **argv)
   auto lDataset = LoadLocalizationFile( lInputFilename );
 
   std::cout << "+------------------------------------+" << std::endl;
-  SetCurrentConfiguration( lMasterConfig );
   for( auto& lRoI : ExtractRoIs( lDataset , Auto  ) )    
   {
     std::cout << "+------------------------------------+" << std::endl;
-    SetCurrentConfiguration( lRoI.mConfiguration );
     std::cout << "Clusterizing RoI with " << lRoI.mData.size() << " localizations" << std::endl;
     lRoI.Clusterize( 
-      CurrentConfiguration().ClusterR() , 
-      CurrentConfiguration().ClusterT() , 
+      lMasterConfig.ClusterR() , 
+      lMasterConfig.ClusterT() , 
       &ReportClusters
     ); 
     lRoI.mData.clear();

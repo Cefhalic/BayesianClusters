@@ -55,8 +55,8 @@ public:
   }; 
 
   //! Default constructor
-  Cluster( const std::vector< double >& aSigmabins2 );
-  
+  Cluster( const std::size_t& aParamSize );
+
   //! Construct a cluster from a single data-point
   //! \param aData A data-point with which to initialize the cluster
   Cluster( const Data& aData , const std::vector< double >& aSigmabins2 );

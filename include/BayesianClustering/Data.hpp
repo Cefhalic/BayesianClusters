@@ -79,7 +79,7 @@ public:
   //! Calculate the localization score from the local neighbourhood
   //! \todo Remind myself how this works and what the difference is with below
   //! \param aData ?
-  void PreprocessLocalizationScores( std::vector<Data>& aData , const Configuration::tBounds& Rbounds , const double& aArea );
+  void PreprocessLocalizationScores( std::vector<Data>& aData , const ScanConfiguration& aScanConfig , const double& aArea );
 
   //! Calculate the localization score from the local neighbourhood
   //! \todo Remind myself how this works and what the difference is with above

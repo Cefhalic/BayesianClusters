@@ -72,14 +72,15 @@ void Data::Preprocess( std::vector<Data>& aData , const std::size_t& aIndex , co
 
 
 __attribute__((flatten))
-void Data::PreprocessLocalizationScores( std::vector<Data>& aData , const Configuration::tBounds& Rbounds , const double& aArea )
+void Data::PreprocessLocalizationScores( std::vector<Data>& aData , const ScanConfiguration& aScanConfig , const double& aArea )
 {
+  auto& Rbounds = aScanConfig.Rbounds(); 
   static constexpr double pi = atan(1)*4;
   const double lLocalizationConstant( aArea / ( pi * ( aData.size() - 1 ) ) ); 
 
   auto lNeighbourit( mNeighbours.begin() );
   PRECISION lLocalizationSum( 0 ) , lLastLocalizationSum( 0 ) , lLocalizationScore( 0 );
-  mLocalizationScores.reserve( CurrentConfiguration().Rbounds().bins );
+  mLocalizationScores.reserve( Rbounds.bins );
 
   double R( Rbounds.min ) , R2( 0 );
   for( uint32_t i(0) ; i!=Rbounds.bins ; ++i , R+=Rbounds.spacing )
