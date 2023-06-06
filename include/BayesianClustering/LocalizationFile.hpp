@@ -41,6 +41,15 @@ class LocalizationFile
     //! \param aCallback A handler for each RoI found
     void ExtractRoIs( const std::function< void( RoI& ) >& aCallback );
 
+    //! Manually extract an RoI 
+    //! \param aCentreX The centre of the window x-coordinate
+    //! \param aCentreY The centre of the window y-coordinate
+    //! \param aWidthX The width of the window
+    //! \param aWidthY The height of the window
+    //! \param aCallback A handler for each RoI found
+    void ExtractRoIs( const double& aCentreX , const double& aCentreY , const double& aWidthX , const double& aWidthY , const std::function< void( RoI& ) >& aCallback );
+
+
   private:
     //! The localizations in the file
     std::vector< Data > mData;

@@ -250,4 +250,24 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
   }
 
 }
+
+
+void LocalizationFile::ExtractRoIs( const double& aCentreX , const double& aCentreY , const double& aWidthX , const double& aWidthY , const std::function< void( RoI& ) >& aCallback )
+{
+  auto lMaxX = aWidthX / 2.0;
+  auto lMaxY = aWidthY / 2.0;
+
+  std::vector< Data > lData;  
+  for( auto& k : mData ) {
+      double x = k.x - aCentreX;
+      double y = k.y - aCentreY;
+      if( fabs(x) < lMaxX and fabs(y) < lMaxY ) lData.emplace_back( x, y, k.s );    
+  }
+
+  RoI lRoI( std::move( lData ) );
+  lRoI.SetCentre( aCentreX, aCentreY );
+  lRoI.SetWidth( aWidthX, aWidthY );
+
+  aCallback( lRoI );        
+}
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
