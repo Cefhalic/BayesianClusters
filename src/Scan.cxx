@@ -17,7 +17,6 @@
 /* ===== Local utilities ===== */
 #include "Utilities/ProgressBar.hpp"
 
-
 //! mutex for critical section
 std::mutex mtx;
 
@@ -180,21 +179,10 @@ int main(int argc, char** argv)
   std::cout << "+------------------------------------+" << std::endl;
   ProgressBar2 lBar( "| Cluster Scan. Andrew W. Rose. 2022 |", 1 );
   std::cout << "+------------------------------------+" << std::endl;
-  AuxConfiguration lAuxConfig;
-  lAuxConfig.FromCommandline( argc, argv );
+  AuxConfiguration lAuxConfig( argc, argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  const std::string& lInputFilename = lAuxConfig.inputFile();
-  if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" );
-  auto lDataset = LocalizationFile( lInputFilename );
-
-  const std::string& lOutputFilename = lAuxConfig.outputFile();
-
-  ScanConfiguration lScanConfig;
-  lScanConfig.FromCommandline( argc, argv );
-
-  lDataset.ExtractRoIs( [&]( RoI& aRoI ) {
-    RoIcallback( aRoI, lOutputFilename, lScanConfig );
-  } );
-
+  ScanConfiguration lScanConfig( lAuxConfig.configFile() );
+  auto lDataset = LocalizationFile( lAuxConfig.inputFile() );
+  lDataset.ExtractRoIs( [&]( RoI& aRoI ) { RoIcallback( aRoI , lAuxConfig.outputFile() , lScanConfig ); } );
 }

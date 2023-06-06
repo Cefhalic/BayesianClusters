@@ -132,7 +132,7 @@ void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function
 }
 
 
-void RoIproxy::Clusterize( const double& R, const double& T, const std::function< void( const RoIproxy& ) >& aCallback )
+void RoIproxy::Clusterize( const double& R, const double& T, const std::function< void( RoIproxy& ) >& aCallback )
 {
   {
     ProgressBar2 lProgressBar( "Clusterize", 0 );
@@ -238,5 +238,5 @@ void RoIproxy::UpdateLogScore( const ScanConfiguration& aScanConfig )
 
   mLogP += (-log(4.0) * mBackgroundCount) + lLogPl;
 }
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

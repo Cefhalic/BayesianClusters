@@ -66,6 +66,8 @@ void __LoadCSV__( const std::string& aFilename, std::vector< Data >& aData, cons
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 LocalizationFile::LocalizationFile( const std::string& aFilename )
 {
+  if( aFilename.size() == 0 ) throw std::runtime_error( "No input file specified" );
+
   auto f = fopen( aFilename.c_str(), "rb");
   if ( f == NULL ) throw std::runtime_error( "File is not available" );
   fseek(f, 0, SEEK_END); // seek to end of file

@@ -25,7 +25,21 @@ class ScanConfiguration
     };
 
     //! Default constructor
-    ScanConfiguration();
+    // ScanConfiguration();
+
+    //! Constructor which parses the parameters when passed in as commandline arguments
+    //! \param argc The number of commandline arguments
+    //! \param argv The commandline arguments
+    ScanConfiguration( int argc, char** argv );
+
+    //! Constructor which parses the parameters when passed in as commandline arguments
+    //! \param aArgs The commandline arguments
+    ScanConfiguration( const std::vector< std::string >& aArgs );
+
+    //! Constructor which parses the parameters when passed in as commandline arguments
+    //! \param aCfgFile A Scan-parameter config file name
+    ScanConfiguration( const std::string& aCfgFile );
+
 
     //! Setter for the sigma-bins to be integrated over
     //! \param aSigmacount   The number of sigma bins
@@ -38,12 +52,12 @@ class ScanConfiguration
     //! \param aRbins    The number of R bins to scan over
     //! \param aMinScanR The lowest value of R to scan
     //! \param aMaxScanR The largest value of R to scan
-    void SetRBins( const std::size_t& aRbins, const double& aMinScanR = 0.0, const double& aMaxScanR = -1 );
+    void SetRBins( const std::size_t& aRbins, const double& aMinScanR, const double& aMaxScanR );
 
     //! \param aTbins    The number of T bins to scan over
     //! \param aMinScanT The lowest value of T to scan
     //! \param aMaxScanT The largest value of T to scan
-    void SetTBins( const std::size_t& aTbins, const double& aMinScanT = 0.0, const double& aMaxScanT = -1 );
+    void SetTBins( const std::size_t& aTbins, const double& aMinScanT, const double& aMaxScanT );
 
     //! Setter for the P_b parameter
     //! \param aPB    The P_b parameter
@@ -53,11 +67,12 @@ class ScanConfiguration
     //! \param aAlpha The alpha parameter
     void SetAlpha( const double& aAlpha );
 
-    //! Parse the parameters when passed in as commandline arguments
-    //! \param argc The number of commandline arguments
-    //! \param argv The commandline arguments
-    void FromCommandline( int argc, char** argv );
+    // //! Parse the parameters when passed in as commandline arguments
+    // //! \param argc The number of commandline arguments
+    // //! \param argv The commandline arguments
+    // void FromCommandline( int argc, char** argv );
 
+  private:
     //! Parse the parameters when passed in as commandline arguments
     //! \param aArgs The commandline arguments
     void FromVector( const std::vector< std::string >& aArgs );
@@ -145,7 +160,6 @@ class ScanConfiguration
       return mTbounds;
     }
 
-
     //! Logarithm of the P_b parameter
     //! \return Logarithm of the P_b parameter
     inline const double& logPb() const
@@ -177,10 +191,6 @@ class ScanConfiguration
     {
       return mLogGammaAlpha;
     }
-
-  public:
-    //! A single global copy of the global variables
-    static ScanConfiguration* Current;
 
   private:
     //! The number of sigma bins
@@ -221,18 +231,30 @@ class AuxConfiguration
 {
   public:
     //! Default constructor
-    AuxConfiguration();
+    // AuxConfiguration();
+
+    //! Constructor which parses the parameters when passed in as commandline arguments
+    //! \param argc The number of commandline arguments
+    //! \param argv The commandline arguments
+    AuxConfiguration( int argc, char** argv );
+
+    //! Constructor which parses the parameters when passed in as commandline arguments
+    //! \param aArgs The commandline arguments
+    AuxConfiguration( const std::vector< std::string >& aArgs );
+
 
     //! Set whether to validate clusterization
     //! \param aValidate Whether to validate clusterization
     void SetValidate( const bool& aValidate );
-
     //! Setter for the input file
     //! \param aFileName The name of the file
     void SetInputFile( const std::string& aFileName );
     //! Setter for the output file
     //! \param aFileName The name of the file
     void SetOutputFile( const std::string& aFileName );
+    //! Setter for the config file
+    //! \param aFileName The name of the file
+    void SetConfigFile( const std::string& aFileName );
 
 
     //! Getter for whether or not to run the validation on the clustering
@@ -242,13 +264,13 @@ class AuxConfiguration
       return mValidate;
     }
 
-
     //! Getter for the input file
     //! \return The name of the input RoI file
     inline const std::string& inputFile() const
     {
       return mInputFile;
     }
+
     //! Getter for the output file
     //! \return The name of the output file
     inline const std::string& outputFile() const
@@ -256,6 +278,12 @@ class AuxConfiguration
       return mOutputFile;
     }
 
+    //! Getter for the config file
+    //! \return The name of the config file
+    inline const std::string& configFile() const
+    {
+      return mConfigFile;
+    }
 
     //! Getter for the R value for a clusterization pass
     //! \return The R value for a clusterization pass
@@ -263,6 +291,7 @@ class AuxConfiguration
     {
       return mClusterR;
     }
+
     //! Getter for the T value for a clusterization pass
     //! \return The T value for a clusterization pass
     inline const double& ClusterT() const
@@ -270,17 +299,17 @@ class AuxConfiguration
       return mClusterT;
     }
 
+    // //! Parse the parameters when passed in as commandline arguments
+    // //! \param argc The number of commandline arguments
+    // //! \param argv The commandline arguments
+    // void FromCommandline( int argc, char** argv );
 
-    //! Parse the parameters when passed in as commandline arguments
-    //! \param argc The number of commandline arguments
-    //! \param argv The commandline arguments
-    void FromCommandline( int argc, char** argv );
-
+  private:
     //! Parse the parameters when passed in as commandline arguments
     //! \param aArgs The commandline arguments
     void FromVector( const std::vector< std::string >& aArgs );
 
-
+  public:
     //! Whether or not to run the validation on the clustering
     bool mValidate;
 
@@ -289,6 +318,9 @@ class AuxConfiguration
 
     //! The output file
     std::string mOutputFile;
+
+    //! The config file
+    std::string mConfigFile;
 
     //! The value of R for clustering
     double mClusterR;

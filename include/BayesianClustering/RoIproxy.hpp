@@ -53,7 +53,7 @@ class RoIproxy
     //! \param R The R parameter for clusterization
     //! \param T The T parameter for clusterization
     //! \param aCallback A callback for the clusterization results
-    void Clusterize( const double& R, const double& T, const std::function< void( const RoIproxy& ) >& aCallback );
+    void Clusterize( const double& R, const double& T, const std::function< void( RoIproxy& ) >& aCallback );
 
     //! Update log-probability after a scan
     //! \param aScanConfig      The configuration parameters for the scan

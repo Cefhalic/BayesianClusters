@@ -19,7 +19,6 @@
 #include "Utilities/ProgressBar.hpp"
 #include "Utilities/ListComprehension.hpp"
 
-
 //! Callback to report clusters
 //! \param aProxy The RoI to report
 void ReportClusters( const RoIproxy& aProxy )
@@ -36,7 +35,6 @@ void ReportClusters( const RoIproxy& aProxy )
     if( i.first ) std::cout << " > Cluster of " << i.second.size() << " localizations" << std::endl;
     else          std::cout << " > " << i.second.size() << " background localizations" << std::endl;
   }
-
 }
 
 //! A callback for handling each RoI
@@ -49,27 +47,18 @@ void RoIcallback( RoI& aRoI, const double& aR, const double& aT )
   aRoI.Clusterize( aR, aT, &ReportClusters );
 }
 
-
 //! The main function
 //! \param argc The number of commandline arguments
 //! \param argv The commandline arguments
 //! \return     The exit code
 int main(int argc, char** argv)
 {
-
   std::cout << "+------------------------------------+" << std::endl;
-  ProgressBar2 lBar( "| Cluster. Andrew W. Rose. 2022 |", 1 );
+  ProgressBar2 lBar( "| Cluster. Andrew W. Rose. 2022      |", 1 );
   std::cout << "+------------------------------------+" << std::endl;
-  AuxConfiguration lMasterConfig;
-  lMasterConfig.FromCommandline( argc, argv );
+  AuxConfiguration lMasterConfig( argc, argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  const std::string& lInputFilename = lMasterConfig.inputFile();
-  if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" );
-  auto lDataset = LocalizationFile( lInputFilename );
-
-  lDataset.ExtractRoIs( [&]( RoI& aRoI ) {
-    RoIcallback( aRoI, lMasterConfig.ClusterR(), lMasterConfig.ClusterT() );
-  } );
-
+  auto lDataset = LocalizationFile( lMasterConfig.inputFile() );
+  lDataset.ExtractRoIs( [&]( RoI& aRoI ) { RoIcallback( aRoI, lMasterConfig.ClusterR(), lMasterConfig.ClusterT() ); } );
 }
