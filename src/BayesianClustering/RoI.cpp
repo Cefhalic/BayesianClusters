@@ -31,46 +31,24 @@ void RoI::Preprocess( const double& aMaxR, const std::vector< double >& aSigmabi
   const double lMax2R2 = lMax2R * lMax2R;
 
   ProgressBar2 lProgressBar( "Populating neighbourhood", mData.size() );
-  [ & ]( const std::size_t& i ) {
-    mData.at( i ).Preprocess( mData, i, lMax2R, lMax2R2, aSigmabins2 );
-  } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
+  [ & ]( const std::size_t& i ) { mData.at( i ).Preprocess( mData, i, lMax2R, lMax2R2, aSigmabins2 ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
 }
 
-void RoI::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback )
+void RoI::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double& ) >& aCallback )
 {
   auto& R = aScanConfig.Rbounds();
   Preprocess( R.max, aScanConfig.sigmabins2() );
 
   {
     ProgressBar2 lProgressBar( "Populating localization scores", mData.size() );
-    [&]( const std::size_t& i ) {
-      mData.at( i ).PreprocessLocalizationScores( mData, aScanConfig, getArea() );
-    } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
+    [&]( const std::size_t& i ) { mData.at( i ).PreprocessLocalizationScores( mData, aScanConfig, getArea() ); } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
   }
 
   std::vector< RoIproxy > lRoIproxys;
   lRoIproxys.reserve( Nthreads );
   for( std::size_t i(0) ; i!=Nthreads ; ++i ) lRoIproxys.emplace_back( *this );
   ProgressBar2 lProgressBar( "Scan over RT", 0 );
-  [&]( const std::size_t& i ) {
-    lRoIproxys.at(i).ScanRT( aScanConfig, aCallback, Nthreads, i );
-  } || range( Nthreads );
-}
-
-void RoI::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback  )
-{
-  std::mutex lMtx;
-  std::vector< ScanEntry > lResults;
-  ScanRT( aScanConfig, [&]( const RoIproxy& aRoI, const double& aR, const double& aT, std::pair<int,int> ) {
-    lMtx.lock();
-    lResults.push_back( { aR, aT, aRoI.mLogP } );
-    lMtx.unlock();
-  } );
-  std::sort( lResults.begin(), lResults.end(), []( const ScanEntry& a, const ScanEntry& b ) {
-    if ( a.r != b.r ) return a.r < b.r;
-    return ( a.t < b.t );
-  } );
-  aCallback( lResults );
+  [&]( const std::size_t& i ) { lRoIproxys.at(i).ScanRT( aScanConfig, aCallback, Nthreads, i ); } || range( Nthreads );
 }
 
 void RoI::Clusterize( const double& R, const double& T, const std::function< void( RoIproxy& ) >& aCallback )

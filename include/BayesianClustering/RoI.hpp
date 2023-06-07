@@ -13,18 +13,6 @@
 class RoIproxy;
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! A struct for storing a result of an individual scan configuration
-struct ScanEntry {
-  //! The R parameter
-  double r;
-  //! The T parameter
-  double t;
-  //! The score
-  PRECISION score;
-};
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A class which holds the raw RoI data and global parameters
 class RoI
 {
@@ -55,13 +43,7 @@ class RoI
     //! Run the scan
     //! \param aScanConfig      The configuration parameters for the scan
     //! \param aCallback A callback for each RT-scan result
-    void ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback );
-
-    //! Run the scan
-    //! \param aScanConfig      The configuration parameters for the scan
-    //! \param aCallback A callback for each RT-scan result
-    void ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback  );
-
+    void ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double& ) >& aCallback );
 
     //! Run clusterization for a specific choice of R and T
     //! \param R The R parameter for clusterization

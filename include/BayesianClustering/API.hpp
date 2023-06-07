@@ -9,77 +9,32 @@
 /* ===== Cluster sources ===== */
 
 // class Data;
-class RoI;
+class RoIproxy;
 class ScanConfiguration;
-struct ScanEntry;
 
-void AutoRoi_Scan_SimpleCallback( const std::string& aFilename , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback );
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//! A struct for storing a result of an individual scan configuration
+struct ScanEntry {
+  //! The R parameter
+  double r;
+  //! The T parameter
+  double t;
+  //! The score
+  double score;
 
-// //! API to load a datafile
-// //! \param aFilename The name of the file to load
-// //! \return The vector of datapoints
-// std::vector< Data > LoadLocalizationFile( const std::string& aFilename );
-
-
-// class tFromConfigFile{}; static const tFromConfigFile FromConfigFile;
-// class tAuto{}; static const tAuto Auto;
-
-
-// // std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tFromConfigFile& aDummy );
-// std::vector< RoI > ExtractRoIs( const std::vector< Data >& aDataset , const tAuto& aDummy );
-
-
-
-// template < typename T > class Handler;
-
-// class BaseHandler
-// {
-// public:
-//  BaseHandler() : mPrevious( NULL ) , mNext( NULL )
-//  {}
-
-//  template < typename T >
-//  BaseHandler& operator>> ( T&& aNext )
-//  {
-//    mNext = new T( std::move( aNext ) );
-//    return *mNext;
-//  }
-
-//  virtual ~BaseHandler()
-//  {
-//    if( mNext ) delete mNext;
-//    mNext = NULL;
-//  }
-
-//  virtual void run()
-//  {
-//    if( mPrevious ) mPrevious -> run();
-//    else throw std::runtime( "No previous defined" );
-//  }
-
-//  Handler<T>& Do
-
-// protected:
-//  BaseHandler* mPrevious;
-
-// private:
-//  virtual void Dummy() = 0;
-//  BaseHandler* mNext;
-// };
+  inline bool operator< ( const ScanEntry& aOther )
+  {
+    if ( r != aOther.r ) return r < aOther.r;
+    return ( t < aOther.t );
+  }
+};
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-// template < typename T >
-// class Handler : public BaseHandler
-// {
-// public:
-//  Handler() = default;
+void AutoRoi_Scan_FullCallback( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double& ) >& aCallback );
 
-//  virtual ~Handler() = default;
+void AutoRoi_Scan_SimpleCallback( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback );
 
-//  virtual void handle( T& aArg ) = 0;
+void AutoRoi_Scan_ToJson( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::string& aOutFile );
 
-// private:
-//  void Dummy(){};
-// };
-
-
+void AutoRoi_Cluster_Callback( const std::string& aInFile , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback );

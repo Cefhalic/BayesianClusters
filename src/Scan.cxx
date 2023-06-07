@@ -2,11 +2,11 @@
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/API.hpp"
-#include "BayesianClustering/LocalizationFile.hpp"
+// #include "BayesianClustering/LocalizationFile.hpp"
 // #include "BayesianClustering/Cluster.hpp"
-#include "BayesianClustering/RoI.hpp"
+// #include "BayesianClustering/RoI.hpp"
 // #include "BayesianClustering/RoIproxy.hpp"
-// #include "BayesianClustering/Configuration.hpp"
+#include "BayesianClustering/Configuration.hpp"
 
 /* ===== C++ ===== */
 #include <vector>
@@ -173,56 +173,56 @@
 // }
 
 
-void ScanCallback_Json( const std::vector< ScanEntry >& aVector, const std::string& aOutFile )
-{
-  // ===========================================================================================================
-  char lOutFileName[256];
-  static int RoIid( 0 );  
-  sprintf( lOutFileName , "RoI%d.%s", RoIid++ , aOutFile.c_str() );
-  FILE *fptr = fopen( lOutFileName , "w" );
-  if (fptr == NULL) throw std::runtime_error("Could not open file");
-  fprintf( fptr , "[\n" );
-  for( auto& lIt : aVector ) fprintf( fptr , "  { \"r\":%.5e , \"t\":%.5e , \"logP\":%.5e },\n" , lIt.r , lIt.t , lIt.score );
-  fseek( fptr, -2, SEEK_CUR ); // Delete the last comma
-  fprintf( fptr , "\n]\n" );
-  fclose(fptr); 
-  // ===========================================================================================================
+// void ScanCallback_Json( const std::vector< ScanEntry >& aVector, const std::string& aOutFile )
+// {
+//   // ===========================================================================================================
+//   char lOutFileName[256];
+//   static int RoIid( 0 );  
+//   sprintf( lOutFileName , "RoI%d.%s", RoIid++ , aOutFile.c_str() );
+//   FILE *fptr = fopen( lOutFileName , "w" );
+//   if (fptr == NULL) throw std::runtime_error("Could not open file");
+//   fprintf( fptr , "[\n" );
+//   for( auto& lIt : aVector ) fprintf( fptr , "  { \"r\":%.5e , \"t\":%.5e , \"logP\":%.5e },\n" , lIt.r , lIt.t , lIt.score );
+//   fseek( fptr, -2, SEEK_CUR ); // Delete the last comma
+//   fprintf( fptr , "\n]\n" );
+//   fclose(fptr); 
+//   // ===========================================================================================================
 
-  // ===========================================================================================================
-  // std::vector< double > x , y , z;
-  // ScanEntry lMax{ 0 , 0 , -9e99 };
+//   // ===========================================================================================================
+//   // std::vector< double > x , y , z;
+//   // ScanEntry lMax{ 0 , 0 , -9e99 };
 
-  // for( auto& lIt : aVector )
-  // {
-  //     if( lIt.score > lMax.score ) lMax = lIt;
-  //     z.push_back( lIt.score );    
-  // }
+//   // for( auto& lIt : aVector )
+//   // {
+//   //     if( lIt.score > lMax.score ) lMax = lIt;
+//   //     z.push_back( lIt.score );    
+//   // }
 
-  // for( std::size_t i(0) ; i!=aScanConfig.Tbounds().bins ; i+=1                          ) x.push_back( aVector.at(i).t );
-  // for( std::size_t i(0) ; i!=aVector.size()             ; i+=aScanConfig.Tbounds().bins ) y.push_back( aVector.at(i).r );
+//   // for( std::size_t i(0) ; i!=aScanConfig.Tbounds().bins ; i+=1                          ) x.push_back( aVector.at(i).t );
+//   // for( std::size_t i(0) ; i!=aVector.size()             ; i+=aScanConfig.Tbounds().bins ) y.push_back( aVector.at(i).r );
 
-  // // for( auto& i : x ) std::cout << "t" << i << std::endl;
-  // // for( auto& i : y ) std::cout << "r" << i << std::endl;
+//   // // for( auto& i : x ) std::cout << "t" << i << std::endl;
+//   // // for( auto& i : y ) std::cout << "r" << i << std::endl;
 
-  // const gsl_interp2d_type *T = gsl_interp2d_bicubic;
-  // gsl_spline2d *spline = gsl_spline2d_alloc( T , aScanConfig.Rbounds().bins , aScanConfig.Tbounds().bins );
-  // gsl_interp_accel *xacc = gsl_interp_accel_alloc();
-  // gsl_interp_accel *yacc = gsl_interp_accel_alloc();
+//   // const gsl_interp2d_type *T = gsl_interp2d_bicubic;
+//   // gsl_spline2d *spline = gsl_spline2d_alloc( T , aScanConfig.Rbounds().bins , aScanConfig.Tbounds().bins );
+//   // gsl_interp_accel *xacc = gsl_interp_accel_alloc();
+//   // gsl_interp_accel *yacc = gsl_interp_accel_alloc();
 
-  // gsl_spline2d_init( spline, &x.front() , &y.front() , &z.front() , aScanConfig.Rbounds().bins , aScanConfig.Tbounds().bins );
+//   // gsl_spline2d_init( spline, &x.front() , &y.front() , &z.front() , aScanConfig.Rbounds().bins , aScanConfig.Tbounds().bins );
 
-  // for( int i(0) ; i!=10 ; ++i )
-  // {
-  //   auto dx = gsl_spline2d_eval_deriv_x( spline , lMax.r , lMax.t , xacc, yacc );
-  //   auto dy = gsl_spline2d_eval_deriv_y( spline , lMax.r , lMax.t , xacc, yacc );
-  //   auto val = gsl_spline2d_eval( spline , lMax.r , lMax.t , xacc, yacc );
-  //   printf( "Fit : %e %e : %e %e %e \n", lMax.r , lMax.t , dx , dy , val );
-  //   lMax.r += (1e-27 * dx);
-  //   lMax.t += (1e-27 * dy);
-  // }
-  // // printf("1.0 and -1.5 : %f\n", gsl_spline2d_eval(spline,1.0,-1.5,xacc, yacc));
-  // ===========================================================================================================
-}
+//   // for( int i(0) ; i!=10 ; ++i )
+//   // {
+//   //   auto dx = gsl_spline2d_eval_deriv_x( spline , lMax.r , lMax.t , xacc, yacc );
+//   //   auto dy = gsl_spline2d_eval_deriv_y( spline , lMax.r , lMax.t , xacc, yacc );
+//   //   auto val = gsl_spline2d_eval( spline , lMax.r , lMax.t , xacc, yacc );
+//   //   printf( "Fit : %e %e : %e %e %e \n", lMax.r , lMax.t , dx , dy , val );
+//   //   lMax.r += (1e-27 * dx);
+//   //   lMax.t += (1e-27 * dy);
+//   // }
+//   // // printf("1.0 and -1.5 : %f\n", gsl_spline2d_eval(spline,1.0,-1.5,xacc, yacc));
+//   // ===========================================================================================================
+// }
 
 //! The main function
 //! \param argc The number of commandline arguments
@@ -236,8 +236,5 @@ int main(int argc, char** argv)
   AuxConfiguration lAuxConfig( argc, argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  AutoRoi_Scan_SimpleCallback( lAuxConfig.inputFile() , 
-                               lAuxConfig.configFile() , 
-                               [&]( const std::vector< ScanEntry >& aVector ){ ScanCallback_Json( aVector , lAuxConfig.outputFile() ); }
-                               );
+  AutoRoi_Scan_ToJson( lAuxConfig.inputFile() , lAuxConfig.configFile() , lAuxConfig.outputFile() );
 }

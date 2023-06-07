@@ -116,7 +116,7 @@ void __RecursiveSearch__( tArray& aHist, const int& aRoIid, const int& i, const 
   if( j != 511 and aHist[i][j+1] < 0 ) __RecursiveSearch__( aHist, aRoIid, i, j+1 );
 }
 
-void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallback )
+void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallback ) const
 {
   // Calculate our scaling factor
   std::pair< double, double> lXbound( std::make_pair( 9e99, -9e99 ) ), lYbound( std::make_pair( 9e99, -9e99 ) );
@@ -253,7 +253,7 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
 }
 
 
-void LocalizationFile::ExtractRoIs( const double& aCentreX , const double& aCentreY , const double& aWidthX , const double& aWidthY , const std::function< void( RoI& ) >& aCallback )
+void LocalizationFile::ExtractRoIs( const double& aCentreX , const double& aCentreY , const double& aWidthX , const double& aWidthY , const std::function< void( RoI& ) >& aCallback ) const
 {
   auto lMaxX = aWidthX / 2.0;
   auto lMaxY = aWidthY / 2.0;

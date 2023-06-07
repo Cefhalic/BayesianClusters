@@ -92,7 +92,7 @@ void RoIproxy::CheckClusterization( const double& R, const double& T )
 }
 
 __attribute__((flatten))
-void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback, const uint8_t& aParallelization, const uint8_t& aOffset, const bool& aValidate )
+void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double&  ) >& aCallback, const uint8_t& aParallelization, const uint8_t& aOffset, const bool& aValidate )
 {
   auto& R = aScanConfig.Rbounds();
   auto& T = aScanConfig.Tbounds();
@@ -107,8 +107,6 @@ void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function
     mClusters.clear();
     for( auto& k : mData ) k.mCluster = NULL;
 
-    std::pair<int,int> lCurrentIJ;
-
     for( uint32_t j(0) ; j!=T.bins ; ++j, lT-=T.spacing ) {
       for( auto& k : mData ) k.mExclude = ( k.mData->mLocalizationScores[ i ] < lT ) ;
       for( auto& k : mData ) k.Clusterize( twoR2, *this );
@@ -119,11 +117,7 @@ void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function
         ValidateLogScore( aScanConfig );
       }
 
-      //place to store current ij
-      lCurrentIJ.first = i;
-      lCurrentIJ.second = j;
-
-      aCallback( *this, lR, lT, lCurrentIJ );
+      aCallback( *this, lR, lT );
     }
   }
 
