@@ -1,11 +1,12 @@
 //! \file Scan.cxx
 
 /* ===== Cluster sources ===== */
+#include "BayesianClustering/API.hpp"
 #include "BayesianClustering/LocalizationFile.hpp"
-#include "BayesianClustering/Cluster.hpp"
+// #include "BayesianClustering/Cluster.hpp"
 #include "BayesianClustering/RoI.hpp"
-#include "BayesianClustering/RoIproxy.hpp"
-#include "BayesianClustering/Configuration.hpp"
+// #include "BayesianClustering/RoIproxy.hpp"
+// #include "BayesianClustering/Configuration.hpp"
 
 /* ===== C++ ===== */
 #include <vector>
@@ -15,10 +16,10 @@
 /* ===== Local utilities ===== */
 #include "Utilities/ProgressBar.hpp"
 
-/* ===== GSL libraries ===== */
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_interp2d.h>
-#include <gsl/gsl_spline2d.h>
+// /* ===== GSL libraries ===== */
+// #include <gsl/gsl_math.h>
+// #include <gsl/gsl_interp2d.h>
+// #include <gsl/gsl_spline2d.h>
 
 // //! mutex for critical section
 // std::mutex mtx;
@@ -172,7 +173,7 @@
 // }
 
 
-void ScanCallback( const std::vector< ScanEntry >& aVector, const std::string& aOutFile, const ScanConfiguration& aScanConfig )
+void ScanCallback_Json( const std::vector< ScanEntry >& aVector, const std::string& aOutFile )
 {
   // ===========================================================================================================
   char lOutFileName[256];
@@ -180,7 +181,9 @@ void ScanCallback( const std::vector< ScanEntry >& aVector, const std::string& a
   sprintf( lOutFileName , "RoI%d.%s", RoIid++ , aOutFile.c_str() );
   FILE *fptr = fopen( lOutFileName , "w" );
   if (fptr == NULL) throw std::runtime_error("Could not open file");
-  for( auto& lIt : aVector ) fprintf( fptr , "%.5e %.5e %+.5e\n" , lIt.r , lIt.t , lIt.score );
+  fprintf( fptr , "[\n" );
+  for( auto& lIt : aVector ) fprintf( fptr , "  { r : %.5e , t : %.5e , logP : %+.5e },\n" , lIt.r , lIt.t , lIt.score );
+  fprintf( fptr , "]\n" );
   fclose(fptr); 
   // ===========================================================================================================
 
@@ -232,9 +235,8 @@ int main(int argc, char** argv)
   AuxConfiguration lAuxConfig( argc, argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  ScanConfiguration lScanConfig( lAuxConfig.configFile() );
-  auto lDataset = LocalizationFile( lAuxConfig.inputFile() );
-
-  auto lRoICallback = [&]( const std::vector< ScanEntry >& aVector ){ ScanCallback( aVector , lAuxConfig.outputFile() , lScanConfig ); };
-  lDataset.ExtractRoIs( [&]( RoI& aRoI ) { aRoI.ScanRT( lScanConfig, lRoICallback ); } );
+  AutoRoi_Scan_SimpleCallback( lAuxConfig.inputFile() , 
+                               lAuxConfig.configFile() , 
+                               [&]( const std::vector< ScanEntry >& aVector ){ ScanCallback_Json( aVector , lAuxConfig.outputFile() ); }
+                               );
 }
