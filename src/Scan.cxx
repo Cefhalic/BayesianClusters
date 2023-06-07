@@ -2,16 +2,11 @@
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/API.hpp"
-// #include "BayesianClustering/LocalizationFile.hpp"
-// #include "BayesianClustering/Cluster.hpp"
-// #include "BayesianClustering/RoI.hpp"
-// #include "BayesianClustering/RoIproxy.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
 /* ===== C++ ===== */
 #include <vector>
 #include <iostream>
-#include <stdio.h>
 
 /* ===== Local utilities ===== */
 #include "Utilities/ProgressBar.hpp"
@@ -21,85 +16,6 @@
 // #include <gsl/gsl_interp2d.h>
 // #include <gsl/gsl_spline2d.h>
 
-// //! mutex for critical section
-// std::mutex mtx;
-
-
-// //! A callback for writing the cluster info to XML file
-// //! aRoI              The current RoIproxy
-// //! aR                The current R position of the scan
-// //! aT                The current T position of the scan
-// //! aCurrentIJ        The current position of the scan in integer units
-// //! aOutput           The output stream
-// //! aRTscores         A 2D map of scores to fill
-// //! aMaxScorePosition The position of the maximum score
-// //! aMaxRTScore       The maximum score
-// void XmlCallback( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int>& aCurrentIJ , std::stringstream& aOutput,
-//                   std::vector<std::vector<double>>& aRTScores, std::pair<int,int>& aMaxScorePosition, double& aMaxRTScore )
-// {
-//   mtx.lock();
-//   // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aRoI.mLogP << ", NumClusteredPts:" << aRoI.mClusteredCount << ", NumBackgroundPts:" << aRoI.mBackgroundCount << ", Clusters:[\n";
-//   aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aRoI.mLogP << ", NumClusteredPts:" << aRoI.mClusteredCount << ", NumBackgroundPts:" << aRoI.mBackgroundCount << "}\n";
-
-//   // for( auto& i : aRoI.mClusters )
-//   // {
-//   //   if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
-//   // }
-
-//   double lLogP = aRoI.mLogP;
-//   //score setting stuff
-//   if (lLogP > aMaxRTScore){
-//     aMaxScorePosition = aCurrentIJ;
-//     aMaxRTScore = lLogP;
-//   }
-
-//   uint32_t p = aCurrentIJ.first, q = aCurrentIJ.second;
-//   aRTScores[p][q] = lLogP;
-
-//   // aOutput << "   },\n";
-//   mtx.unlock();
-// }
-
-
-// //! A callback for writing the cluster info to JSON file
-// //! \param aRoI              The current RoIproxy
-// //! \param aR                The current R position of the scan
-// //! \param aT                The current T position of the scan
-// //! \param aCurrentIJ        The current position of the scan in integer units
-// //! \param aOutput           The output stream
-// //! \param aRTScores         A 2D map of scores to fill
-// //! \param aMaxScorePosition The position of the maximum score
-// //! \param aMaxRTScore       The maximum score
-// void JsonCallback( const RoIproxy& aRoI, const double& aR, const double& aT, std::pair<int,int>& aCurrentIJ, std::stringstream& aOutput,
-//                    std::vector<std::vector<double>>& aRTScores, std::pair<int,int>& aMaxScorePosition, double& aMaxRTScore )
-// {
-//   mtx.lock();
-
-
-//   // std::cout << "R " << aCurrentIJ.first  << " " << CurrentConfiguration().minScanR() + (aCurrentIJ.first  * CurrentConfiguration().dR()) << " " << aR << std::endl;
-//   // std::cout << "T " << aCurrentIJ.second << " " << CurrentConfiguration().maxScanT() - (aCurrentIJ.second * CurrentConfiguration().dT()) << " " << aT << std::endl;
-
-//   // aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aRoI.mLogP << ", NumClusteredPts:" << aRoI.mClusteredCount << ", NumBackgroundPts:" << aRoI.mBackgroundCount << ", Clusters:[\n";
-//   aOutput << "  { R:" << aR << ", T:" << aT << ", Score:" << aRoI.mLogP << ", NumClusteredPts:" << aRoI.mClusteredCount << ", NumBackgroundPts:" << aRoI.mBackgroundCount << "}\n";
-
-//   // for( auto& i : aRoI.mClusters )
-//   // {
-//   //   if( i.mClusterSize ) aOutput << "    { Points:" << i.mClusterSize << ",  Score:" << i.mClusterScore << " },\n";
-//   // }
-
-//   double lLogP = aRoI.mLogP;
-//   //score setting stuff
-//   if (lLogP > aMaxRTScore) {
-//     aMaxScorePosition = aCurrentIJ;
-//     aMaxRTScore = lLogP;
-//   }
-
-//   uint32_t p = aCurrentIJ.first, q = aCurrentIJ.second;
-//   aRTScores[p][q] = lLogP;
-
-//   // aOutput << "   },\n";
-//   mtx.unlock();
-// }
 
 // //just prints the best R, T at the end
 // std::pair<double,double> bestRT(std::pair<int, int>& aMaxScorePosition, std::vector<std::vector<double>>& aRTScores){
@@ -175,19 +91,6 @@
 
 // void ScanCallback_Json( const std::vector< ScanEntry >& aVector, const std::string& aOutFile )
 // {
-//   // ===========================================================================================================
-//   char lOutFileName[256];
-//   static int RoIid( 0 );  
-//   sprintf( lOutFileName , "RoI%d.%s", RoIid++ , aOutFile.c_str() );
-//   FILE *fptr = fopen( lOutFileName , "w" );
-//   if (fptr == NULL) throw std::runtime_error("Could not open file");
-//   fprintf( fptr , "[\n" );
-//   for( auto& lIt : aVector ) fprintf( fptr , "  { \"r\":%.5e , \"t\":%.5e , \"logP\":%.5e },\n" , lIt.r , lIt.t , lIt.score );
-//   fseek( fptr, -2, SEEK_CUR ); // Delete the last comma
-//   fprintf( fptr , "\n]\n" );
-//   fclose(fptr); 
-//   // ===========================================================================================================
-
 //   // ===========================================================================================================
 //   // std::vector< double > x , y , z;
 //   // ScanEntry lMax{ 0 , 0 , -9e99 };

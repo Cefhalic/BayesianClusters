@@ -11,6 +11,16 @@ class Data;
 class RoI;
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//! A struct for storing the manual RoIs
+struct ManualRoI {  
+  double x; //!< The x-centre of the RoI
+  double y; //!< The y-centre of the RoI
+  double width; //!< The width of the RoI
+  double height; //!< The height of the RoI
+};
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A class to store the raw data-points
 class LocalizationFile
 {
@@ -47,7 +57,7 @@ class LocalizationFile
     //! \param aWidthX The width of the window
     //! \param aWidthY The height of the window
     //! \param aCallback A handler for each RoI found
-    void ExtractRoIs( const double& aCentreX , const double& aCentreY , const double& aWidthX , const double& aWidthY , const std::function< void( RoI& ) >& aCallback ) const;
+    void ExtractRoIs( const ManualRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const;
 
 
   private:

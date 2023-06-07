@@ -6,21 +6,16 @@
 #include <vector>
 #include <functional>
 
-/* ===== Cluster sources ===== */
-
-// class Data;
 class RoIproxy;
 class ScanConfiguration;
+class ManualRoI;
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A struct for storing a result of an individual scan configuration
-struct ScanEntry {
-  //! The R parameter
-  double r;
-  //! The T parameter
-  double t;
-  //! The score
-  double score;
+struct ScanEntry {  
+  double r; //!< The R parameter  
+  double t; //!< The T parameter
+  double score; //!< The score
 
   inline bool operator< ( const ScanEntry& aOther )
   {
@@ -38,3 +33,12 @@ void AutoRoi_Scan_SimpleCallback( const std::string& aInFile , const ScanConfigu
 void AutoRoi_Scan_ToJson( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::string& aOutFile );
 
 void AutoRoi_Cluster_Callback( const std::string& aInFile , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback );
+
+
+void ManualRoi_Scan_FullCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double& ) >& aCallback );
+
+void ManualRoi_Scan_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback );
+
+void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::string& aOutFile );
+
+void ManualRoi_Cluster_Callback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback );
