@@ -11,7 +11,9 @@
 #include <algorithm>
 #include <mutex>
 
-
+//! A callback to dump a scan to a JSON file
+//! \param aVector   A vector of scan results
+//! \param aOutFile  The name of the output JSON file
 void ScanCallback_Json( const std::vector< ScanEntry >& aVector, const std::string& aOutFile )
 {
   char lOutFileName[256];
