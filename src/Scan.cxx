@@ -182,8 +182,9 @@ void ScanCallback_Json( const std::vector< ScanEntry >& aVector, const std::stri
   FILE *fptr = fopen( lOutFileName , "w" );
   if (fptr == NULL) throw std::runtime_error("Could not open file");
   fprintf( fptr , "[\n" );
-  for( auto& lIt : aVector ) fprintf( fptr , "  { r : %.5e , t : %.5e , logP : %+.5e },\n" , lIt.r , lIt.t , lIt.score );
-  fprintf( fptr , "]\n" );
+  for( auto& lIt : aVector ) fprintf( fptr , "  { \"r\":%.5e , \"t\":%.5e , \"logP\":%.5e },\n" , lIt.r , lIt.t , lIt.score );
+  fseek( fptr, -2, SEEK_CUR ); // Delete the last comma
+  fprintf( fptr , "\n]\n" );
   fclose(fptr); 
   // ===========================================================================================================
 
