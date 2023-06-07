@@ -21,7 +21,7 @@
 
 //! Callback to report clusters
 //! \param aProxy The RoI to report
-void ReportClusters( const RoIproxy& aProxy )
+void ReportClusters( RoIproxy& aProxy )
 {
   std::map< const Cluster*, std::vector< const Data* > > lClusters;
 

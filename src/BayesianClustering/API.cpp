@@ -2,8 +2,8 @@
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/API.hpp"
+#include "BayesianClustering/LocalizationFile.hpp"
 #include "BayesianClustering/Configuration.hpp"
-
 #include "BayesianClustering/RoI.hpp"
 
 
@@ -13,11 +13,16 @@
 // #include "Utilities/Units.hpp"
 
 // /* ===== C++ ===== */
-#include <iostream>
-#include <functional>
-#include <array>
-#include <limits>
+// #include <iostream>
+// #include <functional>
+// #include <array>
+// #include <limits>
 
+
+void AutoRoi_Scan_SimpleCallback( const std::string& aFilename , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback )
+{
+  LocalizationFile( aFilename ).ExtractRoIs( [&]( RoI& aRoI ) { aRoI.ScanRT( aScanConfig, aCallback ); } );
+}
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,16 +1,19 @@
 //! \file API.hpp
 #pragma once
 
-
 /* ===== C++ ===== */
 #include <string>
 #include <vector>
+#include <functional>
 
 /* ===== Cluster sources ===== */
 
-class Data;
+// class Data;
 class RoI;
-// class Configuration;
+class ScanConfiguration;
+struct ScanEntry;
+
+void AutoRoi_Scan_SimpleCallback( const std::string& aFilename , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback );
 
 // //! API to load a datafile
 // //! \param aFilename The name of the file to load

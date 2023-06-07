@@ -19,25 +19,30 @@
 namespace po = boost::program_options;
 
 
-// ScanConfiguration::ScanConfiguration() :
-//   mSigmacount(-1), mSigmaspacing(-1),
-//   mRbounds{-1,-1,-1,UINT_MAX}, mTbounds{-1,-1,-1,UINT_MAX},
-//   mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
-//   mLogPb(-1), mLogPbDagger(-1)
-// {}
-
-ScanConfiguration::ScanConfiguration( int argc, char** argv )
+ScanConfiguration::ScanConfiguration( int argc, char** argv ) :
+  mSigmacount(-1), mSigmaspacing(-1),
+  mRbounds{-1,-1,-1,UINT_MAX}, mTbounds{-1,-1,-1,UINT_MAX},
+  mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
+  mLogPb(-1), mLogPbDagger(-1)
 {
   std::vector< std::string > lTemp( argv+1, argv+argc );
   FromVector( lTemp );
 }
 
-ScanConfiguration::ScanConfiguration( const std::vector< std::string >& aArgs )
+ScanConfiguration::ScanConfiguration( const std::vector< std::string >& aArgs ) :
+  mSigmacount(-1), mSigmaspacing(-1),
+  mRbounds{-1,-1,-1,UINT_MAX}, mTbounds{-1,-1,-1,UINT_MAX},
+  mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
+  mLogPb(-1), mLogPbDagger(-1)
 {
   FromVector( aArgs );
 }
 
-ScanConfiguration::ScanConfiguration( const std::string& aCfgFile )
+ScanConfiguration::ScanConfiguration( const std::string& aCfgFile ) :
+  mSigmacount(-1), mSigmaspacing(-1),
+  mRbounds{-1,-1,-1,UINT_MAX}, mTbounds{-1,-1,-1,UINT_MAX},
+  mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
+  mLogPb(-1), mLogPbDagger(-1)
 {
   std::ifstream lFstr( aCfgFile.c_str() );
   std::string lStr( (std::istreambuf_iterator<char>(lFstr)), std::istreambuf_iterator<char>() );

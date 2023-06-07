@@ -12,23 +12,23 @@
 
 class RoIproxy;
 
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//! A struct for storing a result of an individual scan configuration
+struct ScanEntry {
+  //! The R parameter
+  double r;
+  //! The T parameter
+  double t;
+  //! The score
+  PRECISION score;
+};
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A class which holds the raw RoI data and global parameters
 class RoI
 {
   public:
-
-    //! A struct for storing a result of an individual scan configuration
-    struct ScanEntry {
-      //! The R parameter
-      double r;
-      //! The T parameter
-      double t;
-      //! The score
-      PRECISION score;
-    };
-
     //! Default Constructor
     //! \param aData The set of data-points in the RoI
     RoI( std::vector<Data>&& aData );
@@ -55,7 +55,7 @@ class RoI
     //! Run the scan
     //! \param aScanConfig      The configuration parameters for the scan
     //! \param aCallback A callback for each RT-scan result
-    void ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( const RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback );
+    void ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback );
 
     //! Run the scan
     //! \param aScanConfig      The configuration parameters for the scan
@@ -67,7 +67,7 @@ class RoI
     //! \param R The R parameter for clusterization
     //! \param T The T parameter for clusterization
     //! \param aCallback A callback for the clusterization results
-    void Clusterize( const double& R, const double& T, const std::function< void( const RoIproxy& ) >& aCallback );
+    void Clusterize( const double& R, const double& T, const std::function< void( RoIproxy& ) >& aCallback );
 
     // //! Save an RoI to a file
     // //! \param aFilename The name of the file to which to save
@@ -136,4 +136,5 @@ class RoI
     double mArea;
 
 };
+
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

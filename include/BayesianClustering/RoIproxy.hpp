@@ -47,7 +47,7 @@ class RoIproxy
     //! \param aParallelization The stride with which we will iterate across RT parameters
     //! \param aOffset          The starting point for the strides as we iterate across RT parameters
     //! \param aValidate        Run validation of the score calculation
-    void ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( const RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback, const uint8_t& aParallelization = 1, const uint8_t& aOffset = 0, const bool& aValidate = false );
+    void ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback, const uint8_t& aParallelization = 1, const uint8_t& aOffset = 0, const bool& aValidate = false );
 
     //! Run clusterization for a specific choice of R and T
     //! \param R The R parameter for clusterization

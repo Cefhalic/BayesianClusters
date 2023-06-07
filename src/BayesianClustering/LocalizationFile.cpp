@@ -247,6 +247,7 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
     lRoI.SetWidth( lWidthX, lWidthY );
 
     aCallback( lRoI );
+    lRoI.mData.clear();
   }
 
 }

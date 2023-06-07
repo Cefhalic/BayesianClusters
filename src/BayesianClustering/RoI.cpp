@@ -36,7 +36,7 @@ void RoI::Preprocess( const double& aMaxR, const std::vector< double >& aSigmabi
   } || range( mData.size() );  // Interleave threading since processing time increases with radius from origin
 }
 
-void RoI::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( const RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback )
+void RoI::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback )
 {
   auto& R = aScanConfig.Rbounds();
   Preprocess( R.max, aScanConfig.sigmabins2() );
@@ -67,13 +67,13 @@ void RoI::ScanRT( const ScanConfiguration& aScanConfig, const std::function< voi
     lMtx.unlock();
   } );
   std::sort( lResults.begin(), lResults.end(), []( const ScanEntry& a, const ScanEntry& b ) {
-    if ( a.r < b.r ) return true;
+    if ( a.r != b.r ) return a.r < b.r;
     return ( a.t < b.t );
   } );
   aCallback( lResults );
 }
 
-void RoI::Clusterize( const double& R, const double& T, const std::function< void( const RoIproxy& ) >& aCallback )
+void RoI::Clusterize( const double& R, const double& T, const std::function< void( RoIproxy& ) >& aCallback )
 {
   if( R < 0 ) throw std::runtime_error( "R must be specified and non-negative" );
   if( T < 0 ) throw std::runtime_error( "T must be specified and non-negative" );

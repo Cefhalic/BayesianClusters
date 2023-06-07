@@ -92,7 +92,7 @@ void RoIproxy::CheckClusterization( const double& R, const double& T )
 }
 
 __attribute__((flatten))
-void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( const RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback, const uint8_t& aParallelization, const uint8_t& aOffset, const bool& aValidate )
+void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double&, std::pair<int,int>  ) >& aCallback, const uint8_t& aParallelization, const uint8_t& aOffset, const bool& aValidate )
 {
   auto& R = aScanConfig.Rbounds();
   auto& T = aScanConfig.Tbounds();
