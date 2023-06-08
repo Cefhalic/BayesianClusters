@@ -1,21 +1,80 @@
 //! \file PythonBindings.cpp
-// //! Self-contained sourcefile for producing python-bindings
+//! Self-contained sourcefile for producing python-bindings
 
-// #include <boost/python.hpp>
-// using namespace boost::python;
+/* ===== C++ libraries ===== */
+#include <iostream>
 
-// #include "BayesianClustering/Configuration.hpp"
+/* ===== BOOST libraries ===== */
+#include <boost/python.hpp>
+using namespace boost::python;
+
+/* ===== Cluster sources ===== */
+#include "BayesianClustering/API.hpp"
+#include "BayesianClustering/LocalizationFile.hpp"
+#include "BayesianClustering/Configuration.hpp"
 // #include "BayesianClustering/RoI.hpp"
 // #include "BayesianClustering/RoIproxy.hpp"
 // #include "BayesianClustering/Cluster.hpp"
-
-// #include "BayesianClustering/API.hpp"
 // #include "BayesianClustering/RoI.hpp"
 // #include "BayesianClustering/Data.hpp"
 // #include "BayesianClustering/DataProxy.hpp"
 
 
-// #include <iostream>
+ 
+
+
+void AutoRoi_Scan_SimpleCallback_( const std::string& aInFile , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback )
+{
+  boost::python::list lList;
+  AutoRoi_Scan_SimpleCallback( aInFile , aScanConfig, [&]( const std::vector< ScanEntry >& aScanResults ){ for( auto& i: aScanResults ) lList.append( boost::ref( i ) ); } );
+  aCallback( lList );
+}
+
+void ManualRoi_Scan_SimpleCallback_( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback )
+{
+  boost::python::list lList;
+  ManualRoi_Scan_SimpleCallback( aInFile , aManualRoI , aScanConfig, [&]( const std::vector< ScanEntry >& aScanResults ){ for( auto& i: aScanResults ) lList.append( boost::ref( i ) ); } );
+  aCallback( lList );
+}
+
+
+
+#define FN( X ) def( #X , &X )
+#define CALLBACK_FN( X ) def( #X , &X##_ )
+
+//! Boost Python Wrapper providing bindings for our C++ functions
+BOOST_PYTHON_MODULE( BayesianClustering )
+{
+
+  class_< ManualRoI >( "ManualRoI" )
+    .def_readwrite( "x", &ManualRoI::x)
+    .def_readwrite( "y", &ManualRoI::y)
+    .def_readwrite( "width", &ManualRoI::width)
+    .def_readwrite( "height", &ManualRoI::height);
+
+  class_< ScanConfiguration, boost::noncopyable >( "ScanConfiguration" , init< const std::string& >() )
+    .def( init< const std::size_t& , const double& , const double& , const std::function< double( const double& ) >&  ,
+                const std::size_t& , const double& , const double&  ,
+                const std::size_t& , const double& , const double&  ,
+                const double&  , const double&  >() );
+
+  // FN( AutoRoi_Scan_FullCallback );
+  CALLBACK_FN( AutoRoi_Scan_SimpleCallback );
+  FN( AutoRoi_Scan_ToJson );
+
+  // CALLBACK_FN( AutoRoi_Cluster_Callback );
+
+  // FN( ManualRoi_Scan_FullCallback );
+  CALLBACK_FN( ManualRoi_Scan_SimpleCallback );
+  FN( ManualRoi_Scan_ToJson );
+
+  // CALLBACK_FN( ManualRoi_Cluster_Callback );
+
+}
+
+#undef CALLBACK_FN
+#undef FN
+
 
 // //! Utility function to convert a python list to STL vector
 // //! \tparam T The object type in the STL container
@@ -173,9 +232,7 @@
 // //   return boost::python::object();
 // // }
 
-// //! Boost Python Wrapper providing bindings for our C++ functions
-// BOOST_PYTHON_MODULE( BayesianClustering )
-// {
+
 
 //   def( "OneStopGetClusters", &OneStopGetClusters );
 

@@ -24,21 +24,54 @@ class ScanConfiguration
       std::size_t bins;
     };
 
-    //! Default constructor
-    // ScanConfiguration();
+    // //! Constructor which parses the parameters when passed in as commandline arguments
+    // //! \param argc The number of commandline arguments
+    // //! \param argv The commandline arguments
+    // ScanConfiguration( int argc, char** argv );
 
-    //! Constructor which parses the parameters when passed in as commandline arguments
-    //! \param argc The number of commandline arguments
-    //! \param argv The commandline arguments
-    ScanConfiguration( int argc, char** argv );
-
-    //! Constructor which parses the parameters when passed in as commandline arguments
-    //! \param aArgs The commandline arguments
-    ScanConfiguration( const std::vector< std::string >& aArgs );
+    // //! Constructor which parses the parameters when passed in as commandline arguments
+    // //! \param aArgs The commandline arguments
+    // ScanConfiguration( const std::vector< std::string >& aArgs );
 
     //! Constructor which parses the parameters when passed in as commandline arguments
     //! \param aCfgFile A Scan-parameter config file name
     ScanConfiguration( const std::string& aCfgFile );
+
+    //! Constructor which take the parameters directly
+    //! \param aSigmacount   The number of sigma bins
+    //! \param aSigmaMin     The lowest sigma bin
+    //! \param aSigmaMax     The highest sigma bin
+    //! \param aInterpolator Function-object to generate the probability of any given sigma
+    //! \param aRbins    The number of R bins to scan over
+    //! \param aMinScanR The lowest value of R to scan
+    //! \param aMaxScanR The largest value of R to scan
+    //! \param aTbins    The number of T bins to scan over
+    //! \param aMinScanT The lowest value of T to scan
+    //! \param aMaxScanT The largest value of T to scan
+    //! \param aPB    The P_b parameter
+    //! \param aAlpha The alpha parameter
+    ScanConfiguration( 
+      const std::size_t& aSigmacount, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator ,
+      const std::size_t& aRbins, const double& aMinScanR, const double& aMaxScanR ,
+      const std::size_t& aTbins, const double& aMinScanT, const double& aMaxScanT ,
+      const double& aPB , const double& aAlpha );
+
+    //! Deleted copy constructor
+    ScanConfiguration( const ScanConfiguration& aOther /*!< Anonymous argument */ ) = delete;
+
+    //! Deleted assignment operator
+    //! \return Reference to this, for chaining calls
+    ScanConfiguration& operator = (const ScanConfiguration& aOther /*!< Anonymous argument */ ) = delete;
+
+    //! Default move constructor
+    ScanConfiguration( ScanConfiguration&& aOther /*!< Anonymous argument */ ) = default;
+
+    //! Default move-assignment constructor
+    //! \return Reference to this, for chaining calls
+    ScanConfiguration& operator = ( ScanConfiguration&& aOther /*!< Anonymous argument */ ) = default;
+
+    //! Default destructor
+    ~ScanConfiguration() = default;
 
 
     //! Setter for the sigma-bins to be integrated over

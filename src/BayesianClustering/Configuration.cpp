@@ -19,24 +19,24 @@
 namespace po = boost::program_options;
 
 
-ScanConfiguration::ScanConfiguration( int argc, char** argv ) :
-  mSigmacount(-1), mSigmaspacing(-1),
-  mRbounds{-1,-1,-1,UINT_MAX}, mTbounds{-1,-1,-1,UINT_MAX},
-  mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
-  mLogPb(-1), mLogPbDagger(-1)
-{
-  std::vector< std::string > lTemp( argv+1, argv+argc );
-  FromVector( lTemp );
-}
+// ScanConfiguration::ScanConfiguration( int argc, char** argv ) :
+//   mSigmacount(-1), mSigmaspacing(-1),
+//   mRbounds{-1,-1,-1,UINT_MAX}, mTbounds{-1,-1,-1,UINT_MAX},
+//   mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
+//   mLogPb(-1), mLogPbDagger(-1)
+// {
+//   std::vector< std::string > lTemp( argv+1, argv+argc );
+//   FromVector( lTemp );
+// }
 
-ScanConfiguration::ScanConfiguration( const std::vector< std::string >& aArgs ) :
-  mSigmacount(-1), mSigmaspacing(-1),
-  mRbounds{-1,-1,-1,UINT_MAX}, mTbounds{-1,-1,-1,UINT_MAX},
-  mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
-  mLogPb(-1), mLogPbDagger(-1)
-{
-  FromVector( aArgs );
-}
+// ScanConfiguration::ScanConfiguration( const std::vector< std::string >& aArgs ) :
+//   mSigmacount(-1), mSigmaspacing(-1),
+//   mRbounds{-1,-1,-1,UINT_MAX}, mTbounds{-1,-1,-1,UINT_MAX},
+//   mAlpha(-1), mLogAlpha(-1), mLogGammaAlpha(-1),
+//   mLogPb(-1), mLogPbDagger(-1)
+// {
+//   FromVector( aArgs );
+// }
 
 ScanConfiguration::ScanConfiguration( const std::string& aCfgFile ) :
   mSigmacount(-1), mSigmaspacing(-1),
@@ -52,6 +52,19 @@ ScanConfiguration::ScanConfiguration( const std::string& aCfgFile ) :
   FromVector( lStrs );
 }
 
+ScanConfiguration::ScanConfiguration( 
+  const std::size_t& aSigmacount, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator ,
+  const std::size_t& aRbins, const double& aMinScanR, const double& aMaxScanR ,
+  const std::size_t& aTbins, const double& aMinScanT, const double& aMaxScanT ,
+  const double& aPB ,
+  const double& aAlpha )
+{
+  SetSigmaParameters( aSigmacount, aSigmaMin, aSigmaMax, aInterpolator );
+  SetRBins( aRbins, aMinScanR, aMaxScanR );
+  SetTBins( aTbins, aMinScanT, aMaxScanT );
+  SetPb( aPB );
+  SetAlpha( aAlpha );
+}
 
 void ScanConfiguration::SetSigmaParameters( const std::size_t& aSigmacount, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator )
 {
@@ -197,19 +210,20 @@ void ScanConfiguration::FromVector( const std::vector< std::string >& aArgs )
 
 
 
-// AuxConfiguration::AuxConfiguration() :
-//   mValidate(false),
-//   mInputFile(""), mOutputFile(""),
-//   mClusterR( -1 ), mClusterT(-1)
-// {}
 
-AuxConfiguration::AuxConfiguration( int argc, char** argv )
+AuxConfiguration::AuxConfiguration( int argc, char** argv ) :
+  mValidate(false),
+  mInputFile(""), mOutputFile(""),
+  mClusterR( -1 ), mClusterT(-1)
 {
   std::vector< std::string > lTemp( argv+1, argv+argc );
   FromVector( lTemp );
 }
 
-AuxConfiguration::AuxConfiguration( const std::vector< std::string >& aArgs )
+AuxConfiguration::AuxConfiguration( const std::vector< std::string >& aArgs ) :
+  mValidate(false),
+  mInputFile(""), mOutputFile(""),
+  mClusterR( -1 ), mClusterT(-1)
 {
   FromVector( aArgs );
 }
