@@ -31,6 +31,9 @@ class RoI
     //! Default move constructor
     RoI( RoI&& aOther /*!< Anonymous argument */ ) = default;
 
+    //! Default destructor
+    ~RoI() = default;
+
     //! Default move-assignment constructor
     //! \return Reference to this, for chaining calls
     RoI& operator= ( RoI&& aOther /*!< Anonymous argument */ ) = default;
