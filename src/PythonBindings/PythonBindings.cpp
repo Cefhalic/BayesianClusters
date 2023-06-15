@@ -5,8 +5,12 @@
 #include <iostream>
 
 /* ===== BOOST libraries ===== */
+#pragma GCC diagnostic push 
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#pragma GCC diagnostic pop
+
 using namespace boost::python;
 
 /* ===== Cluster sources ===== */
@@ -25,6 +29,7 @@ using namespace boost::python;
 //! \param aInFile     The name of the localization file
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The full python callback to be applied 
+__attribute__((flatten))
 void _AutoRoi_Scan_FullCallback_( const std::string& aInFile , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback )
 {
   AutoRoi_Scan_FullCallback( aInFile , aScanConfig, [&]( RoIproxy& aRoIproxy, const double& aR , const double& aT ){ aCallback( aRoIproxy , aR , aT ); } );
@@ -34,6 +39,7 @@ void _AutoRoi_Scan_FullCallback_( const std::string& aInFile , const ScanConfigu
 //! \param aInFile     The name of the localization file
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The simple python callback to be applied
+__attribute__((flatten))
 void _AutoRoi_Scan_SimpleCallback_( const std::string& aInFile , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback )
 {
   AutoRoi_Scan_SimpleCallback( aInFile , aScanConfig, [&]( const std::vector< ScanEntry >& aScanResults ){ aCallback( aScanResults ); } );
@@ -44,6 +50,7 @@ void _AutoRoi_Scan_SimpleCallback_( const std::string& aInFile , const ScanConfi
 //! \param aManualRoI  The manually-specified RoI window
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The full python callback to be applied
+__attribute__((flatten))
 void _ManualRoi_Scan_FullCallback_( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback )
 {
   ManualRoi_Scan_FullCallback( aInFile , aManualRoI , aScanConfig, [&]( RoIproxy& aRoIproxy, const double& aR , const double& aT ){ aCallback( aRoIproxy , aR , aT ); } );
@@ -54,6 +61,7 @@ void _ManualRoi_Scan_FullCallback_( const std::string& aInFile , const ManualRoI
 //! \param aManualRoI  The manually-specified RoI window
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The simple python callback to be applied
+__attribute__((flatten))
 void _ManualRoi_Scan_SimpleCallback_( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback )
 {
   ManualRoi_Scan_SimpleCallback( aInFile , aManualRoI , aScanConfig , [&]( const std::vector< ScanEntry >& aScanResults ){ aCallback( aScanResults ); } );
@@ -62,10 +70,12 @@ void _ManualRoi_Scan_SimpleCallback_( const std::string& aInFile , const ManualR
 
 //! Helper Macro to simplify defining functions
 //! \param X The function being defined
+//! \param ... List of strings giving argument names
 #define          FN( X , ... ) def( #X , &X    , args( __VA_ARGS__ ) )
 
 //! Helper Macro to simplify defining functions with python callbacks
 //! \param X The function being defined
+//! \param ... List of strings giving argument names
 #define CALLBACK_FN( X , ... ) def( #X , &_##X##_ , args( __VA_ARGS__ ) )
 
 //! Boost Python Wrapper providing bindings for our C++ functions
@@ -86,12 +96,12 @@ BOOST_PYTHON_MODULE( BayesianClustering )
                 ( args( "aSigmacount", "aSigmaMin", "aSigmaMax", "aInterpolator", "aRbins", "aMinScanR", "aMaxScanR", "aTbins", "aMinScanT", "aMaxScanT", "aPB", "aAlpha" ) ) ); 
 
   class_< ScanEntry >( "ScanEntry" )  
-      .def_readwrite( "r" , &ScanEntry::r )
-      .def_readwrite( "t" , &ScanEntry::t )
-      .def_readwrite( "score" , &ScanEntry::score );
+    .def_readwrite( "r" , &ScanEntry::r )
+    .def_readwrite( "t" , &ScanEntry::t )
+    .def_readwrite( "score" , &ScanEntry::score );
 
   class_< std::vector<ScanEntry> >( "VectorScanEntry" )
-      .def( vector_indexing_suite< std::vector<ScanEntry> >() );
+    .def( vector_indexing_suite< std::vector<ScanEntry> >() );
 
   CALLBACK_FN( AutoRoi_Scan_FullCallback , "aInFile" , "aScanConfig" , "aCallback" );
   CALLBACK_FN( AutoRoi_Scan_SimpleCallback , "aInFile" , "aScanConfig" , "aCallback" );
