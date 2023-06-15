@@ -49,7 +49,6 @@ private:
 struct ProgressTimer {
   //! Constructor
   //! \param aLabel A description of the task being timed
-  //! \param aMax   The number of calls equalling 100%
   ProgressTimer( const std::string& aLabel );
 
   //! Destructor
