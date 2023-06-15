@@ -7,9 +7,15 @@
 #include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/RoIproxy.hpp"
 
-// /* ===== C++ ===== */
+/* ===== C++ ===== */
+#include <map>
 #include <algorithm>
 #include <mutex>
+
+/* ===== BOOST C++ ===== */
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+
 
 //! A callback to dump a scan to a JSON file
 //! \param aVector   A vector of scan results
@@ -32,7 +38,7 @@ void _ScanCallback_Json_( const std::vector< ScanEntry >& aVector, const std::st
 //! \param aRoI        The region of interest
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The simple callback to be applied
-void _AdaptFullToSimple_( RoI& aRoI , const ScanConfiguration& aScanConfig , const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback )
+void _FullScanToSimpleScan_( RoI& aRoI , const ScanConfiguration& aScanConfig , const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback )
 {
   std::mutex lMtx;
   std::vector< ScanEntry > lResults;
@@ -40,6 +46,38 @@ void _AdaptFullToSimple_( RoI& aRoI , const ScanConfiguration& aScanConfig , con
   std::sort( lResults.begin(), lResults.end() );
   aCallback( lResults );  
 }
+
+
+//! A callback to neatly package the scan results for easy consumption
+//! \param aRoIproxy   The region-proxy containing the clusters
+//! \param aCallback   The simple callback to be applied
+void _FullClusterToSimpleCluster_( RoIproxy& aRoIproxy , const std::function< void( const std::vector< ClusterWrapper >&  ) >& aCallback )
+{
+  typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> geo_point;
+  typedef boost::geometry::model::ring<geo_point> geo_polygon;
+
+  std::map< Cluster* , geo_polygon > lMap;
+  for( auto& i : aRoIproxy.mData )
+  {
+    if( ! i.mCluster ) continue;
+    boost::geometry::append( lMap[ i.mCluster->GetParent() ] , geo_point( i.mData->x , i.mData->y ) );
+  }
+
+
+  std::vector< ClusterWrapper > lResults;
+  for ( auto& i : lMap )
+  {
+    boost::geometry::correct( i.second );
+    geo_polygon lHull;
+    boost::geometry::convex_hull( i.second , lHull );   
+    geo_point lCentroid ( 0 , 0 );
+    boost::geometry::centroid( i.second , lCentroid );    
+    lResults.emplace_back( ClusterWrapper{ i.second.size() , boost::geometry::area( lHull ) , boost::geometry::perimeter( lHull ) , boost::geometry::get<0>( lCentroid ) , boost::geometry::get<1>( lCentroid ) } );
+  }
+
+  aCallback( lResults );  
+}
+
 
 
 __attribute__((flatten))
@@ -51,7 +89,7 @@ void AutoRoi_Scan_FullCallback( const std::string& aInFile , const ScanConfigura
 __attribute__((flatten))
 void AutoRoi_Scan_SimpleCallback( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback )
 {
-  LocalizationFile( aInFile ).ExtractRoIs( [&]( RoI& aRoI ) { _AdaptFullToSimple_( aRoI , aScanConfig, aCallback ); } );
+  LocalizationFile( aInFile ).ExtractRoIs( [&]( RoI& aRoI ) { _FullScanToSimpleScan_( aRoI , aScanConfig, aCallback ); } );
 }
 
 __attribute__((flatten))
@@ -60,10 +98,18 @@ void AutoRoi_Scan_ToJson( const std::string& aInFile , const ScanConfiguration& 
   AutoRoi_Scan_SimpleCallback( aInFile , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aOutFile ); } );
 }
 
+
+
 __attribute__((flatten))
-void AutoRoi_Cluster_Callback( const std::string& aInFile , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback )
+void AutoRoi_Cluster_FullCallback( const std::string& aInFile , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback )
 {  
   LocalizationFile( aInFile ).ExtractRoIs( [&]( RoI& aRoI ) { aRoI.Clusterize( aR, aT, aCallback ); } );
+}
+
+__attribute__((flatten))
+void AutoRoi_Cluster_SimpleCallback( const std::string& aInFile , const double& aR, const double& aT, const std::function< void( const std::vector< ClusterWrapper >& ) >& aCallback )
+{
+  AutoRoi_Cluster_FullCallback( aInFile , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
 }
 
 
@@ -77,7 +123,7 @@ void ManualRoi_Scan_FullCallback( const std::string& aInFile , const ManualRoI& 
 __attribute__((flatten))
 void ManualRoi_Scan_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback )
 {
-  LocalizationFile( aInFile ).ExtractRoIs( aManualRoI , [&]( RoI& aRoI ) { _AdaptFullToSimple_( aRoI , aScanConfig, aCallback ); } );
+  LocalizationFile( aInFile ).ExtractRoIs( aManualRoI , [&]( RoI& aRoI ) { _FullScanToSimpleScan_( aRoI , aScanConfig, aCallback ); } );
 }
 
 __attribute__((flatten))
@@ -86,9 +132,16 @@ void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManua
   ManualRoi_Scan_SimpleCallback( aInFile , aManualRoI , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aOutFile ); } );
 }
 
+
+
 __attribute__((flatten))
-void ManualRoi_Cluster_Callback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback )
+void ManualRoi_Cluster_FullCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback )
 {  
   LocalizationFile( aInFile ).ExtractRoIs( aManualRoI , [&]( RoI& aRoI ) { aRoI.Clusterize( aR, aT, aCallback ); } );
 }
 
+__attribute__((flatten))
+void ManualRoi_Cluster_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( const std::vector< ClusterWrapper >& ) >& aCallback )
+{
+  ManualRoi_Cluster_FullCallback( aInFile , aManualRoI , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
+}

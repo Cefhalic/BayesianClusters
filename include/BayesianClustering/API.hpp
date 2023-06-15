@@ -40,6 +40,27 @@ struct ScanEntry {
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//! A struct for storing a result of an individual scan configuration
+struct ClusterWrapper {  
+  std::size_t localizations; //!< The number of localizations in the cluster
+  long double area; //!< The area of the spanning convex hull
+  long double perimeter; //!< The perimeter of the spanning convex hull
+  double centroid_x; //!< The x-position of the centroid
+  double centroid_y; //!< The y-position of the centroid
+
+  //! Equality operator required by boost python
+  //! \return Whether we are equal to the other
+  //! \param aOther Another ClusterWrapper to compare against
+  bool operator== ( const ClusterWrapper& aOther )
+  {
+    return ( centroid_x == aOther.centroid_x ) and ( centroid_y == aOther.centroid_y );
+  }  
+};
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! Automatically extract RoI, run scan and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aScanConfig The configuration for the scan
@@ -61,12 +82,19 @@ void AutoRoi_Scan_ToJson( const std::string& aInFile , const ScanConfiguration& 
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Automatically extract RoI, clusterize and apply a call-back
+//! Automatically extract RoI, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aCallback   The callback to be applied
-void AutoRoi_Cluster_Callback( const std::string& aInFile , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback );
+void AutoRoi_Cluster_FullCallback( const std::string& aInFile , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback );
+
+//! Automatically extract RoI, clusterize and apply a full call-back
+//! \param aInFile     The name of the localization file
+//! \param aR          The R value of the clusterizer
+//! \param aT          The T value of the clusterizer
+//! \param aCallback   The callback to be applied
+void AutoRoi_Cluster_SimpleCallback( const std::string& aInFile , const double& aR, const double& aT, const std::function< void( const std::vector< ClusterWrapper >& ) >& aCallback );
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -95,12 +123,20 @@ void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManua
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Manually extract RoI, clusterize and apply a call-back
+//! Manually extract RoI, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aManualRoI  The manually-specified RoI window
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aCallback   The callback to be applied
-void ManualRoi_Cluster_Callback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback );
+void ManualRoi_Cluster_FullCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback );
+
+//! Manually extract RoI, clusterize and apply a full call-back
+//! \param aInFile     The name of the localization file
+//! \param aManualRoI  The manually-specified RoI window
+//! \param aR          The R value of the clusterizer
+//! \param aT          The T value of the clusterizer
+//! \param aCallback   The callback to be applied
+void ManualRoi_Cluster_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( const std::vector< ClusterWrapper >& ) >& aCallback );
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

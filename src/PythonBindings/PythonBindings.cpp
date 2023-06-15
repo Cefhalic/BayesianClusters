@@ -45,6 +45,31 @@ void _AutoRoi_Scan_SimpleCallback_( const std::string& aInFile , const ScanConfi
   AutoRoi_Scan_SimpleCallback( aInFile , aScanConfig, [&]( const std::vector< ScanEntry >& aScanResults ){ aCallback( aScanResults ); } );
 }
 
+//! Wrapper to automatically extract RoI, clusterize and apply a full python callback
+//! \param aInFile     The name of the localization file
+//! \param aR          The R value of the clusterizer
+//! \param aT          The T value of the clusterizer
+//! \param aCallback   The full python callback to be applied
+__attribute__((flatten))
+void _AutoRoi_Cluster_FullCallback_( const std::string& aInFile , const double& aR, const double& aT, const boost::python::object& aCallback )
+{
+  throw std::runtime_error( "RoIproxy data-type not yet adapted for python" );
+  AutoRoi_Cluster_FullCallback( aInFile , aR , aT , [&]( RoIproxy& aRoIproxy ){ aCallback( aRoIproxy ); } );
+}
+
+//! Wrapper to automatically extract RoI, clusterize and apply a simple python callback
+//! \param aInFile     The name of the localization file
+//! \param aR          The R value of the clusterizer
+//! \param aT          The T value of the clusterizer
+//! \param aCallback   The simple python callback to be applied
+__attribute__((flatten))
+void _AutoRoi_Cluster_SimpleCallback_( const std::string& aInFile , const double& aR, const double& aT, const boost::python::object& aCallback )
+{
+  AutoRoi_Cluster_SimpleCallback( aInFile , aR , aT , [&]( const std::vector< ClusterWrapper >& aClusters ){ aCallback( aClusters ); } );
+}
+
+
+
 //! Wrapper to manually extract RoI, run scan and apply a full python callback
 //! \param aInFile     The name of the localization file
 //! \param aManualRoI  The manually-specified RoI window
@@ -66,6 +91,34 @@ void _ManualRoi_Scan_SimpleCallback_( const std::string& aInFile , const ManualR
 {
   ManualRoi_Scan_SimpleCallback( aInFile , aManualRoI , aScanConfig , [&]( const std::vector< ScanEntry >& aScanResults ){ aCallback( aScanResults ); } );
 }
+
+
+
+//! Wrapper to manually extract RoI, clusterize and apply a full python callback
+//! \param aInFile     The name of the localization file
+//! \param aManualRoI  The manually-specified RoI window
+//! \param aR          The R value of the clusterizer
+//! \param aT          The T value of the clusterizer
+//! \param aCallback   The full python callback to be applied
+__attribute__((flatten))
+void _ManualRoi_Cluster_FullCallback_( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const boost::python::object& aCallback )
+{
+  throw std::runtime_error( "RoIproxy data-type not yet adapted for python" );
+  ManualRoi_Cluster_FullCallback( aInFile , aManualRoI , aR , aT , [&]( RoIproxy& aRoIproxy ){ aCallback( aRoIproxy ); } );
+}
+
+//! Wrapper to manually extract RoI, clusterize and apply a simple python callback
+//! \param aInFile     The name of the localization file
+//! \param aManualRoI  The manually-specified RoI window
+//! \param aR          The R value of the clusterizer
+//! \param aT          The T value of the clusterizer
+//! \param aCallback   The simple python callback to be applied
+__attribute__((flatten))
+void _ManualRoi_Cluster_SimpleCallback_( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const boost::python::object& aCallback )
+{
+  ManualRoi_Cluster_SimpleCallback( aInFile , aManualRoI , aR , aT , [&]( const std::vector< ClusterWrapper >& aClusters ){ aCallback( aClusters ); } );
+}
+
 
 
 //! Helper Macro to simplify defining functions
@@ -103,17 +156,30 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   class_< std::vector<ScanEntry> >( "VectorScanEntry" )
     .def( vector_indexing_suite< std::vector<ScanEntry> >() );
 
-  CALLBACK_FN( AutoRoi_Scan_FullCallback , "aInFile" , "aScanConfig" , "aCallback" );
+  class_< ClusterWrapper >( "ClusterWrapper" )  
+    .def_readwrite( "localizations" , &ClusterWrapper::localizations )
+    .def_readwrite( "area"          , &ClusterWrapper::area )
+    .def_readwrite( "perimeter"     , &ClusterWrapper::perimeter )
+    .def_readwrite( "centroid_x"    , &ClusterWrapper::centroid_x )
+    .def_readwrite( "centroid_y"    , &ClusterWrapper::centroid_y );
+
+  class_< std::vector<ClusterWrapper> >( "VectorClusterWrapper" )
+    .def( vector_indexing_suite< std::vector<ClusterWrapper> >() );
+
+
+  CALLBACK_FN( AutoRoi_Scan_FullCallback   , "aInFile" , "aScanConfig" , "aCallback" );
   CALLBACK_FN( AutoRoi_Scan_SimpleCallback , "aInFile" , "aScanConfig" , "aCallback" );
-  FN( AutoRoi_Scan_ToJson , "aInFile" , "aScanConfig" , "aOutFile" );
+           FN( AutoRoi_Scan_ToJson         , "aInFile" , "aScanConfig" , "aOutFile" );
 
-  // CALLBACK_FN( AutoRoi_Cluster_Callback );
+  CALLBACK_FN( AutoRoi_Cluster_FullCallback   , "aInFile" , "aR" , "aT" , "aCallback" );
+  CALLBACK_FN( AutoRoi_Cluster_SimpleCallback , "aInFile" , "aR" , "aT" , "aCallback" );
 
-  CALLBACK_FN( ManualRoi_Scan_FullCallback , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
+  CALLBACK_FN( ManualRoi_Scan_FullCallback   , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
   CALLBACK_FN( ManualRoi_Scan_SimpleCallback , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
-  FN( ManualRoi_Scan_ToJson , "aInFile" , "aManualRoI" , "aScanConfig" , "aOutFile" );
+           FN( ManualRoi_Scan_ToJson         , "aInFile" , "aManualRoI" , "aScanConfig" , "aOutFile" );
 
-  // CALLBACK_FN( ManualRoi_Cluster_Callback );
+  CALLBACK_FN( ManualRoi_Cluster_FullCallback   , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
+  CALLBACK_FN( ManualRoi_Cluster_SimpleCallback , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
 
 }
 

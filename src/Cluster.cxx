@@ -12,21 +12,14 @@
 #include <iostream>
 
 //! Callback to report clusters
-//! \param aProxy The RoI to report
-void ReportClusters( RoIproxy& aProxy )
+//! \param aClusters A vector of clusters
+void ReportClusters( const std::vector< ClusterWrapper >& aClusters )
 {
-  std::map< const Cluster*, std::vector< const Data* > > lClusters;
-
-  for( auto& i : aProxy.mData ) {
-    lClusters[ i.mCluster ? i.mCluster->GetParent() : NULL ].push_back( i.mData );
-  }
-
-  std::cout << lClusters.size() << " Clusters" << std::endl;
-
-  for( auto& i : lClusters ) {
-    if( i.first ) std::cout << " > Cluster of " << i.second.size() << " localizations" << std::endl;
-    else          std::cout << " > " << i.second.size() << " background localizations" << std::endl;
-  }
+  printf( "+----------------+----------------+----------------+----------------+----------------+\n" );
+  printf( "| Localizations  |      Area      |    Perimeter   |   Centroid x   |   Centroid y   |\n" );
+  printf( "+----------------+----------------+----------------+----------------+----------------+\n" );
+  for( const auto& i : aClusters ) printf( "| %14ld | %14Le | %14Le | %+14e | %+14e |\n", i.localizations , i.area , i.perimeter , i.centroid_x , i.centroid_y );
+  printf( "+----------------+----------------+----------------+----------------+----------------+\n" );
 }
 
 
@@ -42,5 +35,5 @@ int main(int argc, char** argv)
   AuxConfiguration lMasterConfig( argc, argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  AutoRoi_Cluster_Callback( std::move( lMasterConfig.inputFile() ) , lMasterConfig.ClusterR(), lMasterConfig.ClusterT() , &ReportClusters );
+  AutoRoi_Cluster_SimpleCallback( lMasterConfig.inputFile() , lMasterConfig.ClusterR(), lMasterConfig.ClusterT() , &ReportClusters );
 }
