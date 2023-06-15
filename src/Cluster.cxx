@@ -2,11 +2,9 @@
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/API.hpp"
-#include "BayesianClustering/Cluster.hpp"
-#include "BayesianClustering/RoIproxy.hpp"
 #include "BayesianClustering/Configuration.hpp"
 
-// /* ===== C++ ===== */
+/* ===== C++ ===== */
 #include <map>
 #include <vector>
 #include <iostream>

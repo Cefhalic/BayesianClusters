@@ -60,7 +60,7 @@
 // //   // else if( lOutputFilename.size() > 4 and lOutputFilename.substr(lOutputFilename.size() - 4) == ".xml" )
 // //   // {
 // //   //   std::stringstream lOutput;
-// //   //   aRoI.ScanRT( lAuxConfig.Rbounds() , lAuxConfig.Tbounds() , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ XmlCallback( aRoI , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
+// //   //   aRoI.ScanRT( lMasterConfig.Rbounds() , lMasterConfig.Tbounds() , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ XmlCallback( aRoI , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
 // //   //   std::ofstream lOutFile( aOutFile );
 // //   //   lOutFile << "<Results>\n" << lOutput.str() << "</Results>\n";
 // //   // }
@@ -144,13 +144,13 @@
 //   std::cout << "+------------------------------------+" << std::endl;
 //   std::cout << "| Cluster Scan. Andrew W. Rose. 2022 |" << std::endl;
 //   std::cout << "+------------------------------------+" << std::endl;
-//   AuxConfiguration lAuxConfig( argc, argv );
+//   AuxConfiguration lMasterConfig( argc, argv );
 //   std::cout << "+------------------------------------+" << std::endl;
 
-//   // AutoRoi_Scan_ToJson( lAuxConfig.inputFile() , lAuxConfig.configFile() , lAuxConfig.outputFile() );
+//   // AutoRoi_Scan_ToJson( lMasterConfig.inputFile() , lMasterConfig.configFile() , lMasterConfig.outputFile() );
 
 
-//   ScanConfiguration lScanConfig( lAuxConfig.configFile() );
+//   ScanConfiguration lScanConfig( lMasterConfig.configFile() );
 //   LocalizationFile( lInputFilename ).ExtractRoIs( [&]( RoI& aRoI ){ RoIcallback( aRoI , lScanConfig ); } );    
 
 // //   // std::vector<std::vector<double>> lRTScores;
@@ -314,7 +314,7 @@
 // //   // else if( lOutputFilename.size() > 4 and lOutputFilename.substr(lOutputFilename.size() - 4) == ".xml" )
 // //   // {
 // //   //   std::stringstream lOutput;
-// //   //   aRoI.ScanRT( lAuxConfig.Rbounds() , lAuxConfig.Tbounds() , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ XmlCallback( aRoI , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
+// //   //   aRoI.ScanRT( lMasterConfig.Rbounds() , lMasterConfig.Tbounds() , [&]( const RoIproxy& aRoI , const double& aR , const double& aT, std::pair<int, int> aCurrentIJ ){ XmlCallback( aRoI , aR , aT, aCurrentIJ  , lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); } );
 // //   //   std::ofstream lOutFile( aOutFile );
 // //   //   lOutFile << "<Results>\n" << lOutput.str() << "</Results>\n";
 // //   // }
@@ -362,6 +362,14 @@
 // }
 
 
+
+/* ===== Cluster sources ===== */
+#include "BayesianClustering/API.hpp"
+#include "BayesianClustering/Configuration.hpp"
+
+/* ===== C++ ===== */
+#include <iostream>
+
 //! The main function
 //! \param argc The number of commandline arguments
 //! \param argv The commandline arguments
@@ -369,29 +377,13 @@
 __attribute__((flatten))
 int main(int argc, char **argv)
 {
-//   std::cout << "+------------------------------------+" << std::endl;
-//   std::cout << "| Cluster Scan. Andrew W. Rose. 2022 |" << std::endl;
-//   std::cout << "+------------------------------------+" << std::endl;
-//   AuxConfiguration lAuxConfig( argc , argv );
-//   std::cout << "+------------------------------------+" << std::endl;
+  std::cout << "+------------------------------------+" << std::endl;
+  std::cout << "| Cluster Scan. Andrew W. Rose. 2022 |" << std::endl;
+  std::cout << "+------------------------------------+" << std::endl;
+  AuxConfiguration lMasterConfig( argc , argv );
+  std::cout << "+------------------------------------+" << std::endl;
 
-//   const std::string& lInputFilename = lAuxConfig.inputFile();
-//   if( lInputFilename.size() == 0 ) throw std::runtime_error( "No input file specified" ); 
+  ScanConfiguration lScanConfig( lMasterConfig.configFile() );
 
-//   ScanConfiguration lScanConfig( lAuxConfig.configFile() );
-//   // LocalizationFile( lInputFilename ).ExtractRoIs( [&]( RoI& aRoI ){ RoIcallback( aRoI , lScanConfig ); } );    
-
-
-
-//   // std::vector<std::vector<double>> lRTScores;
-//   // std::pair<int, int> lMaxScorePosition;
-//   // double lMaxRTScore = -9E99;
-//   // std::stringstream lOutput;
-//   // auto lCallback = [&]( const RoIproxy& aRoI , const double& aR , const double& aT ){ JsonCallback( aRoI , aR , aT, lOutput, lRTScores, lMaxScorePosition, lMaxRTScore); };
-//   // AutoRoi_Scan_FullCallback( lInputFilename , lScanConfig , lCallback );
-
-//   AutoRoi_Scan_FullCallback( lInputFilename , lScanConfig , &TestCallback );
-//   // LocalCopy_AutoRoi_Scan_FullCallback( lInputFilename , lScanConfig , &TestCallback );
-
-//   std::cout << sum << std::endl;
+  AutoRoi_Scan_ToJson( lMasterConfig.inputFile() , lScanConfig , lMasterConfig.outputFile() );
 }

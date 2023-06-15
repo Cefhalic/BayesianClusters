@@ -3,6 +3,7 @@
 
 /* ===== C++ libraries ===== */
 #include <iostream>
+#include <functional>
 
 /* ===== BOOST libraries ===== */
 #pragma GCC diagnostic push 
@@ -120,6 +121,15 @@ void _ManualRoi_Cluster_SimpleCallback_( const std::string& aInFile , const Manu
 }
 
 
+// namespace std
+// {
+//   template<> // Specializing class
+//   template<> // Specializing constructor
+//   function< void( const std::vector< ClusterWrapper >& ) >::function< boost::python::object& >( boost::python::object& aCallback ) :
+//     function( [&]( const std::vector< ClusterWrapper >& aClusters ){ aCallback( aClusters ); } ) // deferred constructor
+//   {}
+// }
+
 
 //! Helper Macro to simplify defining functions
 //! \param X The function being defined
@@ -171,14 +181,14 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   CALLBACK_FN( AutoRoi_Scan_SimpleCallback , "aInFile" , "aScanConfig" , "aCallback" );
            FN( AutoRoi_Scan_ToJson         , "aInFile" , "aScanConfig" , "aOutFile" );
 
-  CALLBACK_FN( AutoRoi_Cluster_FullCallback   , "aInFile" , "aR" , "aT" , "aCallback" );
+  // CALLBACK_FN( AutoRoi_Cluster_FullCallback   , "aInFile" , "aR" , "aT" , "aCallback" );
   CALLBACK_FN( AutoRoi_Cluster_SimpleCallback , "aInFile" , "aR" , "aT" , "aCallback" );
 
   CALLBACK_FN( ManualRoi_Scan_FullCallback   , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
   CALLBACK_FN( ManualRoi_Scan_SimpleCallback , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
            FN( ManualRoi_Scan_ToJson         , "aInFile" , "aManualRoI" , "aScanConfig" , "aOutFile" );
 
-  CALLBACK_FN( ManualRoi_Cluster_FullCallback   , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
+  // CALLBACK_FN( ManualRoi_Cluster_FullCallback   , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
   CALLBACK_FN( ManualRoi_Cluster_SimpleCallback , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
 
 }
