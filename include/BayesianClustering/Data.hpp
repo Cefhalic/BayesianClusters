@@ -10,6 +10,7 @@
 #include "BayesianClustering/Configuration.hpp"
 
 class Cluster;
+class ProgressBar;
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A class to store the raw data-points
@@ -78,7 +79,8 @@ class Data
     //! \param aMax2R  Twice the maximum radius out to which we will cluster
     //! \param aMax2R2 Square of twice the maximum radius out to which we will cluster
     //! \param aSigmabins2 The sigma-bins for initializing clusters
-    void Preprocess( std::vector<Data>& aData, const std::size_t& aIndex, const double& aMax2R, const double& aMax2R2, const std::vector< double >& aSigmabins2 );
+    //! \param aProgressBar     The progress bar to update
+    void Preprocess( std::vector<Data>& aData, const std::size_t& aIndex, const double& aMax2R, const double& aMax2R2, const std::vector< double >& aSigmabins2, ProgressBar& aProgressBar );
 
     //! Calculate the localization score from the local neighbourhood
     //! \todo Remind myself how this works and what the difference is with below

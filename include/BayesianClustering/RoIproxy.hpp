@@ -12,6 +12,7 @@
 #include "BayesianClustering/Configuration.hpp"
 
 class RoI;
+class ProgressBar;
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A lightweight wrapper for the RoI to store clusters for a given scan
@@ -36,6 +37,9 @@ class RoIproxy
     //! \return Reference to this, for chaining calls
     RoIproxy& operator = ( RoIproxy&& aOther /*!< Anonymous argument */ ) = default;
 
+    //! Default destructor
+    ~RoIproxy();
+
     //! Run validation tests on the clusters
     //! \param R The R of the last run scan
     //! \param T The T of the last run scan
@@ -44,10 +48,11 @@ class RoIproxy
     //! Run an RT-scan
     //! \param aScanConfig      The configuration parameters for the scan
     //! \param aCallback        A callback for each RT-scan result
+    //! \param aProgressBar     The progress bar to update
     //! \param aParallelization The stride with which we will iterate across RT parameters
     //! \param aOffset          The starting point for the strides as we iterate across RT parameters
     //! \param aValidate        Run validation of the score calculation
-    void ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double& ) >& aCallback, const uint8_t& aParallelization = 1, const uint8_t& aOffset = 0, const bool& aValidate = false );
+    void ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double& ) >& aCallback, ProgressBar& aProgressBar, const uint8_t& aParallelization = 1, const uint8_t& aOffset = 0, const bool& aValidate = false );
 
     //! Run clusterization for a specific choice of R and T
     //! \param R The R parameter for clusterization

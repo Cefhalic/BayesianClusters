@@ -11,10 +11,6 @@
 #include <vector>
 #include <iostream>
 
-/* ===== Local utilities ===== */
-#include "Utilities/ProgressBar.hpp"
-
-
 //! Callback to report clusters
 //! \param aProxy The RoI to report
 void ReportClusters( RoIproxy& aProxy )
@@ -41,10 +37,10 @@ void ReportClusters( RoIproxy& aProxy )
 int main(int argc, char** argv)
 {
   std::cout << "+------------------------------------+" << std::endl;
-  ProgressBar2 lBar( "| Cluster. Andrew W. Rose. 2022      |", 1 );
+  std::cout << "| Cluster. Andrew W. Rose. 2022      |" << std::endl;
   std::cout << "+------------------------------------+" << std::endl;
   AuxConfiguration lMasterConfig( argc, argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  AutoRoi_Cluster_Callback( lMasterConfig.inputFile() , lMasterConfig.ClusterR(), lMasterConfig.ClusterT() , &ReportClusters );
+  AutoRoi_Cluster_Callback( std::move( lMasterConfig.inputFile() ) , lMasterConfig.ClusterR(), lMasterConfig.ClusterT() , &ReportClusters );
 }

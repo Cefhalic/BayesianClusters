@@ -13,6 +13,7 @@
 #include "Utilities/Vectorize.hpp"
 #include "Utilities/Units.hpp"
 
+// #include "Utilities/MemoryMonitoring.hpp"
 
 //! Multithreading handler for loading a chunk of data from CSV file
 //! \param aFilename The name of the file to open
@@ -77,18 +78,17 @@ LocalizationFile::LocalizationFile( const std::string& aFilename )
   int lChunkSize = ceil( double(lSize) / Nthreads );
   std::vector< std::vector< Data > > lData( Nthreads );
 
-  ProgressBar2 lProgressBar( "Reading File", lSize );
-  [ & ]( const std::size_t& i ) {
-    __LoadCSV__( aFilename, lData[i], i*lChunkSize, lChunkSize );
-  }
-  && range( Nthreads );
+  {
+    ProgressTimer lProgressTimer( "Reading File" );
+    [ & ]( const std::size_t& i ) { __LoadCSV__( aFilename, lData[i], i*lChunkSize, lChunkSize ); } && range( Nthreads );
 
-  std::size_t lSize2( 0 );
-  for( auto& i : lData ) lSize2 += i.size();
-  mData.reserve( lSize2 );
+    std::size_t lSize2( 0 );
+    for( auto& i : lData ) lSize2 += i.size();
+    mData.reserve( lSize2 );
 
-  for( auto& i : lData ) {
-    mData.insert( mData.end(), std::make_move_iterator( i.begin() ), std::make_move_iterator( i.end() ) );
+    for( auto& i : lData ) {
+      mData.insert( mData.end(), std::make_move_iterator( i.begin() ), std::make_move_iterator( i.end() ) );
+    }
   }
 
   std::cout << "Read " << mData.size() << " points" << std::endl;
@@ -177,36 +177,37 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
 
   // Local record to store the size, the bounds and the datapoints
   struct tRecord {
+    std::size_t Id;
     std::size_t Size;
     std::pair< double, double > X, Y;
     std::vector< const Data* > Ptrs;
   };
 
-  std::vector < tRecord > lRecords( lRoIid+1, { 0, std::make_pair( 9e99, -9e99 ), std::make_pair( 9e99, -9e99 ), std::vector< const Data* >() } );
+  std::vector < tRecord > lRecords( lRoIid+1, { 0 , 0, std::make_pair( 9e99, -9e99 ), std::make_pair( 9e99, -9e99 ), std::vector< const Data* >() } );
 
   // Fill in holes and calculate the area
   for( int i(0) ; i!=512 ; ++i ) for( int j(0) ; j!=512 ; ++j ) {
-      if( lHist2[i][j] ) {
-        lRecords[ lHist2[i][j] ].Size++;
-        continue;
-      }
-
-      int ClusterL(0), ClusterR(0), ClusterU(0), ClusterD(0);
-
-      for( int k(i-1) ; k>=0 ; --k )
-        if( (ClusterL = lHist2[k][j]) ) break;
-
-      for( int k(i+1) ; k!=512 ; ++k )
-        if( (ClusterR = lHist2[k][j]) ) break;
-
-      for( int k(j-1) ; k>=0 ; --k )
-        if( (ClusterD = lHist2[i][k]) ) break;
-
-      for( int k(j+1) ; k!=512 ; ++k )
-        if( (ClusterU = lHist2[i][k]) ) break;
-
-      if( ClusterU == ClusterL and ClusterR == ClusterL and ClusterD == ClusterL ) lRecords[ lHist2[i][j] = ClusterL ].Size++;
+    if( lHist2[i][j] ) {
+      lRecords[ lHist2[i][j] ].Size++;
+      continue;
     }
+
+    int L(0), R(0), U(0), D(0);
+
+    for( int k(i-1) ; k>=0 ; --k )
+      if( (L = lHist2[k][j]) ) break;
+
+    for( int k(i+1) ; k!=512 ; ++k )
+      if( (R = lHist2[k][j]) ) break;
+
+    for( int k(j-1) ; k>=0 ; --k )
+      if( (D = lHist2[i][k]) ) break;
+
+    for( int k(j+1) ; k!=512 ; ++k )
+      if( (U = lHist2[i][k]) ) break;
+
+    if( U == L and R == L and D == L ) lRecords[ lHist2[i][j] = L ].Size++;
+  }
 
   // Find the bounds and the datapoints
   for( auto& k : mData ) {
@@ -220,6 +221,7 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
 
     if( lRecord.Size < 500 ) continue; // Cull micro RoIs
 
+    lRecord.Id = Id;
     lRecord.Ptrs.push_back( &k );
     if ( k.x < lRecord.X.first  ) lRecord.X.first  = k.x;
     if ( k.x > lRecord.X.second ) lRecord.X.second = k.x;
@@ -227,9 +229,14 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
     if ( k.y > lRecord.Y.second ) lRecord.Y.second = k.y;
   }
 
+  std::sort( lRecords.begin() , lRecords.end() , []( const tRecord& a , const tRecord& b ){ return a.Ptrs.size() < b.Ptrs.size(); } );
 
   for( auto& lRecord : lRecords ) {
     if( !lRecord.Ptrs.size() ) continue;
+
+    // double vm_usage, resident_set;
+    // mem_usage( vm_usage , resident_set );    
+    // std::cout << vm_usage << " " << resident_set << std::endl;
 
     double lCentreX( ( lRecord.X.second + lRecord.X.first ) / 2.0 ), lCentreY( ( lRecord.Y.second + lRecord.Y.first ) / 2.0 );
     double lWidthX( lRecord.X.second - lRecord.X.first ), lWidthY( lRecord.Y.second - lRecord.Y.first );
@@ -242,11 +249,17 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
       lData.emplace_back( x, y, k->s );
     }
 
-    RoI lRoI( std::move( lData ) );
+    RoI lRoI( std::move( lData ) , lRecord.Id );
     lRoI.SetCentre( lCentreX, lCentreY );
     lRoI.SetWidth( lWidthX, lWidthY );
 
     aCallback( lRoI );
+
+    // int fd = open("/proc/sys/vm/drop_caches", O_WRONLY);
+    // write(fd, "3", 1 );
+    // fsync(fd);
+    // close(fd);
+
   }
 
 }

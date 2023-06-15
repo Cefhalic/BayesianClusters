@@ -17,10 +17,19 @@
 RoIproxy::RoIproxy( RoI& aRoI ) :
   mBackgroundCount( 0 ), mRoI( aRoI )
 {
-  mClusters.reserve( aRoI.mData.size() );  // Reserve as much space for clusters as there are data points - prRoI pointers being invalidated!
+  mClusters.reserve( aRoI.mData.size() );  // Reserve as much space for clusters as there are data points - prevent pointers being invalidated!
   mData.reserve( aRoI.mData.size() );
   for( auto& i : aRoI.mData ) mData.emplace_back( i );
 }
+
+RoIproxy::~RoIproxy()
+{
+  mClusters.clear();
+  mClusters.shrink_to_fit();
+  mData.clear();
+  mData.shrink_to_fit();
+}
+
 
 void RoIproxy::CheckClusterization( const double& R, const double& T )
 {
@@ -92,7 +101,7 @@ void RoIproxy::CheckClusterization( const double& R, const double& T )
 }
 
 __attribute__((flatten))
-void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double&  ) >& aCallback, const uint8_t& aParallelization, const uint8_t& aOffset, const bool& aValidate )
+void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double&  ) >& aCallback, ProgressBar& aProgressBar, const uint8_t& aParallelization, const uint8_t& aOffset, const bool& aValidate )
 {
   auto& R = aScanConfig.Rbounds();
   auto& T = aScanConfig.Tbounds();
@@ -118,6 +127,7 @@ void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function
       }
 
       aCallback( *this, lR, lT );
+      ++aProgressBar;
     }
   }
 
@@ -129,7 +139,7 @@ void RoIproxy::ScanRT( const ScanConfiguration& aScanConfig, const std::function
 void RoIproxy::Clusterize( const double& R, const double& T, const std::function< void( RoIproxy& ) >& aCallback )
 {
   {
-    ProgressBar2 lProgressBar( "Clusterize", 0 );
+    ProgressTimer lProgressBar( "Clusterize" );
     auto twoR2 = 4.0 * R * R;
 
     mClusters.clear();

@@ -19,7 +19,8 @@ class RoI
   public:
     //! Default Constructor
     //! \param aData The set of data-points in the RoI
-    RoI( std::vector<Data>&& aData );
+    //! \param aId   A unique identifier
+    RoI( std::vector<Data>&& aData , const std::size_t& aId = 0 );
 
     //! Deleted copy constructor
     RoI( const RoI& aOther /*!< Anonymous argument */ ) = delete;
@@ -32,7 +33,7 @@ class RoI
     RoI( RoI&& aOther /*!< Anonymous argument */ ) = default;
 
     //! Default destructor
-    ~RoI() = default;
+    ~RoI();
 
     //! Default move-assignment constructor
     //! \return Reference to this, for chaining calls
@@ -104,6 +105,9 @@ class RoI
     }
 
   public:
+    //! A unique identifier
+    std::size_t mId;
+
     //! The collection of raw data points
     std::vector<Data> mData;
 

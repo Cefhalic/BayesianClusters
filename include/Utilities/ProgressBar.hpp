@@ -2,9 +2,12 @@
 #pragma once
 
 #include <chrono>
+#include <mutex>
 
 //! A utility progress-bar
-struct ProgressBar {
+class ProgressBar
+{
+public:
   //! Constructor
   //! \param aLabel A description of the task being timed
   //! \param aMax   The number of calls equalling 100%
@@ -19,6 +22,11 @@ struct ProgressBar {
   //! Prefix increment
   void operator++ ( int aDummy /*!< Anonymous argument */ );
 
+private:
+  //! Update the screen
+  void print();
+
+private:
   //! The size of each increment
   float mBlockSize;
   //! The next threshold at which we will write a block to stdout
@@ -27,24 +35,25 @@ struct ProgressBar {
   std::size_t mCount;
   //! A timer for end-of-task stats
   std::chrono::high_resolution_clock::time_point mStart;
+  //! A mutex for multi-threaded updates
+  std::mutex mMutex;
+  //! The label for the start of the line
+  std::string mLabel;
+  //! The current progress
+  std::size_t mPercent;
 };
 
 
+
 //! A utility code timer
-struct ProgressBar2 {
+struct ProgressTimer {
   //! Constructor
   //! \param aLabel A description of the task being timed
   //! \param aMax   The number of calls equalling 100%
-  ProgressBar2( const std::string& aLabel, const uint32_t& aMax );
+  ProgressTimer( const std::string& aLabel );
 
   //! Destructor
-  virtual ~ProgressBar2();
-
-  //! Postfix increment
-  void operator++ ();
-
-  //! Prefix increment
-  void operator++ ( int aDummy /*!< Anonymous argument */ );
+  virtual ~ProgressTimer();
 
   //! A timer for end-of-task stats
   std::chrono::high_resolution_clock::time_point mStart;

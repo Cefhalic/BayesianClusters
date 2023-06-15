@@ -77,6 +77,9 @@ class Cluster
     //! \return Reference to this, for chaining calls
     Cluster& operator = ( Cluster&& aOther /*!< Anonymous argument */ ) = default;
 
+    //! Default destructor
+    ~Cluster();
+
     //! Add another cluster to this one
     //! \param aOther Another cluster of parameters to add to this one
     //! \return Reference to this, for chaining calls

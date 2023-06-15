@@ -9,6 +9,7 @@
 class RoIproxy;
 class ScanConfiguration;
 class ManualRoI;
+class LocalizationFile;
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A struct for storing a result of an individual scan configuration
@@ -18,13 +19,22 @@ struct ScanEntry {
   double score; //!< The score
 
   //! Comparison operator for sorting
-  //! \return Whether we are smaller than the others
+  //! \return Whether we are smaller than the other
   //! \param aOther Another ScanEntry to compare against
-  inline bool operator< ( const ScanEntry& aOther )
+  bool operator< ( const ScanEntry& aOther )
   {
     if ( r != aOther.r ) return r < aOther.r;
     return ( t < aOther.t );
   }
+
+  //! Equality operator required by boost python
+  //! \return Whether we are equal to the other
+  //! \param aOther Another ScanEntry to compare against
+  bool operator== ( const ScanEntry& aOther )
+  {
+    return ( r == aOther.r ) and ( t == aOther.t ) and ( score == aOther.score );
+  }
+
 };
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -93,3 +103,4 @@ void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManua
 //! \param aCallback   The callback to be applied
 void ManualRoi_Cluster_Callback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback );
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+

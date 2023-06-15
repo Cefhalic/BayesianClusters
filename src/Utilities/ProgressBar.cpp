@@ -1,26 +1,39 @@
 //! \file ProgressBar.cpp
 
 #include <iostream>
+#include <iomanip>
 
 #include "Utilities/ProgressBar.hpp"
 
-ProgressBar::ProgressBar( const std::string& aLabel, const uint32_t& aMax ) : mBlockSize( aMax / 100.0 ), mNextThreshold( mBlockSize ), mCount( 0 ),
-  mStart( std::chrono::high_resolution_clock::now() )
+ProgressBar::ProgressBar( const std::string& aLabel, const uint32_t& aMax ) : 
+  mBlockSize( aMax / 100.0 ), 
+  mNextThreshold( mBlockSize ), 
+  mCount( 0 ),
+  mStart( std::chrono::high_resolution_clock::now() ),
+  mPercent( 0 )
 {
-  std::cout << std::string( 102 + aLabel.size(), '=' ) << "]\r" << aLabel << " [" << std::flush;
+  if( aLabel.size() > 30 ) mLabel = std::string( aLabel.begin() , aLabel.begin() + 27 ) + "...";
+  else                     mLabel = aLabel + std::string( 30 - aLabel.size() , ' ' );
+
+  print();
 }
 
 ProgressBar::~ProgressBar()
 {
-  std::cout << "#\n  Completed in " << (std::chrono::duration_cast< std::chrono::milliseconds>( std::chrono::high_resolution_clock::now() - mStart ).count()/1000.0) << " seconds" << std::endl;
+  mPercent = 100;
+  print();
+  std::cout << std::endl;
 }
 
 void ProgressBar::operator++ ()
 {
-  if( mNextThreshold < mCount++ ) {
-    std::cout << '#' << std::flush;
+  mMutex.lock();
+  if( mNextThreshold < ++mCount ) {
+    mPercent++;
+    print();
     mNextThreshold += mBlockSize;
   }
+  mMutex.unlock();
 }
 
 void ProgressBar::operator++ ( int )
@@ -29,21 +42,23 @@ void ProgressBar::operator++ ( int )
 }
 
 
+void ProgressBar::print ()
+{ 
+  std::ios_base::fmtflags f( std::cout.flags() );
+  std::cout << std::fixed << std::setprecision(3);
+  std::cout << "\r" << mLabel << " [" << std::string( mPercent , '#' ) << std::string( 100 - mPercent , '=' ) << "] " << std::setw(10) << (std::chrono::duration_cast< std::chrono::milliseconds>( std::chrono::high_resolution_clock::now() - mStart ).count()/1000.0) << "s" << std::flush;
+  std::cout.flags( f );
+}
 
 
-ProgressBar2::ProgressBar2( const std::string& aLabel, const uint32_t& aMax ) :
+
+ProgressTimer::ProgressTimer( const std::string& aLabel ) :
   mStart( std::chrono::high_resolution_clock::now() )
 {
-  std::cout << aLabel << std::endl;
+  std::cout << aLabel << std::flush;
 }
 
-ProgressBar2::~ProgressBar2()
+ProgressTimer::~ProgressTimer()
 {
-  std::cout << "  Completed in " << (std::chrono::duration_cast< std::chrono::milliseconds>( std::chrono::high_resolution_clock::now() - mStart ).count()/1000.0) << " seconds" << std::endl;
-}
-
-void ProgressBar2::operator++ () {}
-void ProgressBar2::operator++ ( int )
-{
-  operator++ ();
+  std::cout << ": Completed in " << (std::chrono::duration_cast< std::chrono::milliseconds>( std::chrono::high_resolution_clock::now() - mStart ).count()/1000.0) << " seconds" << std::endl;
 }

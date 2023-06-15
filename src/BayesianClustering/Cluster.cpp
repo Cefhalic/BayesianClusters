@@ -115,6 +115,12 @@ Cluster::Cluster( const Data& aData, const std::vector< double >& aSigmabins2 ):
   }
 }
 
+Cluster::~Cluster()
+{
+  mData.clear();
+  mData.shrink_to_fit();
+}
+
 void Cluster::UpdateLogScore( const ScanConfiguration& aScanConfig )
 {
   const auto& lSigmaBins           = aScanConfig.sigmabins();

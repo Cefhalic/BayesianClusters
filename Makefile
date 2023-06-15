@@ -28,9 +28,15 @@ DIRECTORIES = $(sort $(foreach filePath,${LIBRARY_OBJECT_FILES} ${PYTHON_OBJECT_
 LIBPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'python{version_info[0]}.{version_info[1]}' )" )
 LIBBOOSTPYTHON = $(shell ${CONDA_PREFIX}/bin/python -c "from sys import version_info; print( f'boost_python{version_info[0]}{version_info[1]}' )" )
 
+
+FLAGS_DEBUG   = -O0 -fstack-protector-all -Wall -Wextra -pedantic -fno-inline
+FLAGS_RELEASE = -O3 -ffp-contract=fast -freciprocal-math -fmerge-all-constants -fno-math-errno -funroll-loops \
+                    -ftree-vectorize -fno-trapping-math -fassociative-math -ffinite-math-only -fno-signed-zeros
+
 FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREFIX}/include/boost   \
         -lgsl -lgslcblas -lboost_program_options -lm -lpthread  \
-        -g -std=c++14 -march=native -O3 -MMD -MP -fPIC -Wall
+        -g -std=c++14 ${FLAGS_RELEASE} -march=native -MMD -MP -fPIC -Wall
+
       
 PYTHONFLAGS = -I${CONDA_PREFIX}/include/${LIBPYTHON} -l${LIBBOOSTPYTHON} -l${LIBPYTHON} \
               -Wno-deprecated-declarations # Hide the annoying boost auto_ptr=>unique_ptr warning     

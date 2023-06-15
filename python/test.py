@@ -4,7 +4,11 @@ from BayesianClustering import *
 
 # ----------------------------------------------------------------------------
 def Callback( ScanResults ):
-	print( "Python displaying" , ScanResults )
+	#print( "Python displaying" , ScanResults )
+	for i in ScanResults:
+		print( i.r , i.t , i.score );
+
+	exit()
 
 	# X , Y = [] , []
 	# for point in background:
