@@ -103,11 +103,12 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   EXPOSE_VECTOR( ClusterWrapper );
 
   class_< ScanConfiguration, boost::noncopyable >( "ScanConfiguration" , "A class for storing the scan configuration parameters" , init< const std::string& >( arg( "aCfgFile" ) ) )
-    .def( init< const std::size_t& , const double& , const double& , const std::function< double( const double& ) >&  ,
-                const std::size_t& , const double& , const double&  ,
-                const std::size_t& , const double& , const double&  ,
-                const double&  , const double&  >
-                ( args( "aSigmacount", "aSigmaMin", "aSigmaMax", "aInterpolator", "aRbins", "aMinScanR", "aMaxScanR", "aTbins", "aMinScanT", "aMaxScanT", "aPB", "aAlpha" ) ) ); 
+    // .def( init< const std::size_t& , const double& , const double& , const std::function< double( const double& ) >&  ,
+    //             const std::size_t& , const double& , const double&  ,
+    //             const std::size_t& , const double& , const double&  ,
+    //             const double&  , const double&  >
+    //             ( args( "aSigmacount", "aSigmaMin", "aSigmaMax", "aInterpolator", "aRbins", "aMinScanR", "aMaxScanR", "aTbins", "aMinScanT", "aMaxScanT", "aPB", "aAlpha" ) ) )
+    ; 
 
   // ADAPTED_FN( AutoRoi_Scan_FullCallback , "Automatically extract RoI, run scan and apply a full call-back"   , "aInFile" , "aScanConfig" , "aCallback" );
   ADAPTED_FN( AutoRoi_Scan_SimpleCallback  , "Automatically extract RoI, run scan and apply a simple call-back" , "aInFile" , "aScanConfig" , "aCallback" );
