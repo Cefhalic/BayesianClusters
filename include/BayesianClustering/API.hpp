@@ -40,7 +40,7 @@ struct ScanEntry {
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! A struct for storing a result of an individual scan configuration
+//! A struct for storing extracted parameters from a cluster
 struct ClusterWrapper {  
   std::size_t localizations; //!< The number of localizations in the cluster
   long double area; //!< The area of the spanning convex hull
@@ -99,21 +99,21 @@ void AutoRoi_Cluster_SimpleCallback( const std::string& aInFile , const double& 
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Manually extract RoI, run scan and apply a full call-back
+//! Manually specify RoI, run scan and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aManualRoI  The manually-specified RoI window
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The full callback to be applied
 void ManualRoi_Scan_FullCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double& ) >& aCallback );
 
-//! Manually extract RoI, run scan and apply a simple call-back
+//! Manually specify RoI, run scan and apply a simple call-back
 //! \param aInFile     The name of the localization file
 //! \param aManualRoI  The manually-specified RoI window
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The simple callback to be applied
 void ManualRoi_Scan_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback );
 
-//! Manually extract RoI, run scan and dump to JSON file
+//! Manually specify RoI, run scan and dump to JSON file
 //! \param aInFile     The name of the localization file
 //! \param aManualRoI  The manually-specified RoI window
 //! \param aScanConfig The configuration for the scan
@@ -123,7 +123,7 @@ void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManua
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Manually extract RoI, clusterize and apply a full call-back
+//! Manually specify RoI, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aManualRoI  The manually-specified RoI window
 //! \param aR          The R value of the clusterizer
@@ -131,7 +131,7 @@ void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManua
 //! \param aCallback   The callback to be applied
 void ManualRoi_Cluster_FullCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback );
 
-//! Manually extract RoI, clusterize and apply a full call-back
+//! Manually specify RoI, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aManualRoI  The manually-specified RoI window
 //! \param aR          The R value of the clusterizer

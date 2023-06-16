@@ -7,7 +7,7 @@
 #include <functional>
 #include <stdexcept>
 
-//! Class for storing the scan configuration parameters
+//! A class for storing the scan configuration parameters
 class ScanConfiguration
 {
   public:

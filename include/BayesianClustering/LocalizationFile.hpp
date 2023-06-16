@@ -11,7 +11,7 @@ class Data;
 class RoI;
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! A struct for storing the manual RoIs
+//! A struct for storing the parameters of a manual RoI
 struct ManualRoI {  
   double x; //!< The x-centre of the RoI
   double y; //!< The y-centre of the RoI

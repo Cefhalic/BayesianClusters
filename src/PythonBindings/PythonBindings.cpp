@@ -64,13 +64,15 @@ namespace Adapted
 // =====================================================================================================================
 //! Helper Macro to simplify defining functions
 //! \param X The function being defined
+//! \param DOC A string to be used as python documentation
 //! \param ... List of strings giving argument names
-#define FN( X , ... ) def( #X , &X    , args( __VA_ARGS__ ) )
+#define FN( X , DOC , ... ) def( #X , &X    , args( __VA_ARGS__ ) , DOC )
 
 //! Helper Macro to simplify defining functions with python callbacks
 //! \param X The function being defined
+//! \param DOC A string to be used as python documentation
 //! \param ... List of strings giving argument names
-#define ADAPTED_FN( X , ... ) def( #X , +Adapted::X , args( __VA_ARGS__ ) )
+#define ADAPTED_FN( X , DOC , ... ) def( #X , +Adapted::X , args( __VA_ARGS__ ) , DOC )
 
 //! Helper Macro to deal with the boilerplate when dealing with structs
 //! \param r BOOST PP internal
@@ -80,45 +82,46 @@ namespace Adapted
 
 //! Helper Macro to deal with the boilerplate when dealing with structs
 //! \param CLASS The Class name
+//! \param DOC A string to be used as python documentation
 //! \param ARGS One of the arguments
-#define EXPOSE_STRUCT( CLASS , ARGS ) class_< CLASS >( #CLASS ) BOOST_PP_SEQ_FOR_EACH( STRUCT_ARG , CLASS , ARGS )
+#define EXPOSE_STRUCT( CLASS , DOC , ARGS ) class_< CLASS >( #CLASS , DOC ) BOOST_PP_SEQ_FOR_EACH( STRUCT_ARG , CLASS , ARGS )
 
 //! Helper Macro to deal with the boilerplate when dealing with vectors of objects
 //! \param CLASS The Class name
-#define EXPOSE_VECTOR( CLASS ) class_< std::vector< CLASS> >( "Vector##CLASS" ).def( vector_indexing_suite< std::vector< CLASS > >() );
+#define EXPOSE_VECTOR( CLASS ) class_< std::vector< CLASS > >( BOOST_PP_STRINGIZE( Vector##CLASS ) , BOOST_PP_STRINGIZE( An STL vector of CLASS ) ).def( vector_indexing_suite< std::vector< CLASS > >() );
 
 
 //! Boost Python Wrapper providing bindings for our C++ functions
 BOOST_PYTHON_MODULE( BayesianClustering )
 {
 
-  EXPOSE_STRUCT( ManualRoI , (x)(y)(width)(height) );
-  EXPOSE_STRUCT( ScanEntry , (r)(t)(score) );
-  EXPOSE_STRUCT( ClusterWrapper , (localizations)(area)(perimeter)(centroid_x)(centroid_y) );
+  EXPOSE_STRUCT( ManualRoI , "A struct for storing the parameters of a manual RoI" , (x)(y)(width)(height) );
+  EXPOSE_STRUCT( ScanEntry , "A struct for storing a result of an individual scan configuration" , (r)(t)(score) );
+  EXPOSE_STRUCT( ClusterWrapper , "A struct for storing extracted parameters from a cluster" , (localizations)(area)(perimeter)(centroid_x)(centroid_y) );
 
   EXPOSE_VECTOR( ScanEntry );
   EXPOSE_VECTOR( ClusterWrapper );
 
-  class_< ScanConfiguration, boost::noncopyable >( "ScanConfiguration" , init< const std::string& >( arg( "aCfgFile" ) ) )
+  class_< ScanConfiguration, boost::noncopyable >( "ScanConfiguration" , "A class for storing the scan configuration parameters" , init< const std::string& >( arg( "aCfgFile" ) ) )
     .def( init< const std::size_t& , const double& , const double& , const std::function< double( const double& ) >&  ,
                 const std::size_t& , const double& , const double&  ,
                 const std::size_t& , const double& , const double&  ,
                 const double&  , const double&  >
                 ( args( "aSigmacount", "aSigmaMin", "aSigmaMax", "aInterpolator", "aRbins", "aMinScanR", "aMaxScanR", "aTbins", "aMinScanT", "aMaxScanT", "aPB", "aAlpha" ) ) ); 
 
-  // ADAPTED_FN( AutoRoi_Scan_FullCallback   , "aInFile" , "aScanConfig" , "aCallback" );
-  ADAPTED_FN( AutoRoi_Scan_SimpleCallback , "aInFile" , "aScanConfig" , "aCallback" );
-          FN( AutoRoi_Scan_ToJson         , "aInFile" , "aScanConfig" , "aOutFile" );
+  // ADAPTED_FN( AutoRoi_Scan_FullCallback , "Automatically extract RoI, run scan and apply a full call-back"   , "aInFile" , "aScanConfig" , "aCallback" );
+  ADAPTED_FN( AutoRoi_Scan_SimpleCallback  , "Automatically extract RoI, run scan and apply a simple call-back" , "aInFile" , "aScanConfig" , "aCallback" );
+          FN( AutoRoi_Scan_ToJson          , "Automatically extract RoI, run scan and dump to JSON file"        , "aInFile" , "aScanConfig" , "aOutFile" );
 
-  // ADAPTED_FN( AutoRoi_Cluster_FullCallback   , "aInFile" , "aR" , "aT" , "aCallback" );
-  ADAPTED_FN( AutoRoi_Cluster_SimpleCallback , "aInFile" , "aR" , "aT" , "aCallback" );
+  // ADAPTED_FN( AutoRoi_Cluster_FullCallback , "Automatically extract RoI, clusterize and apply a full call-back"   , "aInFile" , "aR" , "aT" , "aCallback" );
+  ADAPTED_FN( AutoRoi_Cluster_SimpleCallback  , "Automatically extract RoI, clusterize and apply a simple call-back" , "aInFile" , "aR" , "aT" , "aCallback" );
 
-  // ADAPTED_FN( ManualRoi_Scan_FullCallback   , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
-  ADAPTED_FN( ManualRoi_Scan_SimpleCallback , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
-          FN( ManualRoi_Scan_ToJson         , "aInFile" , "aManualRoI" , "aScanConfig" , "aOutFile" );
+  // ADAPTED_FN( ManualRoi_Scan_FullCallback , "Manually specify RoI, run scan and apply a full call-back"   , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
+  ADAPTED_FN( ManualRoi_Scan_SimpleCallback  , "Manually specify RoI, run scan and apply a simple call-back" , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
+          FN( ManualRoi_Scan_ToJson          , "Manually specify RoI, run scan and dump to JSON file"        , "aInFile" , "aManualRoI" , "aScanConfig" , "aOutFile" );
 
-  // ADAPTED_FN( ManualRoi_Cluster_FullCallback   , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
-  ADAPTED_FN( ManualRoi_Cluster_SimpleCallback , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
+  // ADAPTED_FN( ManualRoi_Cluster_FullCallback , "Manually specify RoI, clusterize and apply a full call-back"   , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
+  ADAPTED_FN( ManualRoi_Cluster_SimpleCallback  , "Manually specify RoI, clusterize and apply a simple call-back" , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
 }
 
 #undef ADAPTED_FN
