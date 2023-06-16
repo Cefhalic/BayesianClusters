@@ -2,7 +2,7 @@ from BayesianClustering import *
 
 # ----------------------------------------------------------------------------
 def Callback( ScanResults ):
-	for i in ScanResults: print( f"Python callback reporting scan scores: r={i.r:16}, t={i.t:16} => {i.score:16}" );
+	for i in ScanResults: print( f"Python callback reporting scan scores: r={i.r:16.6e}, t={i.t:16.6e} => {i.score:+16}" );
 # ----------------------------------------------------------------------------
 
 Cfg = ScanConfiguration( "example-configs/config.txt" )
