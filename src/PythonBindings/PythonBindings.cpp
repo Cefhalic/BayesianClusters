@@ -80,7 +80,7 @@ namespace Adapted
 
 //! Helper Macro to deal with the boilerplate when dealing with structs
 //! \param CLASS The Class name
-//! \param ARG One of the arguments
+//! \param ARGS One of the arguments
 #define EXPOSE_STRUCT( CLASS , ARGS ) class_< CLASS >( #CLASS ) BOOST_PP_SEQ_FOR_EACH( STRUCT_ARG , CLASS , ARGS )
 
 //! Helper Macro to deal with the boilerplate when dealing with vectors of objects
