@@ -3,7 +3,7 @@
 
 /* ===== C++ libraries ===== */
 #include <iostream>
-#include <functional>
+// #include <functional>
 
 /* ===== BOOST libraries ===== */
 #pragma GCC diagnostic push 
@@ -26,111 +26,38 @@ using namespace boost::python;
 // #include "BayesianClustering/DataProxy.hpp"
 
 
-//! Wrapper to automatically extract RoI, run scan and apply a full python callback
-//! \param aInFile     The name of the localization file
-//! \param aScanConfig The configuration for the scan
-//! \param aCallback   The full python callback to be applied 
-__attribute__((flatten))
-void _AutoRoi_Scan_FullCallback_( const std::string& aInFile , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback )
+// =====================================================================================================================
+//! Helper macro to define a constructor for a std::function of a given signature from a boost::python callback object
+//! Using explicit specialization of the class to the specified type and explicit specialization of the constructor to take a boost::python::object (hence two template<>'s at the start),
+//! create a generic variadic lambda that captures the boost::python callback object and pass the lambda to a deferred constructor. Gnarly!
+//! \param SIGNATURE The signature of the std::function we are creating a constructor for
+#define ADAPT_CALLBACK_CONSTRUCTOR( SIGNATURE ) template<> template<> std::function< SIGNATURE >::function< boost::python::object& >( boost::python::object& aCallback ) : function( [&]( auto&&... aArgs ){ aCallback( aArgs... ); } ) {}
+
+ADAPT_CALLBACK_CONSTRUCTOR( void( RoIproxy&, const double&, const double& ) ); //!< Define a std::function constructor for full scan callback
+ADAPT_CALLBACK_CONSTRUCTOR( void( const std::vector< ScanEntry >& ) );         //!< Define a std::function constructor for simple scan callback
+ADAPT_CALLBACK_CONSTRUCTOR( void( RoIproxy& ) );                               //!< Define a std::function constructor for full clusterizer callback
+ADAPT_CALLBACK_CONSTRUCTOR( void( const std::vector< ClusterWrapper >& ) );    //!< Define a std::function constructor for simple clusterizer callback
+
+#undef ADAPT_CALLBACK_CONSTRUCTOR
+// =====================================================================================================================
+
+
+// =====================================================================================================================
+namespace Adapted
 {
-  AutoRoi_Scan_FullCallback( aInFile , aScanConfig, [&]( RoIproxy& aRoIproxy, const double& aR , const double& aT ){ aCallback( aRoIproxy , aR , aT ); } );
-}
-
-//! Wrapper to automatically extract RoI, run scan and apply a simple python callback
-//! \param aInFile     The name of the localization file
-//! \param aScanConfig The configuration for the scan
-//! \param aCallback   The simple python callback to be applied
-__attribute__((flatten))
-void _AutoRoi_Scan_SimpleCallback_( const std::string& aInFile , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback )
-{
-  AutoRoi_Scan_SimpleCallback( aInFile , aScanConfig, [&]( const std::vector< ScanEntry >& aScanResults ){ aCallback( aScanResults ); } );
-}
-
-//! Wrapper to automatically extract RoI, clusterize and apply a full python callback
-//! \param aInFile     The name of the localization file
-//! \param aR          The R value of the clusterizer
-//! \param aT          The T value of the clusterizer
-//! \param aCallback   The full python callback to be applied
-__attribute__((flatten))
-void _AutoRoi_Cluster_FullCallback_( const std::string& aInFile , const double& aR, const double& aT, const boost::python::object& aCallback )
-{
-  throw std::runtime_error( "RoIproxy data-type not yet adapted for python" );
-  AutoRoi_Cluster_FullCallback( aInFile , aR , aT , [&]( RoIproxy& aRoIproxy ){ aCallback( aRoIproxy ); } );
-}
-
-//! Wrapper to automatically extract RoI, clusterize and apply a simple python callback
-//! \param aInFile     The name of the localization file
-//! \param aR          The R value of the clusterizer
-//! \param aT          The T value of the clusterizer
-//! \param aCallback   The simple python callback to be applied
-__attribute__((flatten))
-void _AutoRoi_Cluster_SimpleCallback_( const std::string& aInFile , const double& aR, const double& aT, const boost::python::object& aCallback )
-{
-  AutoRoi_Cluster_SimpleCallback( aInFile , aR , aT , [&]( const std::vector< ClusterWrapper >& aClusters ){ aCallback( aClusters ); } );
-}
+  auto AutoRoi_Scan_FullCallback        = []( const std::string& aInFile , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback ){ ::AutoRoi_Scan_FullCallback(      aInFile , aScanConfig , aCallback ); }; //!< Lambda to automatically extract RoI, run scan and apply a full python callback
+  auto AutoRoi_Scan_SimpleCallback      = []( const std::string& aInFile , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback ){ ::AutoRoi_Scan_SimpleCallback(    aInFile , aScanConfig , aCallback ); }; //!< Lambda to automatically extract RoI, run scan and apply a simple python callback
+  auto AutoRoi_Cluster_FullCallback     = []( const std::string& aInFile , const double& aR , const double& aT ,  const boost::python::object& aCallback ){ ::AutoRoi_Cluster_FullCallback(   aInFile , aR , aT ,     aCallback ); }; //!< Lambda to automatically extract RoI, clusterize and apply a full python callback
+  auto AutoRoi_Cluster_SimpleCallback   = []( const std::string& aInFile , const double& aR , const double& aT ,  const boost::python::object& aCallback ){ ::AutoRoi_Cluster_SimpleCallback( aInFile , aR , aT ,     aCallback ); }; //!< Lambda to automatically extract RoI, clusterize and apply a simple python callback
+  auto ManualRoi_Scan_FullCallback      = []( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback ){ ::ManualRoi_Scan_FullCallback(      aInFile , aManualRoI , aScanConfig , aCallback ); }; //!< Lambda to manually extract RoI, run scan and apply a full python callback
+  auto ManualRoi_Scan_SimpleCallback    = []( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback ){ ::ManualRoi_Scan_SimpleCallback(    aInFile , aManualRoI , aScanConfig , aCallback ); }; //!< Lambda to manually extract RoI, run scan and apply a simple python callback
+  auto ManualRoi_Cluster_FullCallback   = []( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR , const double& aT ,  const boost::python::object& aCallback ){ ::ManualRoi_Cluster_FullCallback(   aInFile , aManualRoI , aR , aT ,     aCallback ); }; //!< Lambda to manually extract RoI, clusterize and apply a full python callback
+  auto ManualRoi_Cluster_SimpleCallback = []( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR , const double& aT ,  const boost::python::object& aCallback ){ ::ManualRoi_Cluster_SimpleCallback( aInFile , aManualRoI , aR , aT ,     aCallback ); }; //!< Lambda to manually extract RoI, clusterize and apply a simple python callback
+} 
+// =====================================================================================================================
 
 
-
-//! Wrapper to manually extract RoI, run scan and apply a full python callback
-//! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
-//! \param aScanConfig The configuration for the scan
-//! \param aCallback   The full python callback to be applied
-__attribute__((flatten))
-void _ManualRoi_Scan_FullCallback_( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback )
-{
-  ManualRoi_Scan_FullCallback( aInFile , aManualRoI , aScanConfig, [&]( RoIproxy& aRoIproxy, const double& aR , const double& aT ){ aCallback( aRoIproxy , aR , aT ); } );
-}
-
-//! Wrapper to manually extract RoI, run scan and apply a simple python callback
-//! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
-//! \param aScanConfig The configuration for the scan
-//! \param aCallback   The simple python callback to be applied
-__attribute__((flatten))
-void _ManualRoi_Scan_SimpleCallback_( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig , const boost::python::object& aCallback )
-{
-  ManualRoi_Scan_SimpleCallback( aInFile , aManualRoI , aScanConfig , [&]( const std::vector< ScanEntry >& aScanResults ){ aCallback( aScanResults ); } );
-}
-
-
-
-//! Wrapper to manually extract RoI, clusterize and apply a full python callback
-//! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
-//! \param aR          The R value of the clusterizer
-//! \param aT          The T value of the clusterizer
-//! \param aCallback   The full python callback to be applied
-__attribute__((flatten))
-void _ManualRoi_Cluster_FullCallback_( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const boost::python::object& aCallback )
-{
-  throw std::runtime_error( "RoIproxy data-type not yet adapted for python" );
-  ManualRoi_Cluster_FullCallback( aInFile , aManualRoI , aR , aT , [&]( RoIproxy& aRoIproxy ){ aCallback( aRoIproxy ); } );
-}
-
-//! Wrapper to manually extract RoI, clusterize and apply a simple python callback
-//! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
-//! \param aR          The R value of the clusterizer
-//! \param aT          The T value of the clusterizer
-//! \param aCallback   The simple python callback to be applied
-__attribute__((flatten))
-void _ManualRoi_Cluster_SimpleCallback_( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const boost::python::object& aCallback )
-{
-  ManualRoi_Cluster_SimpleCallback( aInFile , aManualRoI , aR , aT , [&]( const std::vector< ClusterWrapper >& aClusters ){ aCallback( aClusters ); } );
-}
-
-
-// namespace std
-// {
-//   template<> // Specializing class
-//   template<> // Specializing constructor
-//   function< void( const std::vector< ClusterWrapper >& ) >::function< boost::python::object& >( boost::python::object& aCallback ) :
-//     function( [&]( const std::vector< ClusterWrapper >& aClusters ){ aCallback( aClusters ); } ) // deferred constructor
-//   {}
-// }
-
-
+// =====================================================================================================================
 //! Helper Macro to simplify defining functions
 //! \param X The function being defined
 //! \param ... List of strings giving argument names
@@ -139,7 +66,7 @@ void _ManualRoi_Cluster_SimpleCallback_( const std::string& aInFile , const Manu
 //! Helper Macro to simplify defining functions with python callbacks
 //! \param X The function being defined
 //! \param ... List of strings giving argument names
-#define CALLBACK_FN( X , ... ) def( #X , &_##X##_ , args( __VA_ARGS__ ) )
+#define ADAPTED_FN( X , ... ) def( #X , +Adapted::X , args( __VA_ARGS__ ) )
 
 //! Boost Python Wrapper providing bindings for our C++ functions
 BOOST_PYTHON_MODULE( BayesianClustering )
@@ -176,25 +103,24 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   class_< std::vector<ClusterWrapper> >( "VectorClusterWrapper" )
     .def( vector_indexing_suite< std::vector<ClusterWrapper> >() );
 
+  // ADAPTED_FN( AutoRoi_Scan_FullCallback   , "aInFile" , "aScanConfig" , "aCallback" );
+  ADAPTED_FN( AutoRoi_Scan_SimpleCallback , "aInFile" , "aScanConfig" , "aCallback" );
+          FN( AutoRoi_Scan_ToJson         , "aInFile" , "aScanConfig" , "aOutFile" );
 
-  CALLBACK_FN( AutoRoi_Scan_FullCallback   , "aInFile" , "aScanConfig" , "aCallback" );
-  CALLBACK_FN( AutoRoi_Scan_SimpleCallback , "aInFile" , "aScanConfig" , "aCallback" );
-           FN( AutoRoi_Scan_ToJson         , "aInFile" , "aScanConfig" , "aOutFile" );
+  // ADAPTED_FN( AutoRoi_Cluster_FullCallback   , "aInFile" , "aR" , "aT" , "aCallback" );
+  ADAPTED_FN( AutoRoi_Cluster_SimpleCallback , "aInFile" , "aR" , "aT" , "aCallback" );
 
-  // CALLBACK_FN( AutoRoi_Cluster_FullCallback   , "aInFile" , "aR" , "aT" , "aCallback" );
-  CALLBACK_FN( AutoRoi_Cluster_SimpleCallback , "aInFile" , "aR" , "aT" , "aCallback" );
+  // ADAPTED_FN( ManualRoi_Scan_FullCallback   , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
+  ADAPTED_FN( ManualRoi_Scan_SimpleCallback , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
+          FN( ManualRoi_Scan_ToJson         , "aInFile" , "aManualRoI" , "aScanConfig" , "aOutFile" );
 
-  CALLBACK_FN( ManualRoi_Scan_FullCallback   , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
-  CALLBACK_FN( ManualRoi_Scan_SimpleCallback , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
-           FN( ManualRoi_Scan_ToJson         , "aInFile" , "aManualRoI" , "aScanConfig" , "aOutFile" );
-
-  // CALLBACK_FN( ManualRoi_Cluster_FullCallback   , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
-  CALLBACK_FN( ManualRoi_Cluster_SimpleCallback , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
-
+  // ADAPTED_FN( ManualRoi_Cluster_FullCallback   , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
+  ADAPTED_FN( ManualRoi_Cluster_SimpleCallback , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
 }
 
-#undef CALLBACK_FN
+#undef ADAPTED_FN
 #undef FN
+// =====================================================================================================================
 
 
 // //  class_< RoI, boost::noncopyable >( "RoI", init<const RoI&>() )
