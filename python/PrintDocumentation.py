@@ -16,5 +16,6 @@ for i,j in members:
     print( f"  {i}\n    {j.__doc__}" )
     for k in [ x.strip()[:-2] for x in j.__init__.__doc__.split( "\n" ) if "None" in x ]: print( "      Constructor:" , k )
     print( "      Attributes:" , *[ x              for x in dir(j) if not x.startswith('__') ] )
+    print()
 
 print()
