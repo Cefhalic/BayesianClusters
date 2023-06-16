@@ -1,4 +1,37 @@
-// //! \file Scan.cxx
+//! \file Scan.cxx
+
+/* ===== Cluster sources ===== */
+#include "BayesianClustering/API.hpp"
+#include "BayesianClustering/Configuration.hpp"
+
+/* ===== C++ ===== */
+#include <iostream>
+
+//! The main function
+//! \param argc The number of commandline arguments
+//! \param argv The commandline arguments
+//! \return     The exit code
+__attribute__((flatten))
+int main(int argc, char **argv)
+{
+  std::cout << "+------------------------------------+" << std::endl;
+  std::cout << "| Cluster Scan. Andrew W. Rose. 2022 |" << std::endl;
+  std::cout << "+------------------------------------+" << std::endl;
+  AuxConfiguration lMasterConfig( argc , argv );
+  std::cout << "+------------------------------------+" << std::endl;
+
+  ScanConfiguration lScanConfig( lMasterConfig.configFile() );
+
+  AutoRoi_Scan_ToJson( lMasterConfig.inputFile() , lScanConfig , lMasterConfig.outputFile() );
+}
+
+
+
+
+
+
+
+
 
 // /* ===== Cluster sources ===== */
 // #include "BayesianClustering/API.hpp"
@@ -360,30 +393,3 @@
 // {
 //   LocalizationFile( aInFile ).ExtractRoIs( [&]( RoI& aRoI ) { aRoI.ScanRT( aScanConfig, aCallback ); } );
 // }
-
-
-
-/* ===== Cluster sources ===== */
-#include "BayesianClustering/API.hpp"
-#include "BayesianClustering/Configuration.hpp"
-
-/* ===== C++ ===== */
-#include <iostream>
-
-//! The main function
-//! \param argc The number of commandline arguments
-//! \param argv The commandline arguments
-//! \return     The exit code
-__attribute__((flatten))
-int main(int argc, char **argv)
-{
-  std::cout << "+------------------------------------+" << std::endl;
-  std::cout << "| Cluster Scan. Andrew W. Rose. 2022 |" << std::endl;
-  std::cout << "+------------------------------------+" << std::endl;
-  AuxConfiguration lMasterConfig( argc , argv );
-  std::cout << "+------------------------------------+" << std::endl;
-
-  ScanConfiguration lScanConfig( lMasterConfig.configFile() );
-
-  AutoRoi_Scan_ToJson( lMasterConfig.inputFile() , lScanConfig , lMasterConfig.outputFile() );
-}
