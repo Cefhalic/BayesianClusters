@@ -45,6 +45,21 @@ ADAPT_CALLBACK_CONSTRUCTOR( std::function< void( const std::vector< ClusterWrapp
 
 #undef ADAPT_CALLBACK_CONSTRUCTOR
 
+
+//! Factory function to construct a ScanConfiguration which take the parameters directly in python
+//! \param aSigmaBins   The number of sigma bins
+//! \param aSigmaMin     The lowest sigma bin
+//! \param aSigmaMax     The highest sigma bin
+//! \param aInterpolator A python function call or python dictionary containing a set of points from which to create an interpolator
+//! \param aRbins    The number of R bins to scan over
+//! \param aMinScanR The lowest value of R to scan
+//! \param aMaxScanR The largest value of R to scan
+//! \param aTbins    The number of T bins to scan over
+//! \param aMinScanT The lowest value of T to scan
+//! \param aMaxScanT The largest value of T to scan
+//! \param aPB    The P_b parameter
+//! \param aAlpha The alpha parameter
+//! \return a shared pointer to the new ScanConfiguration
 std::shared_ptr< ScanConfiguration > ScanConfigurationConstructor( 
       const std::size_t& aSigmaBins, const double& aSigmaMin, const double& aSigmaMax, const boost::python::object& aInterpolator ,
       const std::size_t& aRbins, const double& aMinScanR, const double& aMaxScanR ,
