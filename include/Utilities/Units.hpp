@@ -17,7 +17,7 @@ constexpr double meter      = 1e-0;
 //! A map for converting string representations of SI units to scaling factors
 extern const std::map< std::string, double > UnitMap;
 
-//! User-defined literals fot nanometer quantities
+//! User-defined literals for nanometer quantities
 //! \param aVal The specified value
 //! \return The literal value
 constexpr long double operator"" _nanometer( long double aVal )
@@ -25,7 +25,7 @@ constexpr long double operator"" _nanometer( long double aVal )
   return aVal * nanometer;
 }
 
-//! User-defined literals fot nanometer quantities
+//! User-defined literals for nanometer quantities
 //! \param aVal The specified value
 //! \return The literal value
 constexpr long double operator"" _nanometer( unsigned long long aVal )
@@ -33,7 +33,7 @@ constexpr long double operator"" _nanometer( unsigned long long aVal )
   return aVal * nanometer;
 }
 
-//! User-defined literals fot micrometer quantities
+//! User-defined literals for micrometer quantities
 //! \param aVal The specified value
 //! \return The literal value
 constexpr long double operator"" _micrometer( long double aVal )
@@ -41,7 +41,7 @@ constexpr long double operator"" _micrometer( long double aVal )
   return aVal * micrometer;
 }
 
-//! User-defined literals fot micrometer quantities
+//! User-defined literals for micrometer quantities
 //! \param aVal The specified value
 //! \return The literal value
 constexpr long double operator"" _micrometer( unsigned long long aVal )
