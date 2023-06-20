@@ -2,7 +2,7 @@ channels:
   - conda-forge
 dependencies:
       - cxx-compiler
-      - boost=1.80.0
+      - boost=1.82.0
       - gsl
       - make
       - lld=15.0.5
