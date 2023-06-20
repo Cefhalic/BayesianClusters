@@ -19,6 +19,7 @@ using namespace boost::python;
 
 
 /* ===== Cluster sources ===== */
+#include "Utilities/Units.hpp"
 #include "BayesianClustering/API.hpp"
 #include "BayesianClustering/LocalizationFile.hpp"
 #include "BayesianClustering/Configuration.hpp"
@@ -43,6 +44,27 @@ ADAPT_CALLBACK_CONSTRUCTOR( std::function< void( RoIproxy& ) > );               
 ADAPT_CALLBACK_CONSTRUCTOR( std::function< void( const std::vector< ClusterWrapper >& ) > );    //!< Define a std::function constructor for simple clusterizer callback
 
 #undef ADAPT_CALLBACK_CONSTRUCTOR
+
+std::shared_ptr< ScanConfiguration > ScanConfigurationConstructor( 
+      const std::size_t& aSigmaBins, const double& aSigmaMin, const double& aSigmaMax, const boost::python::object& aInterpolator ,
+      const std::size_t& aRbins, const double& aMinScanR, const double& aMaxScanR ,
+      const std::size_t& aTbins, const double& aMinScanT, const double& aMaxScanT ,
+      const double& aPB , const double& aAlpha )
+{
+  extract< dict > lInterpolator( aInterpolator );
+  if( lInterpolator.check() )
+  { 
+    dict lDict = lInterpolator;
+    std::map< double , double > lMap;
+    for (auto it = stl_input_iterator<tuple>( lDict.items() ); it != stl_input_iterator<tuple>(); ++it) lMap[ extract<double>((*it)[0]) ] = extract<double>((*it)[1]);
+    return std::shared_ptr<ScanConfiguration>( new ScanConfiguration( aSigmaBins, aSigmaMin, aSigmaMax, lMap, aRbins, aMinScanR, aMaxScanR , aTbins, aMinScanT, aMaxScanT , aPB , aAlpha ) );
+  }
+  else
+  {
+    auto lFunc = [&]( const double& aVal ){ return boost::python::call<double>( aInterpolator.ptr() , aVal ); };
+    return std::shared_ptr<ScanConfiguration>( new ScanConfiguration( aSigmaBins, aSigmaMin, aSigmaMax, lFunc, aRbins, aMinScanR, aMaxScanR , aTbins, aMinScanT, aMaxScanT , aPB , aAlpha ) );
+  }
+}
 // =====================================================================================================================
 
 
@@ -94,6 +116,8 @@ namespace Adapted
 //! Boost Python Wrapper providing bindings for our C++ functions
 BOOST_PYTHON_MODULE( BayesianClustering )
 {
+  scope().attr( "nanometer" ) = nanometer;
+  scope().attr( "micrometer" ) = micrometer;
 
   EXPOSE_STRUCT( ManualRoI , "A struct for storing the parameters of a manual RoI" , (x)(y)(width)(height) );
   EXPOSE_STRUCT( ScanEntry , "A struct for storing a result of an individual scan configuration" , (r)(t)(score) );
@@ -102,13 +126,9 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   EXPOSE_VECTOR( ScanEntry );
   EXPOSE_VECTOR( ClusterWrapper );
 
-  class_< ScanConfiguration, boost::noncopyable >( "ScanConfiguration" , "A class for storing the scan configuration parameters" , init< const std::string& >( arg( "aCfgFile" ) ) )
-    // .def( init< const std::size_t& , const double& , const double& , const std::function< double( const double& ) >&  ,
-    //             const std::size_t& , const double& , const double&  ,
-    //             const std::size_t& , const double& , const double&  ,
-    //             const double&  , const double&  >
-    //             ( args( "aSigmacount", "aSigmaMin", "aSigmaMax", "aInterpolator", "aRbins", "aMinScanR", "aMaxScanR", "aTbins", "aMinScanT", "aMaxScanT", "aPB", "aAlpha" ) ) )
-    ; 
+  class_< ScanConfiguration, std::shared_ptr<ScanConfiguration>, boost::noncopyable >( "ScanConfiguration" , "A class for storing the scan configuration parameters" , no_init )
+    .def( init< const std::string& >( arg( "aCfgFile" ) ) )
+    .def( "__init__" , make_constructor( &ScanConfigurationConstructor, default_call_policies(), args( "aSigmaBins", "aSigmaMin", "aSigmaMax", "aInterpolator", "aRbins", "aMinScanR", "aMaxScanR", "aTbins", "aMinScanT", "aMaxScanT", "aPB", "aAlpha" ) ) ); 
 
   // ADAPTED_FN( AutoRoi_Scan_FullCallback , "Automatically extract RoI, run scan and apply a full call-back"   , "aInFile" , "aScanConfig" , "aCallback" );
   ADAPTED_FN( AutoRoi_Scan_SimpleCallback  , "Automatically extract RoI, run scan and apply a simple call-back" , "aInFile" , "aScanConfig" , "aCallback" );

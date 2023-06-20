@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <map>
 #include <vector>
 #include <string>
 #include <cassert>
@@ -31,6 +32,11 @@ class GSLInterpolator
     //! \param x The points on the x-axis
     //! \param y The points on the y-axis
     GSLInterpolator( const gsl_interp_type* type, const std::vector<double>& x, const std::vector<double>& y );
+
+    //! Initialised splice constructor
+    //! \param type The spline type
+    //! \param data Data points along the spline
+    GSLInterpolator( const gsl_interp_type* type, const std::map<double,double>& data );
 
     //! Destructor
     virtual ~GSLInterpolator();

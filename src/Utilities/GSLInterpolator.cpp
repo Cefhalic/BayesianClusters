@@ -29,6 +29,27 @@ GSLInterpolator::GSLInterpolator( const gsl_interp_type* type, const std::vector
   SetData( size, &x.front(), &y.front() );
 }
 
+GSLInterpolator::GSLInterpolator( const gsl_interp_type* type, const std::map<double,double>& data ) :
+  nErrors(0),
+  fAccel(nullptr),
+  fSpline(nullptr),
+  fInterpType(type)
+{
+  auto size = data.size();
+
+  if (size >= fInterpType->min_size) fSpline = gsl_spline_alloc( fInterpType, size );
+
+  std::vector<double> x , y;
+  for ( auto& i : data )
+  {
+    x.push_back( i.first );
+    y.push_back( i.second );
+  }
+
+  SetData( size, &x.front(), &y.front() );
+}
+
+
 GSLInterpolator::~GSLInterpolator()
 {
   if ( fSpline ) gsl_spline_free( fSpline );

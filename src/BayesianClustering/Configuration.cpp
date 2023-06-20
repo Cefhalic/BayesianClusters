@@ -53,26 +53,43 @@ ScanConfiguration::ScanConfiguration( const std::string& aCfgFile ) :
 }
 
 ScanConfiguration::ScanConfiguration( 
-  const std::size_t& aSigmacount, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator ,
+  const std::size_t& aSigmaBins, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator ,
   const std::size_t& aRbins, const double& aMinScanR, const double& aMaxScanR ,
   const std::size_t& aTbins, const double& aMinScanT, const double& aMaxScanT ,
   const double& aPB ,
   const double& aAlpha )
 {
-  SetSigmaParameters( aSigmacount, aSigmaMin, aSigmaMax, aInterpolator );
+  SetSigmaParameters( aSigmaBins, aSigmaMin, aSigmaMax, aInterpolator );
   SetRBins( aRbins, aMinScanR, aMaxScanR );
   SetTBins( aTbins, aMinScanT, aMaxScanT );
   SetPb( aPB );
   SetAlpha( aAlpha );
 }
 
-void ScanConfiguration::SetSigmaParameters( const std::size_t& aSigmacount, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator )
+ScanConfiguration::ScanConfiguration( 
+      const std::size_t& aSigmaBins, const double& aSigmaMin, const double& aSigmaMax, const std::map< double , double >& aInterpolator ,
+      const std::size_t& aRbins, const double& aMinScanR, const double& aMaxScanR ,
+      const std::size_t& aTbins, const double& aMinScanT, const double& aMaxScanT ,
+      const double& aPB , const double& aAlpha )
 {
-  std::cout << "Sigma-integral: " << aSigmaMin << " to " << aSigmaMax << " in " << aSigmacount << " steps" << std::endl;
+  GSLInterpolator lInterpolator( gsl_interp_cspline, aInterpolator );
+  SetSigmaParameters( aSigmaBins, aSigmaMin, aSigmaMax, [&]( const double& aPt ) { return lInterpolator.Eval( aPt ); } );
+  SetRBins( aRbins, aMinScanR, aMaxScanR );
+  SetTBins( aTbins, aMinScanT, aMaxScanT );
+  SetPb( aPB );
+  SetAlpha( aAlpha );
+}
 
-  mSigmacount = aSigmacount;
 
-  if( aSigmacount == 0 ) {
+
+
+void ScanConfiguration::SetSigmaParameters( const std::size_t& aSigmaBins, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator )
+{
+  std::cout << "Sigma-integral: " << aSigmaMin << " to " << aSigmaMax << " in " << aSigmaBins << " steps" << std::endl;
+
+  mSigmacount = aSigmaBins;
+
+  if( aSigmaBins == 0 ) {
     mSigmabins.clear();
     mSigmabins2.clear();
     mProbabilitySigma.clear();
@@ -81,7 +98,7 @@ void ScanConfiguration::SetSigmaParameters( const std::size_t& aSigmacount, cons
     return;
   }
 
-  mSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmacount;
+  mSigmaspacing = ( aSigmaMax - aSigmaMin ) / aSigmaBins;
   mSigmabins = [ & ]( const int& i ) {
     return ( i * mSigmaspacing ) + aSigmaMin;
   } | range( mSigmacount );

@@ -2,6 +2,7 @@
 #pragma once
 
 /* ===== C++ ===== */
+#include <map>
 #include <vector>
 #include <string>
 #include <functional>
@@ -38,7 +39,7 @@ class ScanConfiguration
     ScanConfiguration( const std::string& aCfgFile );
 
     //! Constructor which take the parameters directly
-    //! \param aSigmacount   The number of sigma bins
+    //! \param aSigmaBins   The number of sigma bins
     //! \param aSigmaMin     The lowest sigma bin
     //! \param aSigmaMax     The highest sigma bin
     //! \param aInterpolator Function-object to generate the probability of any given sigma
@@ -51,10 +52,30 @@ class ScanConfiguration
     //! \param aPB    The P_b parameter
     //! \param aAlpha The alpha parameter
     ScanConfiguration( 
-      const std::size_t& aSigmacount, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator ,
+      const std::size_t& aSigmaBins, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator ,
       const std::size_t& aRbins, const double& aMinScanR, const double& aMaxScanR ,
       const std::size_t& aTbins, const double& aMinScanT, const double& aMaxScanT ,
       const double& aPB , const double& aAlpha );
+
+    //! Constructor which take the parameters directly
+    //! \param aSigmaBins   The number of sigma bins
+    //! \param aSigmaMin     The lowest sigma bin
+    //! \param aSigmaMax     The highest sigma bin
+    //! \param aInterpolator A set of points from which to create an interpolator
+    //! \param aRbins    The number of R bins to scan over
+    //! \param aMinScanR The lowest value of R to scan
+    //! \param aMaxScanR The largest value of R to scan
+    //! \param aTbins    The number of T bins to scan over
+    //! \param aMinScanT The lowest value of T to scan
+    //! \param aMaxScanT The largest value of T to scan
+    //! \param aPB    The P_b parameter
+    //! \param aAlpha The alpha parameter
+    ScanConfiguration( 
+      const std::size_t& aSigmaBins, const double& aSigmaMin, const double& aSigmaMax, const std::map< double , double >& aInterpolator ,
+      const std::size_t& aRbins, const double& aMinScanR, const double& aMaxScanR ,
+      const std::size_t& aTbins, const double& aMinScanT, const double& aMaxScanT ,
+      const double& aPB , const double& aAlpha );
+
 
     //! Deleted copy constructor
     ScanConfiguration( const ScanConfiguration& aOther /*!< Anonymous argument */ ) = delete;
@@ -75,11 +96,11 @@ class ScanConfiguration
 
 
     //! Setter for the sigma-bins to be integrated over
-    //! \param aSigmacount   The number of sigma bins
+    //! \param aSigmaBins   The number of sigma bins
     //! \param aSigmaMin     The lowest sigma bin
     //! \param aSigmaMax     The highest sigma bin
     //! \param aInterpolator Function-object to generate the probability of any given sigma
-    void SetSigmaParameters( const std::size_t& aSigmacount, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator );
+    void SetSigmaParameters( const std::size_t& aSigmaBins, const double& aSigmaMin, const double& aSigmaMax, const std::function< double( const double& ) >& aInterpolator );
 
     //! Setter for the R bins for the RT scan
     //! \param aRbins    The number of R bins to scan over
