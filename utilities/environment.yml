@@ -1,8 +1,11 @@
 channels:
   - conda-forge
+  - pwwang
 dependencies:
       - cxx-compiler
-      - boost=1.82.0
+      - glibc214
+      - boost=1.80.0
+      - fmt
       - gsl
       - make
       - lld=15.0.5
