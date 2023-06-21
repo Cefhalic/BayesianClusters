@@ -20,7 +20,7 @@ class RoI
     //! Default Constructor
     //! \param aData The set of data-points in the RoI
     //! \param aId   A unique identifier
-    RoI( std::vector<Data>&& aData , const std::size_t& aId = 0 );
+    RoI( std::vector<Data>&& aData );
 
     //! Deleted copy constructor
     RoI( const RoI& aOther /*!< Anonymous argument */ ) = delete;
@@ -105,9 +105,6 @@ class RoI
     }
 
   public:
-    //! A unique identifier
-    std::size_t mId;
-
     //! The collection of raw data points
     std::vector<Data> mData;
 

@@ -76,7 +76,7 @@ void AutoRoi_Scan_SimpleCallback( const std::string& aInFile , const ScanConfigu
 //! Automatically extract RoI, run scan and dump to JSON file
 //! \param aInFile     The name of the localization file
 //! \param aScanConfig The configuration for the scan
-//! \param aOutFile    The name of the output JSON file
+//! \param aOutFile    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
 void AutoRoi_Scan_ToJson( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::string& aOutFile );
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -117,7 +117,7 @@ void ManualRoi_Scan_SimpleCallback( const std::string& aInFile , const ManualRoI
 //! \param aInFile     The name of the localization file
 //! \param aManualRoI  The manually-specified RoI window
 //! \param aScanConfig The configuration for the scan
-//! \param aOutFile    The name of the output JSON file
+//! \param aOutFile    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
 void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::string& aOutFile );
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

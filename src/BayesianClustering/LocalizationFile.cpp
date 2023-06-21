@@ -249,7 +249,7 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
       lData.emplace_back( x, y, k->s );
     }
 
-    RoI lRoI( std::move( lData ) , lRecord.Id );
+    RoI lRoI( std::move( lData ) );
     lRoI.SetCentre( lCentreX, lCentreY );
     lRoI.SetWidth( lWidthX, lWidthY );
 

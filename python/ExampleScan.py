@@ -1,4 +1,4 @@
-from BayesianClustering import *
+from BayesianClustering.Intermediate import *
 
 # ----------------------------------------------------------------------------
 def Callback( ScanResults ):

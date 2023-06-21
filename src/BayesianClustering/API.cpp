@@ -15,17 +15,23 @@
 /* ===== BOOST C++ ===== */
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+#include <boost/filesystem.hpp>
 
+/* ===== FMT library ===== */
+#include <fmt/format.h>
 
 //! A callback to dump a scan to a JSON file
 //! \param aVector   A vector of scan results
 //! \param aOutFile  The name of the output JSON file
-void _ScanCallback_Json_( const std::vector< ScanEntry >& aVector, const std::string& aOutFile )
+void _ScanCallback_Json_( const std::vector< ScanEntry >& aVector, const std::string& aInFile , const std::string& aOutFile )
 {
-  char lOutFileName[256];
-  static int RoIid( 0 );  
-  sprintf( lOutFileName , "RoI%d.%s", RoIid++ , aOutFile.c_str() );
-  FILE *fptr = fopen( lOutFileName , "w" );
+  static std::size_t RoIid( 0 );  
+
+  using namespace fmt::literals;
+  auto lOutFileName = boost::filesystem::path( fmt::format( aOutFile , "input"_a = boost::filesystem::path( aInFile ).stem().string() , "roi"_a = RoIid++ ) );
+  boost::filesystem::create_directories( lOutFileName.parent_path() );
+
+  FILE *fptr = fopen( lOutFileName.c_str() , "w" );
   if (fptr == NULL) throw std::runtime_error("Could not open file");
   fprintf( fptr , "[\n" );
   for( auto& lIt : aVector ) fprintf( fptr , "  { \"r\":%.5e , \"t\":%.5e , \"logP\":%.5e },\n" , lIt.r , lIt.t , lIt.score );
@@ -33,6 +39,7 @@ void _ScanCallback_Json_( const std::vector< ScanEntry >& aVector, const std::st
   fprintf( fptr , "\n]\n" );
   fclose(fptr); 
 }
+
 
 //! A callback to neatly package the scan results for easy consumption
 //! \param aRoI        The region of interest
@@ -63,7 +70,6 @@ void _FullClusterToSimpleCluster_( RoIproxy& aRoIproxy , const std::function< vo
     boost::geometry::append( lMap[ i.mCluster->GetParent() ] , geo_point( i.mData->x , i.mData->y ) );
   }
 
-
   std::vector< ClusterWrapper > lResults;
   for ( auto& i : lMap )
   {
@@ -77,6 +83,9 @@ void _FullClusterToSimpleCluster_( RoIproxy& aRoIproxy , const std::function< vo
 
   aCallback( lResults );  
 }
+
+
+
 
 
 
@@ -95,7 +104,7 @@ void AutoRoi_Scan_SimpleCallback( const std::string& aInFile , const ScanConfigu
 __attribute__((flatten))
 void AutoRoi_Scan_ToJson( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::string& aOutFile )
 {
-  AutoRoi_Scan_SimpleCallback( aInFile , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aOutFile ); } );
+  AutoRoi_Scan_SimpleCallback( aInFile , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aInFile , aOutFile ); } );
 }
 
 
@@ -129,7 +138,7 @@ void ManualRoi_Scan_SimpleCallback( const std::string& aInFile , const ManualRoI
 __attribute__((flatten))
 void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::string& aOutFile )
 {
-  ManualRoi_Scan_SimpleCallback( aInFile , aManualRoI , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aOutFile ); } );
+  ManualRoi_Scan_SimpleCallback( aInFile , aManualRoI , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aInFile , aOutFile ); } );
 }
 
 
