@@ -1,4 +1,4 @@
-from BayesianClustering.Intermediate import *
+from BayesianClustering import *
 
 # ----------------------------------------------------------------------------
 def Callback( ScanResults ):
@@ -19,4 +19,5 @@ def Interpolator( value ):
 # 												35 , 0*nanometer , 200*nanometer , 35, 0*nanometer, 500*nanometer , 0.2 , 20.0 )
 
 
-AutoRoi_Scan_SimpleCallback( "1_un_red.csv" , Cfg , Callback )
+# AutoRoi_Scan_SimpleCallback( "1_un_red.csv" , Cfg , Callback )
+AutoRoi_Scan_ToJson( "1_un_red.csv" , Cfg ,  "./{input}/RoI{roi:02}/scan.json" )

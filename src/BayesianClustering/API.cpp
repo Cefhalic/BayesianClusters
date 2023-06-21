@@ -22,13 +22,14 @@
 
 //! A callback to dump a scan to a JSON file
 //! \param aVector   A vector of scan results
-//! \param aOutFile  The name of the output JSON file
-void _ScanCallback_Json_( const std::vector< ScanEntry >& aVector, const std::string& aInFile , const std::string& aOutFile )
+//! \param aInFile   The name of the localization file
+//! \param aOutputPattern  The name of the output JSON file
+void _ScanCallback_Json_( const std::vector< ScanEntry >& aVector, const std::string& aInFile , const std::string& aOutputPattern )
 {
   static std::size_t RoIid( 0 );  
 
   using namespace fmt::literals;
-  auto lOutFileName = boost::filesystem::path( fmt::format( aOutFile , "input"_a = boost::filesystem::path( aInFile ).stem().string() , "roi"_a = RoIid++ ) );
+  auto lOutFileName = boost::filesystem::path( fmt::format( aOutputPattern , "input"_a = boost::filesystem::path( aInFile ).stem().string() , "roi"_a = RoIid++ ) );
   boost::filesystem::create_directories( lOutFileName.parent_path() );
 
   FILE *fptr = fopen( lOutFileName.c_str() , "w" );
@@ -52,6 +53,27 @@ void _FullScanToSimpleScan_( RoI& aRoI , const ScanConfiguration& aScanConfig , 
   aRoI.ScanRT( aScanConfig, [&]( const RoIproxy& aRoI, const double& aR, const double& aT ) { lMtx.lock(); lResults.push_back( { aR, aT, aRoI.mLogP } ); lMtx.unlock(); } );
   std::sort( lResults.begin(), lResults.end() );
   aCallback( lResults );  
+}
+
+//! A callback to dump a clustering run to a JSON file
+//! \param aVector   A vector of cluster-wrappers
+//! \param aInFile   The name of the localization file
+//! \param aOutputPattern  The name of the output JSON file
+void _ClusterCallback_Json_( const std::vector< ClusterWrapper >& aVector, const std::string& aInFile , const std::string& aOutputPattern )
+{
+  static std::size_t RoIid( 0 );  
+
+  using namespace fmt::literals;
+  auto lOutFileName = boost::filesystem::path( fmt::format( aOutputPattern , "input"_a = boost::filesystem::path( aInFile ).stem().string() , "roi"_a = RoIid++ ) );
+  boost::filesystem::create_directories( lOutFileName.parent_path() );
+
+  FILE *fptr = fopen( lOutFileName.c_str() , "w" );
+  if (fptr == NULL) throw std::runtime_error("Could not open file");
+  fprintf( fptr , "[\n" );
+  for( auto& lIt : aVector ) fprintf( fptr , "  { \"localizations\":%ld , \"area\":%.5Le , \"perimeter\":%.5Le , \"centroid_x\":%.5e , \"centroid_y\":%.5e },\n" , lIt.localizations , lIt.area , lIt.perimeter , lIt.centroid_x , lIt.centroid_y );
+  fseek( fptr, -2, SEEK_CUR ); // Delete the last comma
+  fprintf( fptr , "\n]\n" );
+  fclose(fptr); 
 }
 
 
@@ -81,6 +103,7 @@ void _FullClusterToSimpleCluster_( RoIproxy& aRoIproxy , const std::function< vo
     lResults.emplace_back( ClusterWrapper{ i.second.size() , boost::geometry::area( lHull ) , boost::geometry::perimeter( lHull ) , boost::geometry::get<0>( lCentroid ) , boost::geometry::get<1>( lCentroid ) } );
   }
 
+  std::sort( lResults.begin(), lResults.end() );
   aCallback( lResults );  
 }
 
@@ -102,9 +125,9 @@ void AutoRoi_Scan_SimpleCallback( const std::string& aInFile , const ScanConfigu
 }
 
 __attribute__((flatten))
-void AutoRoi_Scan_ToJson( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::string& aOutFile )
+void AutoRoi_Scan_ToJson( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern )
 {
-  AutoRoi_Scan_SimpleCallback( aInFile , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aInFile , aOutFile ); } );
+  AutoRoi_Scan_SimpleCallback( aInFile , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aInFile , aOutputPattern ); } );
 }
 
 
@@ -119,6 +142,12 @@ __attribute__((flatten))
 void AutoRoi_Cluster_SimpleCallback( const std::string& aInFile , const double& aR, const double& aT, const std::function< void( const std::vector< ClusterWrapper >& ) >& aCallback )
 {
   AutoRoi_Cluster_FullCallback( aInFile , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
+}
+
+__attribute__((flatten))
+void AutoRoi_Cluster_ToJson( const std::string& aInFile , const double& aR, const double& aT, const std::string& aOutputPattern )
+{
+  AutoRoi_Cluster_SimpleCallback( aInFile , aR , aT , [&]( const std::vector< ClusterWrapper >& aVector ){ _ClusterCallback_Json_( aVector , aInFile , aOutputPattern ); } );
 }
 
 
@@ -136,9 +165,9 @@ void ManualRoi_Scan_SimpleCallback( const std::string& aInFile , const ManualRoI
 }
 
 __attribute__((flatten))
-void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::string& aOutFile )
+void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern )
 {
-  ManualRoi_Scan_SimpleCallback( aInFile , aManualRoI , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aInFile , aOutFile ); } );
+  ManualRoi_Scan_SimpleCallback( aInFile , aManualRoI , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aInFile , aOutputPattern ); } );
 }
 
 
@@ -153,4 +182,10 @@ __attribute__((flatten))
 void ManualRoi_Cluster_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( const std::vector< ClusterWrapper >& ) >& aCallback )
 {
   ManualRoi_Cluster_FullCallback( aInFile , aManualRoI , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
+}
+
+__attribute__((flatten))
+void ManualRoi_Cluster_ToJson( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::string& aOutputPattern )
+{
+  ManualRoi_Cluster_SimpleCallback( aInFile , aManualRoI , aR , aT , [&]( const std::vector< ClusterWrapper >& aVector ){ _ClusterCallback_Json_( aVector , aInFile , aOutputPattern ); } );
 }

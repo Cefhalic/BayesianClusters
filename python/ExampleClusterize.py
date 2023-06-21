@@ -10,4 +10,5 @@ def Callback( Clusters ):
 	print( "+----------------+----------------+----------------+----------------+----------------+" )
 # ----------------------------------------------------------------------------
 
-AutoRoi_Cluster_SimpleCallback( "1_un_red.csv" , 50*1e-9 , 170*1e-9 , Callback )
+# AutoRoi_Cluster_SimpleCallback( "1_un_red.csv" , 50*1e-9 , 170*1e-9 , Callback )
+AutoRoi_Cluster_ToJson( "1_un_red.csv" , 50*1e-9 , 170*1e-9 , "./{input}/RoI{roi:02}/cluster.json" )

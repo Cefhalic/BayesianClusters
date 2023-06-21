@@ -19,7 +19,6 @@ class RoI
   public:
     //! Default Constructor
     //! \param aData The set of data-points in the RoI
-    //! \param aId   A unique identifier
     RoI( std::vector<Data>&& aData );
 
     //! Deleted copy constructor

@@ -147,17 +147,19 @@ BOOST_PYTHON_MODULE( BayesianClustering )
 
   // ADAPTED_FN( AutoRoi_Scan_FullCallback , "Automatically extract RoI, run scan and apply a full call-back"   , "aInFile" , "aScanConfig" , "aCallback" );
   ADAPTED_FN( AutoRoi_Scan_SimpleCallback  , "Automatically extract RoI, run scan and apply a simple call-back" , "aInFile" , "aScanConfig" , "aCallback" );
-          FN( AutoRoi_Scan_ToJson          , "Automatically extract RoI, run scan and dump to JSON file"        , "aInFile" , "aScanConfig" , "aOutFile" );
+          FN( AutoRoi_Scan_ToJson          , "Automatically extract RoI, run scan and dump to JSON file"        , "aInFile" , "aScanConfig" , "aOutputPattern" );
 
   // ADAPTED_FN( AutoRoi_Cluster_FullCallback , "Automatically extract RoI, clusterize and apply a full call-back"   , "aInFile" , "aR" , "aT" , "aCallback" );
   ADAPTED_FN( AutoRoi_Cluster_SimpleCallback  , "Automatically extract RoI, clusterize and apply a simple call-back" , "aInFile" , "aR" , "aT" , "aCallback" );
+          FN( AutoRoi_Cluster_ToJson          , "Automatically extract RoI, clusterize and dump to JSON file"        , "aInFile" , "aR" , "aT" , "aOutputPattern" );
 
   // ADAPTED_FN( ManualRoi_Scan_FullCallback , "Manually specify RoI, run scan and apply a full call-back"   , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
   ADAPTED_FN( ManualRoi_Scan_SimpleCallback  , "Manually specify RoI, run scan and apply a simple call-back" , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
-          FN( ManualRoi_Scan_ToJson          , "Manually specify RoI, run scan and dump to JSON file"        , "aInFile" , "aManualRoI" , "aScanConfig" , "aOutFile" );
+          FN( ManualRoi_Scan_ToJson          , "Manually specify RoI, run scan and dump to JSON file"        , "aInFile" , "aManualRoI" , "aScanConfig" , "aOutputPattern" );
 
   // ADAPTED_FN( ManualRoi_Cluster_FullCallback , "Manually specify RoI, clusterize and apply a full call-back"   , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
   ADAPTED_FN( ManualRoi_Cluster_SimpleCallback  , "Manually specify RoI, clusterize and apply a simple call-back" , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
+          FN( ManualRoi_Cluster_ToJson          , "Manually specify RoI, clusterize and dump to JSON file"        , "aInFile" , "aManualRoI" , "aR" , "aT" , "aOutputPattern" );
 }
 
 #undef ADAPTED_FN
