@@ -20,9 +20,7 @@ int main(int argc, char **argv)
   AuxConfiguration lMasterConfig( argc , argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  ScanConfiguration lScanConfig( lMasterConfig.configFile() );
-
-  AutoRoi_Scan_ToJson( lMasterConfig.inputFile() , lScanConfig , lMasterConfig.outputFile() );
+  AutoRoi_Scan_ToJson( lMasterConfig.inputFile() , lMasterConfig.configFile() , lMasterConfig.outputFile() );
 }
 
 
