@@ -58,6 +58,9 @@ class LocalizationFile
 
 
   private:
+    //! The localization file name
+    std::string mFilename;
+
     //! The localizations in the file
     std::vector< Data > mData;
 };

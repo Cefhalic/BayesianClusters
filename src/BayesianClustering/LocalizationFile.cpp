@@ -12,8 +12,13 @@
 #include "Utilities/ProgressBar.hpp"
 #include "Utilities/Vectorize.hpp"
 #include "Utilities/Units.hpp"
-
 // #include "Utilities/MemoryMonitoring.hpp"
+
+/* ===== BOOST C++ ===== */
+#include <boost/filesystem.hpp>
+#include <boost/gil/extension/io/bmp.hpp>
+#include <boost/gil/image.hpp>
+
 
 //! Multithreading handler for loading a chunk of data from CSV file
 //! \param aFilename The name of the file to open
@@ -65,7 +70,7 @@ void __LoadCSV__( const std::string& aFilename, std::vector< Data >& aData, cons
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-LocalizationFile::LocalizationFile( const std::string& aFilename )
+LocalizationFile::LocalizationFile( const std::string& aFilename ) : mFilename( aFilename )
 {
   if( aFilename.size() == 0 ) throw std::runtime_error( "No input file specified" );
 
@@ -177,13 +182,12 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
 
   // Local record to store the size, the bounds and the datapoints
   struct tRecord {
-    std::size_t Id;
     std::size_t Size;
     std::pair< double, double > X, Y;
     std::vector< const Data* > Ptrs;
   };
 
-  std::vector < tRecord > lRecords( lRoIid+1, { 0 , 0, std::make_pair( 9e99, -9e99 ), std::make_pair( 9e99, -9e99 ), std::vector< const Data* >() } );
+  std::vector < tRecord > lRecords( lRoIid+1, { 0, std::make_pair( 9e99, -9e99 ), std::make_pair( 9e99, -9e99 ), std::vector< const Data* >() } );
 
   // Fill in holes and calculate the area
   for( int i(0) ; i!=512 ; ++i ) for( int j(0) ; j!=512 ; ++j ) {
@@ -209,6 +213,42 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
     if( U == L and R == L and D == L ) lRecords[ lHist2[i][j] = L ].Size++;
   }
 
+  // --------------------------------------------------------
+  {  
+    namespace bg = boost::gil;
+    auto img = bg::rgb8_image_t { 512 , 512 , bg::rgb8_pixel_t{255,255,255} };
+    auto view = bg::view(img);
+
+    auto ToRGB = []( const int& aVal )
+    {
+      uint32_t lVal(0) , lMask( 1 ) , lOutShift( 7 );
+      for( int i(0) ; i!=24 ; ++i )
+      {
+        if( aVal & lMask ) lVal |= ( 1 << lOutShift );
+        lMask <<= 1;
+        lOutShift = ( lOutShift + 8 ) % 25;  
+      }
+      return bg::rgb8_pixel_t{ (uint8_t)(lVal>>0) , (uint8_t)(lVal>>8) , (uint8_t)(lVal>>16) };
+    };
+
+    std::map< int , bg::rgb8_pixel_t > lColours;
+
+    for( int i(0) ; i!=512 ; ++i ) for( int j(0) ; j!=512 ; ++j ) {
+      auto& Id = lHist2[i][j];
+      if( !Id ) continue;
+      auto& lRecord = lRecords[Id];
+      if( lRecord.Size < 500 ) continue; // Cull micro RoIs
+
+      auto lIt = lColours.find( Id );
+      if( lIt == lColours.end() ) lIt = lColours.insert( std::make_pair( Id , ToRGB( lColours.size() ) ) ).first;
+      view( i , j ) = lIt->second;    
+    }
+    auto lOutFileName = boost::filesystem::path( mFilename ).stem().string() + ".AutoRoI.bmp";
+    bg::write_view( lOutFileName , bg::const_view(img), bg::bmp_tag());
+  }
+  // --------------------------------------------------------
+
+
   // Find the bounds and the datapoints
   for( auto& k : mData ) {
     std::size_t x = ( k.x - lXbound.first ) * lXScale;
@@ -221,7 +261,6 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
 
     if( lRecord.Size < 500 ) continue; // Cull micro RoIs
 
-    lRecord.Id = Id;
     lRecord.Ptrs.push_back( &k );
     if ( k.x < lRecord.X.first  ) lRecord.X.first  = k.x;
     if ( k.x > lRecord.X.second ) lRecord.X.second = k.x;
