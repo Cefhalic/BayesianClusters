@@ -57,7 +57,7 @@ class LocalizationFile
     void ExtractRoIs( const std::function< void( RoI& ) >& aCallback ) const;
 
     //! Manually extract an RoI 
-    //! \param aFilename An image file
+    //! \param aImageMap The name of an imagemap file
     //! \param aCallback A handler for each RoI found
     void ExtractRoIs( const std::string& aImageMap , const std::function< void( RoI& ) >& aCallback ) const;
 

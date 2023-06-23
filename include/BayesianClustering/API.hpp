@@ -169,21 +169,21 @@ void ManualRoi_Cluster_ToJson( const std::string& aInFile , const ManualRoI& aMa
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! Extract RoI using an image-map, run scan and apply a full call-back
 //! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
+//! \param aImageMap  The name of an imagemap file
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The full callback to be applied
 void ImageMapRoi_Scan_FullCallback( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double& ) >& aCallback );
 
 //! Extract RoI using an image-map, run scan and apply a simple call-back
 //! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
+//! \param aImageMap  The name of an imagemap file
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The simple callback to be applied
 void ImageMapRoi_Scan_SimpleCallback( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback );
 
 //! Extract RoI using an image-map, run scan and dump to JSON file
 //! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
+//! \param aImageMap  The name of an imagemap file
 //! \param aScanConfig The configuration for the scan
 //! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
 void ImageMapRoi_Scan_ToJson( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern );
@@ -193,7 +193,7 @@ void ImageMapRoi_Scan_ToJson( const std::string& aInFile , const std::string& aI
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! Extract RoI using an image-map, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
+//! \param aImageMap  The name of an imagemap file
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aCallback   The callback to be applied
@@ -201,7 +201,7 @@ void ImageMapRoi_Cluster_FullCallback( const std::string& aInFile , const std::s
 
 //! Extract RoI using an image-map, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
+//! \param aImageMap  The name of an imagemap file
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aCallback   The callback to be applied
@@ -209,7 +209,7 @@ void ImageMapRoi_Cluster_SimpleCallback( const std::string& aInFile , const std:
 
 //! Extract RoI using an image-map, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
+//! \param aImageMap  The name of an imagemap file
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
