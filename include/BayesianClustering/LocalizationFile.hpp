@@ -47,14 +47,19 @@ class LocalizationFile
     ~LocalizationFile() = default;
 
   public:
+    //! Manually extract an RoI 
+    //! \param aRoI The manual RoI window
+    //! \param aCallback A handler for each RoI found
+    void ExtractRoIs( const ManualRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const;
+
     //! Automatically extract the RoIs
     //! \param aCallback A handler for each RoI found
     void ExtractRoIs( const std::function< void( RoI& ) >& aCallback ) const;
 
     //! Manually extract an RoI 
-    //! \param aRoI The manual RoI window
+    //! \param aFilename An image file
     //! \param aCallback A handler for each RoI found
-    void ExtractRoIs( const ManualRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const;
+    void ExtractRoIs( const std::string& aImageMap , const std::function< void( RoI& ) >& aCallback ) const;
 
 
   private:

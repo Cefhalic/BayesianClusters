@@ -101,10 +101,38 @@ LocalizationFile::LocalizationFile( const std::string& aFilename ) : mFilename( 
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void LocalizationFile::ExtractRoIs( const ManualRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const
+{
+  auto lMaxX = aRoI.width / 2.0;
+  auto lMaxY = aRoI.height / 2.0;
+
+  std::vector< Data > lData;  
+  for( auto& k : mData ) {
+      double x = k.x - aRoI.x;
+      double y = k.y - aRoI.y;
+      if( fabs(x) < lMaxX and fabs(y) < lMaxY ) lData.emplace_back( x, y, k.s );    
+  }
+
+  RoI lRoI( std::move( lData ) );
+  lRoI.SetCentre( aRoI.x , aRoI.y );
+  lRoI.SetWidth( aRoI.width , aRoI.height );
+
+  aCallback( lRoI );        
+}
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! Typedef an array for histogramming a Localization File
 typedef std::array< std::array< int, 512 >, 512 > tArray;
+
+//! Local record to store the size, the bounds and the datapoints
+struct tRecord {
+  std::size_t Size; //!< The number of histogram cells in the RoI
+  std::pair< double, double > X; //!< The X-bounds of the RoI
+  std::pair< double, double > Y; //!< The Y-bounds of the RoI
+  std::vector< const Data* > Ptrs; //!< The data points in the RoI
+};
 
 //! Recursively search histogram for continuously connected regions over threshold
 //! \param aHist The histogram being searched
@@ -179,14 +207,6 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
       if( lHist2[i][j] < 0 ) __RecursiveSearch__( lHist2, ++lRoIid, i, j );
     }
 
-
-  // Local record to store the size, the bounds and the datapoints
-  struct tRecord {
-    std::size_t Size;
-    std::pair< double, double > X, Y;
-    std::vector< const Data* > Ptrs;
-  };
-
   std::vector < tRecord > lRecords( lRoIid+1, { 0, std::make_pair( 9e99, -9e99 ), std::make_pair( 9e99, -9e99 ), std::vector< const Data* >() } );
 
   // Fill in holes and calculate the area
@@ -210,10 +230,21 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
     for( int k(j+1) ; k!=512 ; ++k )
       if( (U = lHist2[i][k]) ) break;
 
-    if( U == L and R == L and D == L ) lRecords[ lHist2[i][j] = L ].Size++;
+    if ( ( ( U == L ) or ( D == L ) ) and ( R == L ) )
+    {
+      lRecords[ lHist2[i][j] = L ].Size++;
+      continue;
+    } 
+
+    if ( ( ( L == U ) or ( R == U ) ) and ( D == U ) ) 
+    {
+      lRecords[ lHist2[i][j] = U ].Size++;
+      continue;
+    } 
   }
 
-  // --------------------------------------------------------
+  // =============================================================================
+  // Export RoI's to BMP
   {  
     namespace bg = boost::gil;
     auto img = bg::rgb8_image_t { 512 , 512 , bg::rgb8_pixel_t{255,255,255} };
@@ -240,13 +271,13 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
       if( lRecord.Size < 500 ) continue; // Cull micro RoIs
 
       auto lIt = lColours.find( Id );
-      if( lIt == lColours.end() ) lIt = lColours.insert( std::make_pair( Id , ToRGB( lColours.size() ) ) ).first;
+      if( lIt == lColours.end() ) lIt = lColours.emplace( std::make_pair( Id , ToRGB( lColours.size() ) ) ).first;
       view( i , j ) = lIt->second;    
     }
     auto lOutFileName = boost::filesystem::path( mFilename ).stem().string() + ".AutoRoI.bmp";
     bg::write_view( lOutFileName , bg::const_view(img), bg::bmp_tag());
   }
-  // --------------------------------------------------------
+  // =============================================================================
 
 
   // Find the bounds and the datapoints
@@ -304,22 +335,80 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
 }
 
 
-void LocalizationFile::ExtractRoIs( const ManualRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const
-{
-  auto lMaxX = aRoI.width / 2.0;
-  auto lMaxY = aRoI.height / 2.0;
 
-  std::vector< Data > lData;  
+
+
+
+void LocalizationFile::ExtractRoIs( const std::string& aImageMap , const std::function< void( RoI& ) >& aCallback ) const
+{
+  namespace bg = boost::gil;
+  bg::rgb8_image_t img;
+  bg::read_image( aImageMap , img , bg::bmp_tag() );
+  auto view = bg::view(img);
+
+  // Calculate our scaling factor
+  std::pair< double, double> lXbound( std::make_pair( 9e99, -9e99 ) ), lYbound( std::make_pair( 9e99, -9e99 ) );
+
   for( auto& k : mData ) {
-      double x = k.x - aRoI.x;
-      double y = k.y - aRoI.y;
-      if( fabs(x) < lMaxX and fabs(y) < lMaxY ) lData.emplace_back( x, y, k.s );    
+    if ( k.x < lXbound.first  ) lXbound.first  = k.x;
+    if ( k.x > lXbound.second ) lXbound.second = k.x;
+    if ( k.y < lYbound.first  ) lYbound.first  = k.y;
+    if ( k.y > lYbound.second ) lYbound.second = k.y;
   }
 
-  RoI lRoI( std::move( lData ) );
-  lRoI.SetCentre( aRoI.x , aRoI.y );
-  lRoI.SetWidth( aRoI.width , aRoI.height );
+  std::size_t lWidth = view.width();
+  std::size_t lHeight = view.height();
 
-  aCallback( lRoI );        
+  auto lXScale( (lWidth - 1e-12) / ( lXbound.second - lXbound.first ) );
+  auto lYScale( (lHeight - 1e-12) / ( lYbound.second - lYbound.first ) );
+
+  std::map < int , tRecord > lRecords;
+
+  // Find the bounds and the datapoints
+  for( auto& k : mData ) {
+    std::size_t x = ( k.x - lXbound.first ) * lXScale;
+    std::size_t y = ( k.y - lYbound.first ) * lYScale;
+
+    // std::cout << lWidth << " " << lHeight << " " << x << " " << y << std::endl;
+
+    auto& pixel = view( x , y );
+    auto Id = bg::semantic_at_c<0>( pixel ) + ( 256 * bg::semantic_at_c<1>( pixel ) ) + ( 65536 * bg::semantic_at_c<2>( pixel ) );
+    if( Id == 0xFFFFFF ) continue;
+
+    auto lIt = lRecords.find( Id );
+    if( lIt == lRecords.end() ) lIt = lRecords.emplace( std::make_pair( Id , tRecord{ 0, std::make_pair( 9e99, -9e99 ), std::make_pair( 9e99, -9e99 ), std::vector< const Data* >() } ) ).first;
+    auto& lRecord = lIt->second;
+
+    lRecord.Ptrs.push_back( &k );
+    if ( k.x < lRecord.X.first  ) lRecord.X.first  = k.x;
+    if ( k.x > lRecord.X.second ) lRecord.X.second = k.x;
+    if ( k.y < lRecord.Y.first  ) lRecord.Y.first  = k.y;
+    if ( k.y > lRecord.Y.second ) lRecord.Y.second = k.y;
+  }
+
+  std::vector < tRecord* > lRecords2;
+  for( auto& i : lRecords ) lRecords2.push_back( &i.second );
+  std::sort( lRecords2.begin() , lRecords2.end() , []( const tRecord* a , const tRecord* b ){ return a->Ptrs.size() < b->Ptrs.size(); } );
+
+  for( auto& lIt : lRecords2 ) {
+    auto& lRecord = *lIt;
+    double lCentreX( ( lRecord.X.second + lRecord.X.first ) / 2.0 ), lCentreY( ( lRecord.Y.second + lRecord.Y.first ) / 2.0 );
+    double lWidthX( lRecord.X.second - lRecord.X.first ), lWidthY( lRecord.Y.second - lRecord.Y.first );
+
+    std::vector< Data > lData;
+
+    for( auto& k : lRecord.Ptrs ) {
+      double x = k->x - lCentreX;
+      double y = k->y - lCentreY;
+      lData.emplace_back( x, y, k->s );
+    }
+
+    RoI lRoI( std::move( lData ) );
+    lRoI.SetCentre( lCentreX, lCentreY );
+    lRoI.SetWidth( lWidthX, lWidthY );
+
+    aCallback( lRoI );
+  }
+
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
