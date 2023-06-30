@@ -4,6 +4,7 @@ dependencies:
       - cxx-compiler
       - boost=1.82.0
       - fmt
+      - libzip
       - gsl
       - make
       - lld=15.0.5

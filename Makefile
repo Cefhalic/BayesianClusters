@@ -35,7 +35,7 @@ FLAGS_RELEASE = -O3 -ffp-contract=fast -freciprocal-math -fmerge-all-constants -
                     -ftree-vectorize -fno-trapping-math -fassociative-math -ffinite-math-only -fno-signed-zeros
 
 FLAGS = -L${CONDA_PREFIX}/lib -Iinclude -I${CONDA_PREFIX}/include -I${CONDA_PREFIX}/include/boost   \
-        -lgsl -lgslcblas -lboost_program_options -lboost_filesystem -lfmt -lm -lpthread  \
+        -lgsl -lgslcblas -lboost_program_options -lboost_filesystem -lfmt -lzip -lm -lpthread  \
         -g -std=c++14 ${FLAGS_RELEASE} -march=native -MMD -MP -fPIC -Wall
 
       
