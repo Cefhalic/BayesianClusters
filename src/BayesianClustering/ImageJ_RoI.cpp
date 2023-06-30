@@ -27,24 +27,23 @@ roi_polygon DecodeBinaryRoI( const uint8_t* const aData )
 
 std::map< std::string , roi_polygon > OpenRoiZipfile( const std::string& aZipFileName )
 {   
-  int lError(0);
-  zip_t* arch = zip_open( aZipFileName.c_str() , 0 , &lError ); // initializes a pointer to a zip archive , sets that pointer to the zip file
-
-  // the zip_stat structure contains information such as file name, size, compressed size; create and "initialize" the structure according to documentation
-  struct zip_stat* finfo = (struct zip_stat*) malloc( 1024 );
-  zip_stat_init( finfo );
-
   std::map< std::string , roi_polygon > lRet;
 
-  // we open the file at the count'th index inside the archive we loop and print every file and its contents, stopping when zip_stat_index did not return 0, which means the count index is more than # of files
-  uint8_t* lData( NULL );
-  for ( std::size_t count( 0 ); !zip_stat_index( arch , count , 0 , finfo ) ; ++count ) {
-      lData = (uint8_t*) realloc( lData , finfo->size + 1 ); // allocate room for the entire file contents
-      zip_file_t* fd = zip_fopen_index( arch , count , 0 ); // opens file at count index, reads from fd finfo->size, bytes into lData buffer
-      zip_fread( fd , lData , finfo->size );    
-      lRet[ finfo->name ] = DecodeBinaryRoI( lData  );  
+  // -------------------------------------------------------------------------------
+  int lError(0);
+  zip_t* lArchive = zip_open( aZipFileName.c_str() , 0 , &lError ); // initializes a pointer to a zip archive , sets that pointer to the zip file
+  struct zip_stat* lMemberInfo = (struct zip_stat*) malloc( 1024 ); // the zip_stat structure contains information such as file name, size, compressed size
+  zip_stat_init( lMemberInfo );                                     // create and "initialize" the structure according to documentation
+
+  uint8_t* lBuffer( NULL );
+  for ( std::size_t lIndex( 0 ); !zip_stat_index( lArchive , lIndex , 0 , lMemberInfo ) ; ++lIndex ) { // we open the file at the lIndex'th index inside the archive we loop and print every file and its contents, stopping when zip_stat_index did not return 0
+    lBuffer = (uint8_t*) realloc( lBuffer , lMemberInfo->size + 1 );   // allocate room for the entire file contents
+    zip_file_t* lMemberPtr = zip_fopen_index( lArchive , lIndex , 0 ); // opens file at lIndex index 
+    zip_fread( lMemberPtr , lBuffer , lMemberInfo->size );             // reads lMemberInfo->size bytes from lMemberPtr into lBuffer buffer 
+    lRet[ lMemberInfo->name ] = DecodeBinaryRoI( lBuffer );  
   } 
-  free( lData ); // frees allocated buffer, will reallocate on next iteration of loop
+  free( lBuffer ); // free allocated buffer
+  // -------------------------------------------------------------------------------
 
   return lRet;
 }
