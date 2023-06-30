@@ -42,16 +42,43 @@ void _ScanCallback_Json_( const std::vector< ScanEntry >& aVector, const std::st
 }
 
 
+// ScanEntry _BestScore_( const ScanConfiguration& aScanConfig , const std::vector< ScanEntry >& aResults )
+// {
+//   std::size_t lMax( 0 );
+//   for( std::size_t i(1) ; i!= aResults.size() ; ++i )
+//     if( aResults[i].score > aResults[lMax].score ) lMax = i;
+
+//   std::size_t R( lMax / aScanConfig.tbounds.bins ), T( lMax % aScanConfig.tbounds.bins );
+
+//   ScanEntry lMean{ 0.0 , 0.0 , 0.0 };
+//   for( int r=std::max(0,R-2) ; r!=std::min(aScanConfig.rbounds.bins,R+3) ; ++r ){
+//     for( int t=std::max(0,T-2) ; t!=std::min(aScanConfig.tbounds.bins,T+3) ; ++t ){
+//       std::size_t lIndex = ( aScanConfig.tbounds.bins * r ) + t;
+//       auto& lBin = aResults[lIndex];
+//       lMean.r += ( lBin.score * lBin.r );
+//       lMean.t += ( lBin.score * lBin.t );
+//       lMean.score += lBin.score;
+//     }
+//   } 
+
+//   lMean.r /= lMean.score;
+//   lMean.t /= lMean.score;
+
+//   return lMean;
+// }
+
+
 //! A callback to neatly package the scan results for easy consumption
 //! \param aRoI        The region of interest
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The simple callback to be applied
-void _FullScanToSimpleScan_( RoI& aRoI , const ScanConfiguration& aScanConfig , const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback )
+void _FullScanToSimpleScan_( RoI& aRoI , const ScanConfiguration& aScanConfig , const tSimpleScanCallback& aCallback )
 {
   std::mutex lMtx;
   std::vector< ScanEntry > lResults;
   aRoI.ScanRT( aScanConfig, [&]( const RoIproxy& aRoI, const double& aR, const double& aT ) { lMtx.lock(); lResults.push_back( { aR, aT, aRoI.mLogP } ); lMtx.unlock(); } );
   std::sort( lResults.begin(), lResults.end() );
+
   aCallback( lResults );  
 }
 
@@ -113,13 +140,13 @@ void _FullClusterToSimpleCluster_( RoIproxy& aRoIproxy , const std::function< vo
 
 
 __attribute__((flatten))
-void AutoRoi_Scan_FullCallback( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double& ) >& aCallback )
+void AutoRoi_Scan_FullCallback( const std::string& aInFile , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback )
 {
   LocalizationFile( aInFile ).ExtractRoIs( [&]( RoI& aRoI ) { aRoI.ScanRT( aScanConfig, aCallback ); } );
 }
 
 __attribute__((flatten))
-void AutoRoi_Scan_SimpleCallback( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback )
+void AutoRoi_Scan_SimpleCallback( const std::string& aInFile , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback )
 {
   LocalizationFile( aInFile ).ExtractRoIs( [&]( RoI& aRoI ) { _FullScanToSimpleScan_( aRoI , aScanConfig, aCallback ); } );
 }
@@ -133,13 +160,13 @@ void AutoRoi_Scan_ToJson( const std::string& aInFile , const ScanConfiguration& 
 
 
 __attribute__((flatten))
-void AutoRoi_Cluster_FullCallback( const std::string& aInFile , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback )
+void AutoRoi_Cluster_FullCallback( const std::string& aInFile , const double& aR, const double& aT, const tFullClusterCallback& aCallback )
 {  
   LocalizationFile( aInFile ).ExtractRoIs( [&]( RoI& aRoI ) { aRoI.Clusterize( aR, aT, aCallback ); } );
 }
 
 __attribute__((flatten))
-void AutoRoi_Cluster_SimpleCallback( const std::string& aInFile , const double& aR, const double& aT, const std::function< void( const std::vector< ClusterWrapper >& ) >& aCallback )
+void AutoRoi_Cluster_SimpleCallback( const std::string& aInFile , const double& aR, const double& aT, const tSimpleClusterCallback& aCallback )
 {
   AutoRoi_Cluster_FullCallback( aInFile , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
 }
@@ -153,13 +180,13 @@ void AutoRoi_Cluster_ToJson( const std::string& aInFile , const double& aR, cons
 
 
 __attribute__((flatten))
-void ManualRoi_Scan_FullCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double& ) >& aCallback )
+void ManualRoi_Scan_FullCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback )
 {
   LocalizationFile( aInFile ).ExtractRoIs( aManualRoI , [&]( RoI& aRoI ) { aRoI.ScanRT( aScanConfig, aCallback ); } );
 }
 
 __attribute__((flatten))
-void ManualRoi_Scan_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback )
+void ManualRoi_Scan_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback )
 {
   LocalizationFile( aInFile ).ExtractRoIs( aManualRoI , [&]( RoI& aRoI ) { _FullScanToSimpleScan_( aRoI , aScanConfig, aCallback ); } );
 }
@@ -173,13 +200,13 @@ void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManua
 
 
 __attribute__((flatten))
-void ManualRoi_Cluster_FullCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback )
+void ManualRoi_Cluster_FullCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const tFullClusterCallback& aCallback )
 {  
   LocalizationFile( aInFile ).ExtractRoIs( aManualRoI , [&]( RoI& aRoI ) { aRoI.Clusterize( aR, aT, aCallback ); } );
 }
 
 __attribute__((flatten))
-void ManualRoi_Cluster_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::function< void( const std::vector< ClusterWrapper >& ) >& aCallback )
+void ManualRoi_Cluster_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const tSimpleClusterCallback& aCallback )
 {
   ManualRoi_Cluster_FullCallback( aInFile , aManualRoI , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
 }
@@ -192,40 +219,40 @@ void ManualRoi_Cluster_ToJson( const std::string& aInFile , const ManualRoI& aMa
 
 
 
-__attribute__((flatten))
-void ImageMapRoi_Scan_FullCallback( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const std::function< void( RoIproxy&, const double&, const double& ) >& aCallback )
-{
-  LocalizationFile( aInFile ).ExtractRoIs( aImageMap , [&]( RoI& aRoI ) { aRoI.ScanRT( aScanConfig, aCallback ); } );
-}
+// __attribute__((flatten))
+// void ImageMapRoi_Scan_FullCallback( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback )
+// {
+//   LocalizationFile( aInFile ).ExtractRoIs( aImageMap , [&]( RoI& aRoI ) { aRoI.ScanRT( aScanConfig, aCallback ); } );
+// }
 
-__attribute__((flatten))
-void ImageMapRoi_Scan_SimpleCallback( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const std::function< void( const std::vector< ScanEntry >&  ) >& aCallback )
-{
-  LocalizationFile( aInFile ).ExtractRoIs( aImageMap , [&]( RoI& aRoI ) { _FullScanToSimpleScan_( aRoI , aScanConfig, aCallback ); } );
-}
+// __attribute__((flatten))
+// void ImageMapRoi_Scan_SimpleCallback( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback )
+// {
+//   LocalizationFile( aInFile ).ExtractRoIs( aImageMap , [&]( RoI& aRoI ) { _FullScanToSimpleScan_( aRoI , aScanConfig, aCallback ); } );
+// }
 
-__attribute__((flatten))
-void ImageMapRoi_Scan_ToJson( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern )
-{
-  ImageMapRoi_Scan_SimpleCallback( aInFile , aImageMap , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aInFile , aOutputPattern ); } );
-}
+// __attribute__((flatten))
+// void ImageMapRoi_Scan_ToJson( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern )
+// {
+//   ImageMapRoi_Scan_SimpleCallback( aInFile , aImageMap , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aInFile , aOutputPattern ); } );
+// }
 
 
 
-__attribute__((flatten))
-void ImageMapRoi_Cluster_FullCallback( const std::string& aInFile , const std::string& aImageMap , const double& aR, const double& aT, const std::function< void( RoIproxy& ) >& aCallback )
-{  
-  LocalizationFile( aInFile ).ExtractRoIs( aImageMap , [&]( RoI& aRoI ) { aRoI.Clusterize( aR, aT, aCallback ); } );
-}
+// __attribute__((flatten))
+// void ImageMapRoi_Cluster_FullCallback( const std::string& aInFile , const std::string& aImageMap , const double& aR, const double& aT, const tFullClusterCallback& aCallback )
+// {  
+//   LocalizationFile( aInFile ).ExtractRoIs( aImageMap , [&]( RoI& aRoI ) { aRoI.Clusterize( aR, aT, aCallback ); } );
+// }
 
-__attribute__((flatten))
-void ImageMapRoi_Cluster_SimpleCallback( const std::string& aInFile , const std::string& aImageMap , const double& aR, const double& aT, const std::function< void( const std::vector< ClusterWrapper >& ) >& aCallback )
-{
-  ImageMapRoi_Cluster_FullCallback( aInFile , aImageMap , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
-}
+// __attribute__((flatten))
+// void ImageMapRoi_Cluster_SimpleCallback( const std::string& aInFile , const std::string& aImageMap , const double& aR, const double& aT, const tSimpleClusterCallback& aCallback )
+// {
+//   ImageMapRoi_Cluster_FullCallback( aInFile , aImageMap , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
+// }
 
-__attribute__((flatten))
-void ImageMapRoi_Cluster_ToJson( const std::string& aInFile , const std::string& aImageMap , const double& aR, const double& aT, const std::string& aOutputPattern )
-{
-  ImageMapRoi_Cluster_SimpleCallback( aInFile , aImageMap , aR , aT , [&]( const std::vector< ClusterWrapper >& aVector ){ _ClusterCallback_Json_( aVector , aInFile , aOutputPattern ); } );
-}
+// __attribute__((flatten))
+// void ImageMapRoi_Cluster_ToJson( const std::string& aInFile , const std::string& aImageMap , const double& aR, const double& aT, const std::string& aOutputPattern )
+// {
+//   ImageMapRoi_Cluster_SimpleCallback( aInFile , aImageMap , aR , aT , [&]( const std::vector< ClusterWrapper >& aVector ){ _ClusterCallback_Json_( aVector , aInFile , aOutputPattern ); } );
+// }

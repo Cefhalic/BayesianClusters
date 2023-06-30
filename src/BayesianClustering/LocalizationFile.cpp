@@ -339,76 +339,76 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
 
 
 
-void LocalizationFile::ExtractRoIs( const std::string& aImageMap , const std::function< void( RoI& ) >& aCallback ) const
-{
-  namespace bg = boost::gil;
-  bg::rgb8_image_t img;
-  bg::read_image( aImageMap , img , bg::bmp_tag() );
-  auto view = bg::view(img);
+// void LocalizationFile::ExtractRoIs( const std::string& aImageMap , const std::function< void( RoI& ) >& aCallback ) const
+// {
+//   namespace bg = boost::gil;
+//   bg::rgb8_image_t img;
+//   bg::read_image( aImageMap , img , bg::bmp_tag() );
+//   auto view = bg::view(img);
 
-  // Calculate our scaling factor
-  std::pair< double, double> lXbound( std::make_pair( 9e99, -9e99 ) ), lYbound( std::make_pair( 9e99, -9e99 ) );
+//   // Calculate our scaling factor
+//   std::pair< double, double> lXbound( std::make_pair( 9e99, -9e99 ) ), lYbound( std::make_pair( 9e99, -9e99 ) );
 
-  for( auto& k : mData ) {
-    if ( k.x < lXbound.first  ) lXbound.first  = k.x;
-    if ( k.x > lXbound.second ) lXbound.second = k.x;
-    if ( k.y < lYbound.first  ) lYbound.first  = k.y;
-    if ( k.y > lYbound.second ) lYbound.second = k.y;
-  }
+//   for( auto& k : mData ) {
+//     if ( k.x < lXbound.first  ) lXbound.first  = k.x;
+//     if ( k.x > lXbound.second ) lXbound.second = k.x;
+//     if ( k.y < lYbound.first  ) lYbound.first  = k.y;
+//     if ( k.y > lYbound.second ) lYbound.second = k.y;
+//   }
 
-  std::size_t lWidth = view.width();
-  std::size_t lHeight = view.height();
+//   std::size_t lWidth = view.width();
+//   std::size_t lHeight = view.height();
 
-  auto lXScale( (lWidth - 1e-12) / ( lXbound.second - lXbound.first ) );
-  auto lYScale( (lHeight - 1e-12) / ( lYbound.second - lYbound.first ) );
+//   auto lXScale( (lWidth - 1e-12) / ( lXbound.second - lXbound.first ) );
+//   auto lYScale( (lHeight - 1e-12) / ( lYbound.second - lYbound.first ) );
 
-  std::map < int , tRecord > lRecords;
+//   std::map < int , tRecord > lRecords;
 
-  // Find the bounds and the datapoints
-  for( auto& k : mData ) {
-    std::size_t x = ( k.x - lXbound.first ) * lXScale;
-    std::size_t y = ( k.y - lYbound.first ) * lYScale;
+//   // Find the bounds and the datapoints
+//   for( auto& k : mData ) {
+//     std::size_t x = ( k.x - lXbound.first ) * lXScale;
+//     std::size_t y = ( k.y - lYbound.first ) * lYScale;
 
-    // std::cout << lWidth << " " << lHeight << " " << x << " " << y << std::endl;
+//     // std::cout << lWidth << " " << lHeight << " " << x << " " << y << std::endl;
 
-    auto& pixel = view( x , y );
-    auto Id = bg::semantic_at_c<0>( pixel ) + ( 256 * bg::semantic_at_c<1>( pixel ) ) + ( 65536 * bg::semantic_at_c<2>( pixel ) );
-    if( Id == 0xFFFFFF ) continue;
+//     auto& pixel = view( x , y );
+//     auto Id = bg::semantic_at_c<0>( pixel ) + ( 256 * bg::semantic_at_c<1>( pixel ) ) + ( 65536 * bg::semantic_at_c<2>( pixel ) );
+//     if( Id == 0xFFFFFF ) continue;
 
-    auto lIt = lRecords.find( Id );
-    if( lIt == lRecords.end() ) lIt = lRecords.emplace( std::make_pair( Id , tRecord{ 0, std::make_pair( 9e99, -9e99 ), std::make_pair( 9e99, -9e99 ), std::vector< const Data* >() } ) ).first;
-    auto& lRecord = lIt->second;
+//     auto lIt = lRecords.find( Id );
+//     if( lIt == lRecords.end() ) lIt = lRecords.emplace( std::make_pair( Id , tRecord{ 0, std::make_pair( 9e99, -9e99 ), std::make_pair( 9e99, -9e99 ), std::vector< const Data* >() } ) ).first;
+//     auto& lRecord = lIt->second;
 
-    lRecord.Ptrs.push_back( &k );
-    if ( k.x < lRecord.X.first  ) lRecord.X.first  = k.x;
-    if ( k.x > lRecord.X.second ) lRecord.X.second = k.x;
-    if ( k.y < lRecord.Y.first  ) lRecord.Y.first  = k.y;
-    if ( k.y > lRecord.Y.second ) lRecord.Y.second = k.y;
-  }
+//     lRecord.Ptrs.push_back( &k );
+//     if ( k.x < lRecord.X.first  ) lRecord.X.first  = k.x;
+//     if ( k.x > lRecord.X.second ) lRecord.X.second = k.x;
+//     if ( k.y < lRecord.Y.first  ) lRecord.Y.first  = k.y;
+//     if ( k.y > lRecord.Y.second ) lRecord.Y.second = k.y;
+//   }
 
-  std::vector < tRecord* > lRecords2;
-  for( auto& i : lRecords ) lRecords2.push_back( &i.second );
-  std::sort( lRecords2.begin() , lRecords2.end() , []( const tRecord* a , const tRecord* b ){ return a->Ptrs.size() < b->Ptrs.size(); } );
+//   std::vector < tRecord* > lRecords2;
+//   for( auto& i : lRecords ) lRecords2.push_back( &i.second );
+//   std::sort( lRecords2.begin() , lRecords2.end() , []( const tRecord* a , const tRecord* b ){ return a->Ptrs.size() < b->Ptrs.size(); } );
 
-  for( auto& lIt : lRecords2 ) {
-    auto& lRecord = *lIt;
-    double lCentreX( ( lRecord.X.second + lRecord.X.first ) / 2.0 ), lCentreY( ( lRecord.Y.second + lRecord.Y.first ) / 2.0 );
-    double lWidthX( lRecord.X.second - lRecord.X.first ), lWidthY( lRecord.Y.second - lRecord.Y.first );
+//   for( auto& lIt : lRecords2 ) {
+//     auto& lRecord = *lIt;
+//     double lCentreX( ( lRecord.X.second + lRecord.X.first ) / 2.0 ), lCentreY( ( lRecord.Y.second + lRecord.Y.first ) / 2.0 );
+//     double lWidthX( lRecord.X.second - lRecord.X.first ), lWidthY( lRecord.Y.second - lRecord.Y.first );
 
-    std::vector< Data > lData;
+//     std::vector< Data > lData;
 
-    for( auto& k : lRecord.Ptrs ) {
-      double x = k->x - lCentreX;
-      double y = k->y - lCentreY;
-      lData.emplace_back( x, y, k->s );
-    }
+//     for( auto& k : lRecord.Ptrs ) {
+//       double x = k->x - lCentreX;
+//       double y = k->y - lCentreY;
+//       lData.emplace_back( x, y, k->s );
+//     }
 
-    RoI lRoI( std::move( lData ) );
-    lRoI.SetCentre( lCentreX, lCentreY );
-    lRoI.SetWidth( lWidthX, lWidthY );
+//     RoI lRoI( std::move( lData ) );
+//     lRoI.SetCentre( lCentreX, lCentreY );
+//     lRoI.SetWidth( lWidthX, lWidthY );
 
-    aCallback( lRoI );
-  }
+//     aCallback( lRoI );
+//   }
 
-}
+// }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

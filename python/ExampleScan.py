@@ -20,6 +20,6 @@ def Interpolator( value ):
 
 
 # AutoRoi_Scan_SimpleCallback( "1_un_red.csv" , Cfg , Callback )
-# AutoRoi_Scan_ToJson( "1_un_red.csv" , Cfg ,  "./{input}/RoI{roi:02}/scan.json" )
+AutoRoi_Scan_ToJson( "1_un_red.csv" , Cfg ,  "./{input}/RoI{roi:02}/scan.json" )
 
-ImageMapRoi_Scan_ToJson( "1_un_red.csv" , "1_un_red.AutoRoI.bmp" , Cfg , "./{input}/RoI{roi:02}/scan.json" )
+# ImageMapRoi_Scan_ToJson( "1_un_red.csv" , "1_un_red.AutoRoI.bmp" , Cfg , "./{input}/RoI{roi:02}/scan.json" )
