@@ -18,7 +18,8 @@ EXECUTABLE_OBJECT_FILES = $(patsubst src/%.cxx,obj/bin/%.o,${EXECUTABLE_SOURCES}
 EXECUTABLES = $(patsubst src/%.cxx,%.exe,${EXECUTABLE_SOURCES})
 
 # Documentation targets
-DOXYGEN = documentation/SoftwareManual.pdf
+DOXYGEN_SOURCES = $(sort $(wildcard utilities/*.Doxyfile) )
+DOXYGEN = $(patsubst utilities/%.Doxyfile,documentation/%-SoftwareManual.pdf,${DOXYGEN_SOURCES})   
 DOCUMENTATION = documentation/OptimizingTheMaths.pdf
 
 # The names of any directory paths that will need to be created
@@ -119,9 +120,9 @@ ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE}
 ${DIRECTORIES}:
 	$(call switch_verbose, "Making directory      | mkdir -p $@"   , mkdir -p $@ )
 
-${DOXYGEN}: ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES} ${PYTHON_SOURCES}
+${DOXYGEN}: documentation/%-SoftwareManual.pdf : utilities/%.Doxyfile ${HEADERS} ${LIBRARY_SOURCES} ${EXECUTABLE_SOURCES} ${PYTHON_SOURCES}
 	@echo "Generating Doxygen Documentation: doxygen utilities/Doxyfile ---> $@"
-	@doxygen utilities/Doxyfile
+	@doxygen $<
 	@make -sC .doxygen/latex > /dev/null 2>&1
 	@cp .doxygen/latex/refman.pdf $@
 
