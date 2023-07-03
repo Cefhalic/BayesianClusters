@@ -61,6 +61,12 @@ class LocalizationFile
     //! \param aCallback A handler for each RoI found
     // void ExtractRoIs( const std::string& aImageMap , const std::function< void( RoI& ) >& aCallback ) const;
 
+    //! Accessor to the raw data
+    //! \return Reference to the raw data
+    inline const std::vector< Data >& data()
+    {
+      return mData;
+    }
 
   private:
     //! The localization file name

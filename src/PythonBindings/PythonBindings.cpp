@@ -104,6 +104,37 @@ namespace Adapted
 // =====================================================================================================================
 
 
+boost::python::tuple GetLocalizations( const std::string& aFile )
+{
+  LocalizationFile lFile( aFile );
+  boost::python::list x , y;
+  for( auto& i : lFile.data() )
+  {
+    x.append( i.x );
+    y.append( i.y );
+  }
+  return boost::python::make_tuple( x , y );
+}
+
+#include "BayesianClustering/ImageJ_RoI.hpp"
+boost::python::list GetRoIs( const std::string& aFile )
+{
+  boost::python::list lRet;
+  std::map< std::string , roi_polygon > lRoIs = OpenRoiZipfile( aFile );
+  for( const auto& i : lRoIs )
+  {
+    boost::python::list x , y;
+    for( const auto& point : i.second )
+    {
+      x.append( boost::geometry::get<0>(point) );
+      y.append( boost::geometry::get<1>(point) );
+    }
+    lRet.append( boost::python::make_tuple( x , y ) );
+  }
+
+  return lRet;
+}
+
 // =====================================================================================================================
 //! Helper Macro to simplify defining functions
 //! \param X The function being defined
@@ -151,15 +182,15 @@ BOOST_PYTHON_MODULE( BayesianClustering )
     .def( init< const std::string& >( arg( "aCfgFile" ) ) )
     .def( "__init__" , make_constructor( &ScanConfigurationConstructor, default_call_policies(), args( "aSigmaBins", "aSigmaMin", "aSigmaMax", "aInterpolator", "aRbins", "aMinScanR", "aMaxScanR", "aTbins", "aMinScanT", "aMaxScanT", "aPB", "aAlpha" ) ) ); 
 
+  // class_< tSimpleClusterCallback , boost::noncopyable >( "tSimpleClusterCallback" , init< const object& >() );
+  // def( "AutoRoi_Cluster_SimpleCallback" , &AutoRoi_Cluster_SimpleCallback , args( "aInFile" , "aR" , "aT" , "aCallback" ) , "Automatically extract RoI, clusterize and apply a simple call-back" );
+
   // ADAPTED_FN( AutoRoi_Scan_FullCallback , "Automatically extract RoI, run scan and apply a full call-back"   , "aInFile" , "aScanConfig" , "aCallback" );
   ADAPTED_FN( AutoRoi_Scan_SimpleCallback  , "Automatically extract RoI, run scan and apply a simple call-back" , "aInFile" , "aScanConfig" , "aCallback" );
           FN( AutoRoi_Scan_ToJson          , "Automatically extract RoI, run scan and dump to JSON file"        , "aInFile" , "aScanConfig" , "aOutputPattern" );
 
   // ADAPTED_FN( AutoRoi_Cluster_FullCallback , "Automatically extract RoI, clusterize and apply a full call-back"   , "aInFile" , "aR" , "aT" , "aCallback" );
-  // ADAPTED_FN( AutoRoi_Cluster_SimpleCallback  , "Automatically extract RoI, clusterize and apply a simple call-back" , "aInFile" , "aR" , "aT" , "aCallback" );
-  class_< tSimpleClusterCallback , boost::noncopyable >( "tSimpleClusterCallback" , init< const object& >() );
-  def( "AutoRoi_Cluster_SimpleCallback" , &AutoRoi_Cluster_SimpleCallback , args( "aInFile" , "aR" , "aT" , "aCallback" ) , "Automatically extract RoI, clusterize and apply a simple call-back" );
-
+  ADAPTED_FN( AutoRoi_Cluster_SimpleCallback  , "Automatically extract RoI, clusterize and apply a simple call-back" , "aInFile" , "aR" , "aT" , "aCallback" );
           FN( AutoRoi_Cluster_ToJson          , "Automatically extract RoI, clusterize and dump to JSON file"        , "aInFile" , "aR" , "aT" , "aOutputPattern" );
 
   // ADAPTED_FN( ManualRoi_Scan_FullCallback , "Manually specify RoI, run scan and apply a full call-back"   , "aInFile" , "aManualRoI" , "aScanConfig" , "aCallback" );
@@ -177,6 +208,14 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   // // ADAPTED_FN( ImageMapRoi_Cluster_FullCallback , "Extract RoI using an image-map, clusterize and apply a full call-back"   , "aInFile" , "aImageMap" , "aR" , "aT" , "aCallback" );
   // ADAPTED_FN( ImageMapRoi_Cluster_SimpleCallback  , "Extract RoI using an image-map, clusterize and apply a simple call-back" , "aInFile" , "aImageMap" , "aR" , "aT" , "aCallback" );
   //         FN( ImageMapRoi_Cluster_ToJson          , "Extract RoI using an image-map, clusterize and dump to JSON file"        , "aInFile" , "aImageMap" , "aR" , "aT" , "aOutputPattern" );
+
+  // ------------------------------------------
+
+
+  def( "GetLocalizations" , &GetLocalizations );
+  def( "GetRoIs" , &GetRoIs );
+
+
 }
 
 #undef ADAPTED_FN
