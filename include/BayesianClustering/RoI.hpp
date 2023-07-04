@@ -64,9 +64,9 @@ class RoI
     //! \param aPhysicalCentreY The y-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
     void SetCentre( const double& aPhysicalCentreX, const double& aPhysicalCentreY );
 
-    //! Setter for the size of the RoI window
-    //! \param aWidthX The width of the window in physical units
-    //! \param aWidthY The height of the window in physical units
+    // //! Setter for the size of the RoI window
+    // //! \param aWidthX The width of the window in physical units
+    // //! \param aWidthY The height of the window in physical units
     // void SetWidth( const double& aWidthX, const double& aWidthY );
 
     //! Setter for the size of the RoI window

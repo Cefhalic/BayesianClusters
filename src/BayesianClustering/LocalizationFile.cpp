@@ -106,8 +106,7 @@ LocalizationFile::LocalizationFile( const std::string& aFilename ) : mFilename( 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 void LocalizationFile::ExtractRoIs( const ManualRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const
 {
-  auto lMaxX = aRoI.width / 2.0;
-  auto lMaxY = aRoI.height / 2.0;
+  auto lMaxX( aRoI.width / 2.0 ) , lMaxY( aRoI.height / 2.0 );
 
   std::vector< Data > lData;  
   for( auto& k : mData ) {
@@ -174,33 +173,37 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
   constexpr int cMaskSize( (2*cGaussianSize)+1 );
   constexpr double cScaling( -1.0 / (cMaskSize*cMaskSize) );
   std::array< std::array< float, cMaskSize >, cMaskSize > lMask;
-  for( int i(-cGaussianSize) ; i<=cGaussianSize ; ++i ) for( int j(-cGaussianSize) ; j<=cGaussianSize ; ++j ) {
-      lMask[i+cGaussianSize][j+cGaussianSize] = exp( cScaling * ( (i*i)+(j*j) ) );
-    }
+  for( int i(-cGaussianSize) ; i<=cGaussianSize ; ++i ) for( int j(-cGaussianSize) ; j<=cGaussianSize ; ++j )
+  {
+    lMask[i+cGaussianSize][j+cGaussianSize] = exp( cScaling * ( (i*i)+(j*j) ) );
+  }
 
   tArray lHist2;
   int Max( INT_MIN );
   for( int i(0) ; i!=512 ; ++i ) for( int j(0) ; j!=512 ; ++j ) {
       lHist2[i][j] = 0;
-      for( int k(-cGaussianSize) ; k<=cGaussianSize ; ++k ) for( int l(-cGaussianSize) ; l<=cGaussianSize ; ++l ) {
-          auto i2( i+k ), j2( j+l );
-          if( i2 < 0 or i2 > 511 or j2 < 0 or j2 > 511 ) continue;
-          lHist2[i][j] += ( lHist[i2][j2] * lMask[k+cGaussianSize][l+cGaussianSize] );
-        }
+      for( int k(-cGaussianSize) ; k<=cGaussianSize ; ++k ) for( int l(-cGaussianSize) ; l<=cGaussianSize ; ++l )
+      {
+        auto i2( i+k ), j2( j+l );
+        if( i2 < 0 or i2 > 511 or j2 < 0 or j2 > 511 ) continue;
+        lHist2[i][j] += ( lHist[i2][j2] * lMask[k+cGaussianSize][l+cGaussianSize] );
+      }
       if ( Max < lHist2[i][j] ) Max = lHist2[i][j];
     }
 
   // Threshold the histogram
   int lThreshold = 0.2 * Max;
-  for( int i(0) ; i!=512 ; ++i ) for( int j(0) ; j!=512 ; ++j ) {
-      lHist2[i][j] = - int( lHist2[i][j] > lThreshold );
-    }
+  for( int i(0) ; i!=512 ; ++i ) for( int j(0) ; j!=512 ; ++j )
+  {
+    lHist2[i][j] = - int( lHist2[i][j] > lThreshold );
+  }
 
   // Depth-first search for continuously connected regions
   int lRoIid( 0 );
-  for( int i(0) ; i!=512 ; ++i ) for( int j(0) ; j!=512 ; ++j ) {
-      if( lHist2[i][j] < 0 ) __RecursiveSearch__( lHist2, ++lRoIid, i, j );
-    }
+  for( int i(0) ; i!=512 ; ++i ) for( int j(0) ; j!=512 ; ++j )
+  {
+    if( lHist2[i][j] < 0 ) __RecursiveSearch__( lHist2, ++lRoIid, i, j );
+  }
 
 
   //! Local record to store the size, the bounds and the datapoints
@@ -284,25 +287,18 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
   // // =============================================================================
 
 
-  // Find the bounds and the datapoints
+  // Find the centre and the datapoints
   for( auto& k : mData ) {
-    std::size_t x = ( k.x - lXbound.first ) * lXScale;
-    std::size_t y = ( k.y - lYbound.first ) * lYScale;
+    std::size_t x( ( k.x - lXbound.first ) * lXScale ) , y( ( k.y - lYbound.first ) * lYScale );
 
     auto& Id = lHist2[x][y];
     if( !Id ) continue;
 
     auto& lRecord = lRecords[Id];
-
     if( lRecord.Size < 500 ) continue; // Cull micro RoIs
-
     lRecord.Ptrs.push_back( &k );
     lRecord.CentreX += k.x;
     lRecord.CentreY += k.y;    
-    // if ( k.x < lRecord.X.first  ) lRecord.X.first  = k.x;
-    // if ( k.x > lRecord.X.second ) lRecord.X.second = k.x;
-    // if ( k.y < lRecord.Y.first  ) lRecord.Y.first  = k.y;
-    // if ( k.y > lRecord.Y.second ) lRecord.Y.second = k.y;
   }
 
   std::sort( lRecords.begin() , lRecords.end() , []( const tRecord& a , const tRecord& b ){ return a.Ptrs.size() < b.Ptrs.size(); } );
@@ -314,12 +310,7 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
     lRecord.CentreY /= lRecord.Ptrs.size();
 
     std::vector< Data > lData;
-
-    for( auto& k : lRecord.Ptrs ) {
-      double x = k->x - lRecord.CentreX;
-      double y = k->y - lRecord.CentreY;
-      lData.emplace_back( x, y, k->s );
-    }
+    for( auto& k : lRecord.Ptrs ) lData.emplace_back( k->x - lRecord.CentreX , k->y - lRecord.CentreY , k->s );
 
     RoI lRoI( std::move( lData ) );
     lRoI.SetCentre( lRecord.CentreX, lRecord.CentreY );
@@ -353,13 +344,7 @@ void LocalizationFile::ExtractRoIs( const std::string& aImageJfile , const doubl
     for( const auto& i : mData )
     {
       geo_point lPoint( i.x , i.y );    
-
-      if( boost::geometry::within( lPoint , lPoly ) )
-      {
-        double x = i.x - lCentreX;
-        double y = i.y - lCentreY;
-        lData.emplace_back( x, y, i.s );
-      }
+      if( boost::geometry::within( lPoint , lPoly ) ) lData.emplace_back( i.x - lCentreX , i.y - lCentreY , i.s );
     }
 
     //! \todo Add ID back into RoI
