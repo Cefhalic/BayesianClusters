@@ -159,17 +159,15 @@ boost::python::tuple CheckRoIs( const std::string& aFile , const std::string& aR
   auto lLocs = boost::python::make_tuple( x , y );
 
   boost::python::list lRoIs;
-  lFile.ExtractRoIs( aRoIFile , aScale , [&]( RoI& aRoI )
-    {
-      boost::python::list x , y;
-      for( auto& i : aRoI.mData )
-      {
-        x.append( i.x + aRoI.mPhysicalCentreX );
-        y.append( i.y + aRoI.mPhysicalCentreY );
-      }
-      lRoIs.append( boost::python::make_tuple( x , y ) );
-    } 
-  );
+  lFile.ExtractRoIs( aRoIFile , aScale , [&]( RoI& aRoI ) {
+                                                            boost::python::list x , y;
+                                                            for( auto& i : aRoI.mData )
+                                                            {
+                                                              x.append( i.x + aRoI.getCentreX() );
+                                                              y.append( i.y + aRoI.getCentreY() );
+                                                            }
+                                                            lRoIs.append( boost::python::make_tuple( x , y ) );
+                                                          } );
   
   return boost::python::make_tuple( lLocs , lRoIs );
 }

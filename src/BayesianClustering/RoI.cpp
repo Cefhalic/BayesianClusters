@@ -17,7 +17,7 @@
 RoI::RoI( std::vector<Data>&& aData ):
   mData( std::move( aData ) ),
   mPhysicalCentreX(0), mPhysicalCentreY(0),
-  mWidthX(0), mWidthY(0),
+  // mWidthX(0), mWidthY(0),
   mArea(0)
 {
   std::sort( mData.begin(), mData.end() );
@@ -73,12 +73,18 @@ void RoI::SetCentre( const double& aPhysicalCentreX, const double& aPhysicalCent
   mPhysicalCentreY = aPhysicalCentreY;
 }
 
-void RoI::SetWidth( const double& aWidthX, const double& aWidthY )
+// void RoI::SetWidth( const double& aWidthX, const double& aWidthY )
+// {
+//   std::cout << "Width: x=" << aWidthX << ", y=" << aWidthY << std::endl;
+//   mWidthX = aWidthX;
+//   mWidthY = aWidthY;
+//   mArea = mWidthX * mWidthY;
+// }
+
+void RoI::SetArea( const double& aArea )
 {
-  std::cout << "Width: x=" << aWidthX << ", y=" << aWidthY << std::endl;
-  mWidthX = aWidthX;
-  mWidthY = aWidthY;
-  mArea = mWidthX * mWidthY;
+  std::cout << "Area =" << aArea << std::endl;
+  mArea = aArea;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -67,38 +67,42 @@ class RoI
     //! Setter for the size of the RoI window
     //! \param aWidthX The width of the window in physical units
     //! \param aWidthY The height of the window in physical units
-    void SetWidth( const double& aWidthX, const double& aWidthY );
+    // void SetWidth( const double& aWidthX, const double& aWidthY );
+
+    //! Setter for the size of the RoI window
+    //! \param aArea The area of the RoI in physical units
+    void SetArea( const double& aArea );
 
     //! Getter for the x-coordinate of the physical centre
     //! \return The x-coordinate of the physical centre
-    double getCentreX() const
+    inline const double& getCentreX() const
     {
       return mPhysicalCentreX;
     }
     //! Getter for the y-coordinate of the physical centre
     //! \return The y-coordinate of the physical centre
-    double getCentreY() const
+    inline const double& getCentreY() const
     {
       return mPhysicalCentreY;
     }
 
-    //! Getter for the width of the ROI window
-    //! \return The width of the ROI window
-    double getWidthX() const
-    {
-      return mWidthX;
-    }
+    // //! Getter for the width of the ROI window
+    // //! \return The width of the ROI window
+    // double getWidthX() const
+    // {
+    //   return mWidthX;
+    // }
+
+    // //! Getter for the height of the ROI window
+    // //! \return The height of the ROI window
+    // double getWidthY() const
+    // {
+    //   return mWidthY;
+    // }
 
     //! Getter for the height of the ROI window
     //! \return The height of the ROI window
-    double getWidthY() const
-    {
-      return mWidthY;
-    }
-
-    //! Getter for the height of the ROI window
-    //! \return The height of the ROI window
-    double getArea() const
+    inline const double& getArea() const
     {
       return mArea;
     }
@@ -107,16 +111,17 @@ class RoI
     //! The collection of raw data points
     std::vector<Data> mData;
 
-  // private:
+  private:
     //! The x-coordinate of the centre of the window in physical units
     double mPhysicalCentreX;
     //! The y-coordinate of the centre of the window in physical units
     double mPhysicalCentreY;
 
-    //! The width of the window in the x-direction in physical units
-    double mWidthX;
-    //! The width of the window in the y-direction in physical units
-    double mWidthY;
+    // //! The width of the window in the x-direction in physical units
+    // double mWidthX;
+    // //! The width of the window in the y-direction in physical units
+    // double mWidthY;
+
     //! The area of the window in physical units
     double mArea;
 
