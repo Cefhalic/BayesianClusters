@@ -18,8 +18,9 @@ class RoI
 {
   public:
     //! Default Constructor
+    //! \param aId The ID of the RoI
     //! \param aData The set of data-points in the RoI
-    RoI( std::vector<Data>&& aData );
+    RoI( const std::string& aId , std::vector<Data>&& aData );
 
     //! Deleted copy constructor
     RoI( const RoI& aOther /*!< Anonymous argument */ ) = delete;
@@ -109,13 +110,23 @@ class RoI
 
     //! Accessor to the raw data
     //! \return Reference to the raw data
-    inline const std::vector< Data >& data()
+    inline const std::vector< Data >& data() const
     {
       return mData;
     }
 
+    //! Accessor to the RoI ID
+    //! \return Reference to the RoI ID
+    inline const std::string& id() const
+    {
+      return mId;
+    }
+
   private:
     friend class RoIproxy;
+
+    //! The ID of the ROI
+    std::string mId;
 
     //! The collection of raw data points
     std::vector<Data> mData;

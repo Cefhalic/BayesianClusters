@@ -71,11 +71,11 @@ struct ClusterWrapper {
 //! Typedef the full scan callback for clarity
 typedef std::function< void( RoIproxy&, const double&, const double& ) > tFullScanCallback;
 //! Typedef the simplified scan callback for clarity
-typedef std::function< void( const std::vector< ScanEntry >&  ) > tSimpleScanCallback;
+typedef std::function< void( const std::string& , const std::vector< ScanEntry >&  ) > tSimpleScanCallback;
 //! Typedef the full clustering callback for clarity
 typedef std::function< void( RoIproxy& ) > tFullClusterCallback;
 //! Typedef the simplified clustering callback for clarity
-typedef std::function< void( const std::vector< ClusterWrapper >& ) > tSimpleClusterCallback;
+typedef std::function< void( const std::string& , const std::vector< ClusterWrapper >& ) > tSimpleClusterCallback;
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

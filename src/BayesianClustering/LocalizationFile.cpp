@@ -115,7 +115,7 @@ void LocalizationFile::ExtractRoIs( const ManualRoI& aRoI , const std::function<
       if( fabs(x) < lMaxX and fabs(y) < lMaxY ) lData.emplace_back( x, y, k.s );    
   }
 
-  RoI lRoI( std::move( lData ) );
+  RoI lRoI( "" , std::move( lData ) );
   lRoI.SetCentre( aRoI.x , aRoI.y );
   lRoI.SetArea( aRoI.width * aRoI.height );
 
@@ -303,7 +303,9 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
 
   std::sort( lRecords.begin() , lRecords.end() , []( const tRecord& a , const tRecord& b ){ return a.Ptrs.size() < b.Ptrs.size(); } );
 
-  for( auto& lRecord : lRecords ) {
+  for( std::size_t i(1) ; i!=lRecords.size() ; ++i )
+  {
+    auto& lRecord = lRecords[i];    
     if( !lRecord.Ptrs.size() ) continue;
 
     lRecord.CentreX /= lRecord.Ptrs.size();
@@ -312,7 +314,7 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
     std::vector< Data > lData;
     for( auto& k : lRecord.Ptrs ) lData.emplace_back( k->x - lRecord.CentreX , k->y - lRecord.CentreY , k->s );
 
-    RoI lRoI( std::move( lData ) );
+    RoI lRoI( "ROI"+std::to_string( i ) , std::move( lData ) );
     lRoI.SetCentre( lRecord.CentreX, lRecord.CentreY );
     lRoI.SetArea( lBinArea * lRecord.Size );
 
@@ -348,7 +350,7 @@ void LocalizationFile::ExtractRoIs( const std::string& aImageJfile , const doubl
     }
 
     //! \todo Add ID back into RoI
-    RoI lRoI( std::move( lData ) );
+    RoI lRoI( j.first , std::move( lData ) );
     lRoI.SetCentre( lCentreX, lCentreY );
     lRoI.SetArea( boost::geometry::area( lPoly ) );
     aCallback( lRoI );

@@ -14,7 +14,8 @@
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-RoI::RoI( std::vector<Data>&& aData ):
+RoI::RoI( const std::string& aId , std::vector<Data>&& aData ):
+  mId( aId ),
   mData( std::move( aData ) ),
   mPhysicalCentreX(0), mPhysicalCentreY(0),
   // mWidthX(0), mWidthY(0),
