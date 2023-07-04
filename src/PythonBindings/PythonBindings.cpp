@@ -26,7 +26,6 @@ using namespace boost::python;
 #include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/RoIproxy.hpp"
 // #include "BayesianClustering/Cluster.hpp"
-// #include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/Data.hpp"
 // #include "BayesianClustering/DataProxy.hpp"
 #include "BayesianClustering/ImageJ_RoI.hpp"
@@ -221,9 +220,6 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   class_< ScanConfiguration, std::shared_ptr<ScanConfiguration>, boost::noncopyable >( "ScanConfiguration" , "A class for storing the scan configuration parameters" , no_init )
     .def( init< const std::string& >( arg( "aCfgFile" ) ) )
     .def( "__init__" , make_constructor( &ScanConfigurationConstructor, default_call_policies(), args( "aSigmaBins", "aSigmaMin", "aSigmaMax", "aInterpolator", "aRbins", "aMinScanR", "aMaxScanR", "aTbins", "aMinScanT", "aMaxScanT", "aPB", "aAlpha" ) ) ); 
-
-  // class_< tSimpleClusterCallback , boost::noncopyable >( "tSimpleClusterCallback" , init< const object& >() );
-  // def( "AutoRoi_Cluster_SimpleCallback" , &AutoRoi_Cluster_SimpleCallback , args( "aInFile" , "aR" , "aT" , "aCallback" ) , "Automatically extract RoI, clusterize and apply a simple call-back" );
 
   // ADAPTED_FN( AutoRoi_Scan_FullCallback , "Automatically extract RoI, run scan and apply a full call-back"   , "aInFile" , "aScanConfig" , "aCallback" );
   ADAPTED_FN( AutoRoi_Scan_SimpleCallback  , "Automatically extract RoI, run scan and apply a simple call-back" , "aInFile" , "aScanConfig" , "aCallback" );
