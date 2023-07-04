@@ -13,4 +13,4 @@ def Callback( Clusters ):
 # AutoRoi_Cluster_SimpleCallback( "1_un_red.csv" , 50*1e-9 , 170*1e-9 , Callback )
 # AutoRoi_Cluster_ToJson( "1_un_red.csv" , 50*1e-9 , 170*1e-9 , "./{input}/RoI{roi:02}/cluster.json" )
 
-ImageJRoi_Cluster_ToJson( "stem.csv" , "ROI/stem.zip" , 25*nanometer , 50*nanometer , 170*nanometer , "./{input}/RoI{roi:02}/cluster.json" )
+ImageJRoi_Cluster_ToJson( "stem.csv" , "ROI/stem.zip" , 25*nanometer , 50*nanometer , 170*nanometer , "./{input}/RoI-{roi}/cluster.json" )

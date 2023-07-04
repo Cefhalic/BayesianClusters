@@ -10,6 +10,9 @@
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/ImageJ_RoI.hpp"
 
+/* ===== BOOST C++ ===== */
+#include <boost/filesystem.hpp>
+
 
 roi_polygon DecodeBinaryRoI( const uint8_t* const aData )
 {
@@ -37,10 +40,11 @@ std::map< std::string , roi_polygon > OpenRoiZipfile( const std::string& aZipFil
 
   uint8_t* lBuffer( NULL );
   for ( std::size_t lIndex( 0 ); !zip_stat_index( lArchive , lIndex , 0 , lMemberInfo ) ; ++lIndex ) { // we open the file at the lIndex'th index inside the archive we loop and print every file and its contents, stopping when zip_stat_index did not return 0
+    boost::filesystem::path lPath( lMemberInfo->name );
     lBuffer = (uint8_t*) realloc( lBuffer , lMemberInfo->size + 1 );   // allocate room for the entire file contents
     zip_file_t* lMemberPtr = zip_fopen_index( lArchive , lIndex , 0 ); // opens file at lIndex index 
     zip_fread( lMemberPtr , lBuffer , lMemberInfo->size );             // reads lMemberInfo->size bytes from lMemberPtr into lBuffer buffer 
-    lRet[ lMemberInfo->name ] = DecodeBinaryRoI( lBuffer );  
+    lRet[ lPath.stem().string() ] = DecodeBinaryRoI( lBuffer );  
   } 
   free( lBuffer ); // free allocated buffer
   // -------------------------------------------------------------------------------

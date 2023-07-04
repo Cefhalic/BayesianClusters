@@ -349,7 +349,6 @@ void LocalizationFile::ExtractRoIs( const std::string& aImageJfile , const doubl
       if( boost::geometry::within( lPoint , lPoly ) ) lData.emplace_back( i.x - lCentreX , i.y - lCentreY , i.s );
     }
 
-    //! \todo Add ID back into RoI
     RoI lRoI( j.first , std::move( lData ) );
     lRoI.SetCentre( lCentreX, lCentreY );
     lRoI.SetArea( boost::geometry::area( lPoly ) );
