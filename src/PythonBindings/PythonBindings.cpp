@@ -105,6 +105,10 @@ namespace Adapted
 // =====================================================================================================================
 
 
+// =====================================================================================================================
+//! Debugging tool to get the raw x-y coordinates
+//! \param aFile The name of the localizations file
+//! \return The x-coordinates and the y-coordinates of the raw points as a python tuple (optimised for displaying in MatPlotLib)
 boost::python::tuple GetLocalizations( const std::string& aFile )
 {
   LocalizationFile lFile( aFile );
@@ -117,6 +121,9 @@ boost::python::tuple GetLocalizations( const std::string& aFile )
   return boost::python::make_tuple( x , y );
 }
 
+//! Debugging tool to get the raw coordinates from an ImageJ RoI file  
+//! \param aFile The name of an ImageJ RoI file
+//! \return A list of python tuples, each containing the x-coordinates and the y-coordinates of the polygon points (optimised for displaying in MatPlotLib)
 boost::python::list GetRoIs( const std::string& aFile )
 {
   boost::python::list lRet;
@@ -135,6 +142,11 @@ boost::python::list GetRoIs( const std::string& aFile )
   return lRet;
 }
 
+//! Debugging tool to get the raw x-y coordinates and which RoI they are included in
+//! \param aFile The name of the localizations file
+//! \param aRoIFile  The name of an ImageJ RoI file file
+//! \param aScale The size of the LSB in the ImageJ file
+//! \return A python tuple of the raw localizations and a list of tuples containing the x-coordinates and the y-coordinates of the localizations in each RoI (both optimised for displaying in MatPlotLib) 
 boost::python::tuple CheckRoIs( const std::string& aFile , const std::string& aRoIFile , const double& aScale )
 {
   LocalizationFile lFile( aFile );
@@ -161,6 +173,7 @@ boost::python::tuple CheckRoIs( const std::string& aFile , const std::string& aR
   
   return boost::python::make_tuple( lLocs , lRoIs );
 }
+// =====================================================================================================================
 
 
 

@@ -178,6 +178,7 @@ void ManualRoi_Cluster_ToJson( const std::string& aInFile , const ManualRoI& aMa
 //! Extract RoI using an image-map, run scan and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aImageJfile  The name of an ImageJ RoI file file
+//! \param aScale The size of the LSB in the ImageJ file
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The full callback to be applied
 void ImageJRoi_Scan_FullCallback( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback );
@@ -185,6 +186,7 @@ void ImageJRoi_Scan_FullCallback( const std::string& aInFile , const std::string
 //! Extract RoI using an image-map, run scan and apply a simple call-back
 //! \param aInFile     The name of the localization file
 //! \param aImageJfile  The name of an ImageJ RoI file file
+//! \param aScale The size of the LSB in the ImageJ file
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The simple callback to be applied
 void ImageJRoi_Scan_SimpleCallback( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback );
@@ -192,6 +194,7 @@ void ImageJRoi_Scan_SimpleCallback( const std::string& aInFile , const std::stri
 //! Extract RoI using an image-map, run scan and dump to JSON file
 //! \param aInFile     The name of the localization file
 //! \param aImageJfile  The name of an ImageJ RoI file file
+//! \param aScale The size of the LSB in the ImageJ file
 //! \param aScanConfig The configuration for the scan
 //! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
 void ImageJRoi_Scan_ToJson( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern );
@@ -202,6 +205,7 @@ void ImageJRoi_Scan_ToJson( const std::string& aInFile , const std::string& aIma
 //! Extract RoI using an image-map, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aImageJfile  The name of an ImageJ RoI file file
+//! \param aScale The size of the LSB in the ImageJ file
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aCallback   The callback to be applied
@@ -210,6 +214,7 @@ void ImageJRoi_Cluster_FullCallback( const std::string& aInFile , const std::str
 //! Extract RoI using an image-map, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aImageJfile  The name of an ImageJ RoI file file
+//! \param aScale The size of the LSB in the ImageJ file
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aCallback   The callback to be applied
@@ -218,6 +223,7 @@ void ImageJRoi_Cluster_SimpleCallback( const std::string& aInFile , const std::s
 //! Extract RoI using an image-map, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aImageJfile  The name of an ImageJ RoI file file
+//! \param aScale The size of the LSB in the ImageJ file
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
