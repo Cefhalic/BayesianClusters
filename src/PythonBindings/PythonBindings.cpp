@@ -161,7 +161,7 @@ boost::python::tuple CheckRoIs( const std::string& aFile , const std::string& aR
   boost::python::list lRoIs;
   lFile.ExtractRoIs( aRoIFile , aScale , [&]( RoI& aRoI ) {
                                                             boost::python::list x , y;
-                                                            for( auto& i : aRoI.mData )
+                                                            for( auto& i : aRoI.data() )
                                                             {
                                                               x.append( i.x + aRoI.getCentreX() );
                                                               y.append( i.y + aRoI.getCentreY() );

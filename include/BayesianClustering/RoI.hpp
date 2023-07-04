@@ -107,11 +107,19 @@ class RoI
       return mArea;
     }
 
-  public:
+    //! Accessor to the raw data
+    //! \return Reference to the raw data
+    inline const std::vector< Data >& data()
+    {
+      return mData;
+    }
+
+  private:
+    friend class RoIproxy;
+
     //! The collection of raw data points
     std::vector<Data> mData;
 
-  private:
     //! The x-coordinate of the centre of the window in physical units
     double mPhysicalCentreX;
     //! The y-coordinate of the centre of the window in physical units
