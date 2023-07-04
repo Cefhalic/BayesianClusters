@@ -14,12 +14,11 @@
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-RoI::RoI( const std::string& aId , std::vector<Data>&& aData ):
+RoI::RoI( const std::string& aId , std::vector<Data>&& aData , const double& aPhysicalCentreX, const double& aPhysicalCentreY , const double& aArea ):
   mId( aId ),
   mData( std::move( aData ) ),
-  mPhysicalCentreX(0), mPhysicalCentreY(0),
-  // mWidthX(0), mWidthY(0),
-  mArea(0)
+  mPhysicalCentreX(aPhysicalCentreX), mPhysicalCentreY(aPhysicalCentreY),
+  mArea(aArea)
 {
   std::sort( mData.begin(), mData.end() );
   std::cout << "+------------------------------------+" << std::endl;
@@ -64,28 +63,6 @@ void RoI::Clusterize( const double& R, const double& T, const std::function< voi
 
   RoIproxy lProxy( *this );
   lProxy.Clusterize( R,  T, aCallback );
-}
-
-
-void RoI::SetCentre( const double& aPhysicalCentreX, const double& aPhysicalCentreY )
-{
-  std::cout << "Centre: x=" << aPhysicalCentreX << ", y=" << aPhysicalCentreY << std::endl;
-  mPhysicalCentreX = aPhysicalCentreX;
-  mPhysicalCentreY = aPhysicalCentreY;
-}
-
-// void RoI::SetWidth( const double& aWidthX, const double& aWidthY )
-// {
-//   std::cout << "Width: x=" << aWidthX << ", y=" << aWidthY << std::endl;
-//   mWidthX = aWidthX;
-//   mWidthY = aWidthY;
-//   mArea = mWidthX * mWidthY;
-// }
-
-void RoI::SetArea( const double& aArea )
-{
-  std::cout << "Area =" << aArea << std::endl;
-  mArea = aArea;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

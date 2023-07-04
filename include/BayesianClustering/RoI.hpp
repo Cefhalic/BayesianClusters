@@ -20,7 +20,10 @@ class RoI
     //! Default Constructor
     //! \param aId The ID of the RoI
     //! \param aData The set of data-points in the RoI
-    RoI( const std::string& aId , std::vector<Data>&& aData );
+    //! \param aPhysicalCentreX The x-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
+    //! \param aPhysicalCentreY The y-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
+    //! \param aArea The area of the RoI in physical units    
+    RoI( const std::string& aId , std::vector<Data>&& aData , const double& aPhysicalCentreX, const double& aPhysicalCentreY , const double& aArea );
 
     //! Deleted copy constructor
     RoI( const RoI& aOther /*!< Anonymous argument */ ) = delete;
@@ -60,46 +63,19 @@ class RoI
     // void WriteCSV( const std::string& aFilename );
 
   public:
-    //! Setter for the centre of the scan window
-    //! \param aPhysicalCentreX The x-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
-    //! \param aPhysicalCentreY The y-coordinate of the centre of the window in physical units (becomes 0 in algorithm units)
-    void SetCentre( const double& aPhysicalCentreX, const double& aPhysicalCentreY );
-
-    // //! Setter for the size of the RoI window
-    // //! \param aWidthX The width of the window in physical units
-    // //! \param aWidthY The height of the window in physical units
-    // void SetWidth( const double& aWidthX, const double& aWidthY );
-
-    //! Setter for the size of the RoI window
-    //! \param aArea The area of the RoI in physical units
-    void SetArea( const double& aArea );
-
     //! Getter for the x-coordinate of the physical centre
     //! \return The x-coordinate of the physical centre
     inline const double& getCentreX() const
     {
       return mPhysicalCentreX;
     }
+
     //! Getter for the y-coordinate of the physical centre
     //! \return The y-coordinate of the physical centre
     inline const double& getCentreY() const
     {
       return mPhysicalCentreY;
     }
-
-    // //! Getter for the width of the ROI window
-    // //! \return The width of the ROI window
-    // double getWidthX() const
-    // {
-    //   return mWidthX;
-    // }
-
-    // //! Getter for the height of the ROI window
-    // //! \return The height of the ROI window
-    // double getWidthY() const
-    // {
-    //   return mWidthY;
-    // }
 
     //! Getter for the height of the ROI window
     //! \return The height of the ROI window
@@ -135,11 +111,6 @@ class RoI
     double mPhysicalCentreX;
     //! The y-coordinate of the centre of the window in physical units
     double mPhysicalCentreY;
-
-    // //! The width of the window in the x-direction in physical units
-    // double mWidthX;
-    // //! The width of the window in the y-direction in physical units
-    // double mWidthY;
 
     //! The area of the window in physical units
     double mArea;

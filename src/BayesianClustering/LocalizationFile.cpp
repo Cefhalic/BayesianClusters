@@ -115,10 +115,7 @@ void LocalizationFile::ExtractRoIs( const ManualRoI& aRoI , const std::function<
       if( fabs(x) < lMaxX and fabs(y) < lMaxY ) lData.emplace_back( x, y, k.s );    
   }
 
-  RoI lRoI( "" , std::move( lData ) );
-  lRoI.SetCentre( aRoI.x , aRoI.y );
-  lRoI.SetArea( aRoI.width * aRoI.height );
-
+  RoI lRoI( "" , std::move( lData ) , aRoI.x , aRoI.y , aRoI.width * aRoI.height );
   aCallback( lRoI );        
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -314,10 +311,7 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
     std::vector< Data > lData;
     for( auto& k : lRecord.Ptrs ) lData.emplace_back( k->x - lRecord.CentreX , k->y - lRecord.CentreY , k->s );
 
-    RoI lRoI( "ROI"+std::to_string( i ) , std::move( lData ) );
-    lRoI.SetCentre( lRecord.CentreX, lRecord.CentreY );
-    lRoI.SetArea( lBinArea * lRecord.Size );
-
+    RoI lRoI( "ROI"+std::to_string( i ) , std::move( lData ) , lRecord.CentreX , lRecord.CentreY , lRecord.Size * lBinArea );
     aCallback( lRoI );
   }
 
@@ -349,9 +343,7 @@ void LocalizationFile::ExtractRoIs( const std::string& aImageJfile , const doubl
       if( boost::geometry::within( lPoint , lPoly ) ) lData.emplace_back( i.x - lCentreX , i.y - lCentreY , i.s );
     }
 
-    RoI lRoI( j.first , std::move( lData ) );
-    lRoI.SetCentre( lCentreX, lCentreY );
-    lRoI.SetArea( boost::geometry::area( lPoly ) );
+    RoI lRoI( j.first , std::move( lData ) , lCentreX , lCentreY , boost::geometry::area( lPoly ) );
     aCallback( lRoI );
   }
 
