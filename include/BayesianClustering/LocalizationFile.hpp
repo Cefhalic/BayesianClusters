@@ -57,9 +57,10 @@ class LocalizationFile
     void ExtractRoIs( const std::function< void( RoI& ) >& aCallback ) const;
 
     //! Manually extract an RoI 
-    //! \param aImageMap The name of an imagemap file
+    //! \param aImageJfile The name of an ImageJ RoI file
+    //! \param aScale The size of the LSB in the ImageJ file
     //! \param aCallback A handler for each RoI found
-    // void ExtractRoIs( const std::string& aImageMap , const std::function< void( RoI& ) >& aCallback ) const;
+    void ExtractRoIs( const std::string& aImageJfile , const double& aScale , const std::function< void( RoI& ) >& aCallback ) const;
 
     //! Accessor to the raw data
     //! \return Reference to the raw data

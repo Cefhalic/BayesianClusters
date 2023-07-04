@@ -7,6 +7,7 @@
 #include "BayesianClustering/LocalizationFile.hpp"
 #include "BayesianClustering/Data.hpp"
 #include "BayesianClustering/RoI.hpp"
+#include "BayesianClustering/ImageJ_RoI.hpp"
 
 /* ===== Local utilities ===== */
 #include "Utilities/ProgressBar.hpp"
@@ -16,6 +17,7 @@
 
 /* ===== BOOST C++ ===== */
 #include <boost/filesystem.hpp>
+#include <boost/geometry.hpp>
 #include <boost/gil/extension/io/bmp.hpp>
 #include <boost/gil/image.hpp>
 
@@ -304,10 +306,6 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
   for( auto& lRecord : lRecords ) {
     if( !lRecord.Ptrs.size() ) continue;
 
-    // double vm_usage, resident_set;
-    // mem_usage( vm_usage , resident_set );    
-    // std::cout << vm_usage << " " << resident_set << std::endl;
-
     double lCentreX( ( lRecord.X.second + lRecord.X.first ) / 2.0 ), lCentreY( ( lRecord.Y.second + lRecord.Y.first ) / 2.0 );
     double lWidthX( lRecord.X.second - lRecord.X.first ), lWidthY( lRecord.Y.second - lRecord.Y.first );
 
@@ -324,18 +322,58 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
     lRoI.SetWidth( lWidthX, lWidthY );
 
     aCallback( lRoI );
-
-    // int fd = open("/proc/sys/vm/drop_caches", O_WRONLY);
-    // write(fd, "3", 1 );
-    // fsync(fd);
-    // close(fd);
-
   }
 
 }
 
 
+void LocalizationFile::ExtractRoIs( const std::string& aImageJfile , const double& aScale , const std::function< void( RoI& ) >& aCallback ) const
+{
+  std::map< std::string , roi_polygon > lRoIs = OpenRoiZipfile( aImageJfile );
 
+  typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> geo_point;
+  typedef boost::geometry::model::ring<geo_point> geo_polygon;
+
+  for( const auto& j : lRoIs )
+  {
+    geo_polygon lPoly;
+    for( const auto& point : j.second ) boost::geometry::append( lPoly , geo_point( boost::geometry::get<0>(point) * aScale , boost::geometry::get<1>(point) * aScale ) );
+    boost::geometry::correct( lPoly ); // Add closing points, etc.
+
+    geo_point lCentroid( 0 , 0 );
+    boost::geometry::centroid( lPoly , lCentroid );
+    double lCentreX( boost::geometry::get<0>(lCentroid) );
+    double lCentreY( boost::geometry::get<1>(lCentroid) );
+
+    //! \todo CHECK ROI AREA HANDLING
+    boost::geometry::model::box<geo_point> lBox;
+    boost::geometry::envelope( lPoly , lBox );
+    double lWidthX( boost::geometry::get<boost::geometry::max_corner, 0>( lBox ) - boost::geometry::get<boost::geometry::min_corner, 0>( lBox ) );
+    double lWidthY( boost::geometry::get<boost::geometry::max_corner, 1>( lBox ) - boost::geometry::get<boost::geometry::min_corner, 1>( lBox ) );
+
+    std::vector< Data > lData;
+
+    for( const auto& i : mData )
+    {
+      geo_point lPoint( i.x , i.y );    
+
+      if( boost::geometry::within( lPoint , lPoly ) )
+      {
+        double x = i.x - lCentreX;
+        double y = i.y - lCentreY;
+        lData.emplace_back( x, y, i.s );
+      }
+    }
+
+    //! \todo Add ID back into RoI
+    RoI lRoI( std::move( lData ) );
+    lRoI.SetCentre( lCentreX, lCentreY );
+    lRoI.SetWidth( lWidthX, lWidthY );
+    aCallback( lRoI );
+  }
+
+
+}
 
 
 

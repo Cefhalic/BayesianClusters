@@ -219,40 +219,40 @@ void ManualRoi_Cluster_ToJson( const std::string& aInFile , const ManualRoI& aMa
 
 
 
-// __attribute__((flatten))
-// void ImageMapRoi_Scan_FullCallback( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback )
-// {
-//   LocalizationFile( aInFile ).ExtractRoIs( aImageMap , [&]( RoI& aRoI ) { aRoI.ScanRT( aScanConfig, aCallback ); } );
-// }
+__attribute__((flatten))
+void ImageJRoi_Scan_FullCallback( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback )
+{
+  LocalizationFile( aInFile ).ExtractRoIs( aImageJfile , aScale , [&]( RoI& aRoI ) { aRoI.ScanRT( aScanConfig, aCallback ); } );
+}
 
-// __attribute__((flatten))
-// void ImageMapRoi_Scan_SimpleCallback( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback )
-// {
-//   LocalizationFile( aInFile ).ExtractRoIs( aImageMap , [&]( RoI& aRoI ) { _FullScanToSimpleScan_( aRoI , aScanConfig, aCallback ); } );
-// }
+__attribute__((flatten))
+void ImageJRoi_Scan_SimpleCallback( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback )
+{
+  LocalizationFile( aInFile ).ExtractRoIs( aImageJfile , aScale , [&]( RoI& aRoI ) { _FullScanToSimpleScan_( aRoI , aScanConfig, aCallback ); } );
+}
 
-// __attribute__((flatten))
-// void ImageMapRoi_Scan_ToJson( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern )
-// {
-//   ImageMapRoi_Scan_SimpleCallback( aInFile , aImageMap , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aInFile , aOutputPattern ); } );
-// }
+__attribute__((flatten))
+void ImageJRoi_Scan_ToJson( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern )
+{
+  ImageJRoi_Scan_SimpleCallback( aInFile , aImageJfile , aScale , aScanConfig , [&]( const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aVector , aInFile , aOutputPattern ); } );
+}
 
 
 
-// __attribute__((flatten))
-// void ImageMapRoi_Cluster_FullCallback( const std::string& aInFile , const std::string& aImageMap , const double& aR, const double& aT, const tFullClusterCallback& aCallback )
-// {  
-//   LocalizationFile( aInFile ).ExtractRoIs( aImageMap , [&]( RoI& aRoI ) { aRoI.Clusterize( aR, aT, aCallback ); } );
-// }
+__attribute__((flatten))
+void ImageJRoi_Cluster_FullCallback( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const double& aR, const double& aT, const tFullClusterCallback& aCallback )
+{  
+  LocalizationFile( aInFile ).ExtractRoIs( aImageJfile , aScale , [&]( RoI& aRoI ) { aRoI.Clusterize( aR, aT, aCallback ); } );
+}
 
-// __attribute__((flatten))
-// void ImageMapRoi_Cluster_SimpleCallback( const std::string& aInFile , const std::string& aImageMap , const double& aR, const double& aT, const tSimpleClusterCallback& aCallback )
-// {
-//   ImageMapRoi_Cluster_FullCallback( aInFile , aImageMap , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
-// }
+__attribute__((flatten))
+void ImageJRoi_Cluster_SimpleCallback( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const double& aR, const double& aT, const tSimpleClusterCallback& aCallback )
+{
+  ImageJRoi_Cluster_FullCallback( aInFile , aImageJfile , aScale , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
+}
 
-// __attribute__((flatten))
-// void ImageMapRoi_Cluster_ToJson( const std::string& aInFile , const std::string& aImageMap , const double& aR, const double& aT, const std::string& aOutputPattern )
-// {
-//   ImageMapRoi_Cluster_SimpleCallback( aInFile , aImageMap , aR , aT , [&]( const std::vector< ClusterWrapper >& aVector ){ _ClusterCallback_Json_( aVector , aInFile , aOutputPattern ); } );
-// }
+__attribute__((flatten))
+void ImageJRoi_Cluster_ToJson( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const double& aR, const double& aT, const std::string& aOutputPattern )
+{
+  ImageJRoi_Cluster_SimpleCallback( aInFile , aImageJfile , aScale , aR , aT , [&]( const std::vector< ClusterWrapper >& aVector ){ _ClusterCallback_Json_( aVector , aInFile , aOutputPattern ); } );
+}

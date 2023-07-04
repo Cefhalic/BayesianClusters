@@ -107,7 +107,7 @@ class RoI
     //! The collection of raw data points
     std::vector<Data> mData;
 
-  private:
+  // private:
     //! The x-coordinate of the centre of the window in physical units
     double mPhysicalCentreX;
     //! The y-coordinate of the centre of the window in physical units

@@ -23,12 +23,13 @@ using namespace boost::python;
 #include "BayesianClustering/API.hpp"
 #include "BayesianClustering/LocalizationFile.hpp"
 #include "BayesianClustering/Configuration.hpp"
-// #include "BayesianClustering/RoI.hpp"
+#include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/RoIproxy.hpp"
 // #include "BayesianClustering/Cluster.hpp"
 // #include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/Data.hpp"
 // #include "BayesianClustering/DataProxy.hpp"
+#include "BayesianClustering/ImageJ_RoI.hpp"
 
 
 // =====================================================================================================================
@@ -86,20 +87,20 @@ std::shared_ptr< ScanConfiguration > ScanConfigurationConstructor(
 // =====================================================================================================================
 namespace Adapted
 {
-  // auto AutoRoi_Scan_FullCallback        = []( const std::string& aInFile , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::AutoRoi_Scan_FullCallback(      aInFile , aScanConfig , aCallback ); }; //!< Lambda to automatically extract RoI, run scan and apply a full python callback
-  auto AutoRoi_Scan_SimpleCallback      = []( const std::string& aInFile , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::AutoRoi_Scan_SimpleCallback(    aInFile , aScanConfig , aCallback ); }; //!< Lambda to automatically extract RoI, run scan and apply a simple python callback
-  // auto AutoRoi_Cluster_FullCallback     = []( const std::string& aInFile , const double& aR , const double& aT ,  const object& aCallback ){ ::AutoRoi_Cluster_FullCallback(   aInFile , aR , aT ,     aCallback ); }; //!< Lambda to automatically extract RoI, clusterize and apply a full python callback
-  auto AutoRoi_Cluster_SimpleCallback   = []( const std::string& aInFile , const double& aR , const double& aT ,  const object& aCallback ){ ::AutoRoi_Cluster_SimpleCallback( aInFile , aR , aT ,     aCallback ); }; //!< Lambda to automatically extract RoI, clusterize and apply a simple python callback
+  // auto AutoRoi_Scan_FullCallback      = []( const std::string& aInFile , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::AutoRoi_Scan_FullCallback(      aInFile , aScanConfig , aCallback ); }; //!< Lambda to automatically extract RoI, run scan and apply a full python callback
+  auto AutoRoi_Scan_SimpleCallback       = []( const std::string& aInFile , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::AutoRoi_Scan_SimpleCallback(    aInFile , aScanConfig , aCallback ); }; //!< Lambda to automatically extract RoI, run scan and apply a simple python callback
+  // auto AutoRoi_Cluster_FullCallback   = []( const std::string& aInFile , const double& aR , const double& aT ,  const object& aCallback ){ ::AutoRoi_Cluster_FullCallback(   aInFile , aR , aT ,     aCallback ); }; //!< Lambda to automatically extract RoI, clusterize and apply a full python callback
+  auto AutoRoi_Cluster_SimpleCallback    = []( const std::string& aInFile , const double& aR , const double& aT ,  const object& aCallback ){ ::AutoRoi_Cluster_SimpleCallback( aInFile , aR , aT ,     aCallback ); }; //!< Lambda to automatically extract RoI, clusterize and apply a simple python callback
 
-  // auto ManualRoi_Scan_FullCallback      = []( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::ManualRoi_Scan_FullCallback(      aInFile , aManualRoI , aScanConfig , aCallback ); }; //!< Lambda to manually specify RoI, run scan and apply a full python callback
-  auto ManualRoi_Scan_SimpleCallback    = []( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::ManualRoi_Scan_SimpleCallback(    aInFile , aManualRoI , aScanConfig , aCallback ); }; //!< Lambda to manually specify RoI, run scan and apply a simple python callback
-  // auto ManualRoi_Cluster_FullCallback   = []( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR , const double& aT ,  const object& aCallback ){ ::ManualRoi_Cluster_FullCallback(   aInFile , aManualRoI , aR , aT ,     aCallback ); }; //!< Lambda to manually specify RoI, clusterize and apply a full python callback
-  auto ManualRoi_Cluster_SimpleCallback = []( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR , const double& aT ,  const object& aCallback ){ ::ManualRoi_Cluster_SimpleCallback( aInFile , aManualRoI , aR , aT ,     aCallback ); }; //!< Lambda to manually specify RoI, clusterize and apply a simple python callback
+  // auto ManualRoi_Scan_FullCallback    = []( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::ManualRoi_Scan_FullCallback(      aInFile , aManualRoI , aScanConfig , aCallback ); }; //!< Lambda to manually specify RoI, run scan and apply a full python callback
+  auto ManualRoi_Scan_SimpleCallback     = []( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::ManualRoi_Scan_SimpleCallback(    aInFile , aManualRoI , aScanConfig , aCallback ); }; //!< Lambda to manually specify RoI, run scan and apply a simple python callback
+  // auto ManualRoi_Cluster_FullCallback = []( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR , const double& aT ,  const object& aCallback ){ ::ManualRoi_Cluster_FullCallback(   aInFile , aManualRoI , aR , aT ,     aCallback ); }; //!< Lambda to manually specify RoI, clusterize and apply a full python callback
+  auto ManualRoi_Cluster_SimpleCallback  = []( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR , const double& aT ,  const object& aCallback ){ ::ManualRoi_Cluster_SimpleCallback( aInFile , aManualRoI , aR , aT ,     aCallback ); }; //!< Lambda to manually specify RoI, clusterize and apply a simple python callback
 
-  // // auto ImageMapRoi_Scan_FullCallback      = []( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::ImageMapRoi_Scan_FullCallback(      aInFile , aImageMap , aScanConfig , aCallback ); }; //!< Lambda to extract RoI using an image-map, run scan and apply a full python callback
-  // auto ImageMapRoi_Scan_SimpleCallback    = []( const std::string& aInFile , const std::string& aImageMap , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::ImageMapRoi_Scan_SimpleCallback(    aInFile , aImageMap , aScanConfig , aCallback ); }; //!< Lambda to extract RoI using an image-map, run scan and apply a simple python callback
-  // // auto ImageMapRoi_Cluster_FullCallback   = []( const std::string& aInFile , const std::string& aImageMap , const double& aR , const double& aT ,  const object& aCallback ){ ::ImageMapRoi_Cluster_FullCallback(   aInFile , aImageMap , aR , aT ,     aCallback ); }; //!< Lambda to extract RoI using an image-map, clusterize and apply a full python callback
-  // auto ImageMapRoi_Cluster_SimpleCallback = []( const std::string& aInFile , const std::string& aImageMap , const double& aR , const double& aT ,  const object& aCallback ){ ::ImageMapRoi_Cluster_SimpleCallback( aInFile , aImageMap , aR , aT ,     aCallback ); }; //!< Lambda to extract RoI using an image-map, clusterize and apply a simple python callback
+  // auto ImageJRoi_Scan_FullCallback    = []( const std::string& aInFile , const std::string& aImageJ , const double& aScale , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::ImageJRoi_Scan_FullCallback(      aInFile , aImageJ , aScale , aScanConfig , aCallback ); }; //!< Lambda to extract RoI via an ImagJ RoI file, run scan and apply a full python callback
+  auto ImageJRoi_Scan_SimpleCallback     = []( const std::string& aInFile , const std::string& aImageJ , const double& aScale , const ScanConfiguration& aScanConfig , const object& aCallback ){ ::ImageJRoi_Scan_SimpleCallback(    aInFile , aImageJ , aScale , aScanConfig , aCallback ); }; //!< Lambda to extract RoI via an ImagJ RoI file, run scan and apply a simple python callback
+  // auto ImageJRoi_Cluster_FullCallback = []( const std::string& aInFile , const std::string& aImageJ , const double& aScale , const double& aR , const double& aT ,  const object& aCallback ){ ::ImageJRoi_Cluster_FullCallback(   aInFile , aImageJ , aScale , aR , aT ,     aCallback ); }; //!< Lambda to extract RoI via an ImagJ RoI file, clusterize and apply a full python callback
+  auto ImageJRoi_Cluster_SimpleCallback  = []( const std::string& aInFile , const std::string& aImageJ , const double& aScale , const double& aR , const double& aT ,  const object& aCallback ){ ::ImageJRoi_Cluster_SimpleCallback( aInFile , aImageJ , aScale , aR , aT ,     aCallback ); }; //!< Lambda to extract RoI via an ImagJ RoI file, clusterize and apply a simple python callback
 } 
 // =====================================================================================================================
 
@@ -116,7 +117,6 @@ boost::python::tuple GetLocalizations( const std::string& aFile )
   return boost::python::make_tuple( x , y );
 }
 
-#include "BayesianClustering/ImageJ_RoI.hpp"
 boost::python::list GetRoIs( const std::string& aFile )
 {
   boost::python::list lRet;
@@ -134,6 +134,35 @@ boost::python::list GetRoIs( const std::string& aFile )
 
   return lRet;
 }
+
+boost::python::tuple CheckRoIs( const std::string& aFile , const std::string& aRoIFile , const double& aScale )
+{
+  LocalizationFile lFile( aFile );
+  boost::python::list x , y;
+  for( auto& i : lFile.data() )
+  {
+    x.append( i.x );
+    y.append( i.y );
+  }
+  auto lLocs = boost::python::make_tuple( x , y );
+
+  boost::python::list lRoIs;
+  lFile.ExtractRoIs( aRoIFile , aScale , [&]( RoI& aRoI )
+    {
+      boost::python::list x , y;
+      for( auto& i : aRoI.mData )
+      {
+        x.append( i.x + aRoI.mPhysicalCentreX );
+        y.append( i.y + aRoI.mPhysicalCentreY );
+      }
+      lRoIs.append( boost::python::make_tuple( x , y ) );
+    } 
+  );
+  
+  return boost::python::make_tuple( lLocs , lRoIs );
+}
+
+
 
 // =====================================================================================================================
 //! Helper Macro to simplify defining functions
@@ -201,19 +230,20 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   ADAPTED_FN( ManualRoi_Cluster_SimpleCallback  , "Manually specify RoI, clusterize and apply a simple call-back" , "aInFile" , "aManualRoI" , "aR" , "aT" , "aCallback" );
           FN( ManualRoi_Cluster_ToJson          , "Manually specify RoI, clusterize and dump to JSON file"        , "aInFile" , "aManualRoI" , "aR" , "aT" , "aOutputPattern" );
 
-  // // ADAPTED_FN( ImageMapRoi_Scan_FullCallback , "Extract RoI using an image-map, run scan and apply a full call-back"   , "aInFile" , "aImageMap" , "aScanConfig" , "aCallback" );
-  // ADAPTED_FN( ImageMapRoi_Scan_SimpleCallback  , "Extract RoI using an image-map, run scan and apply a simple call-back" , "aInFile" , "aImageMap" , "aScanConfig" , "aCallback" );
-  //         FN( ImageMapRoi_Scan_ToJson          , "Extract RoI using an image-map, run scan and dump to JSON file"        , "aInFile" , "aImageMap" , "aScanConfig" , "aOutputPattern" );
+  // ADAPTED_FN( ImageJRoi_Scan_FullCallback , "Extract RoI via an ImagJ RoI file, run scan and apply a full call-back"   , "aInFile" , "aImageJ" , "aScale" , "aScanConfig" , "aCallback" );
+  ADAPTED_FN( ImageJRoi_Scan_SimpleCallback  , "Extract RoI via an ImagJ RoI file, run scan and apply a simple call-back" , "aInFile" , "aImageJ" , "aScale" , "aScanConfig" , "aCallback" );
+          FN( ImageJRoi_Scan_ToJson          , "Extract RoI via an ImagJ RoI file, run scan and dump to JSON file"        , "aInFile" , "aImageJ" , "aScale" , "aScanConfig" , "aOutputPattern" );
 
-  // // ADAPTED_FN( ImageMapRoi_Cluster_FullCallback , "Extract RoI using an image-map, clusterize and apply a full call-back"   , "aInFile" , "aImageMap" , "aR" , "aT" , "aCallback" );
-  // ADAPTED_FN( ImageMapRoi_Cluster_SimpleCallback  , "Extract RoI using an image-map, clusterize and apply a simple call-back" , "aInFile" , "aImageMap" , "aR" , "aT" , "aCallback" );
-  //         FN( ImageMapRoi_Cluster_ToJson          , "Extract RoI using an image-map, clusterize and dump to JSON file"        , "aInFile" , "aImageMap" , "aR" , "aT" , "aOutputPattern" );
+  // ADAPTED_FN( ImageJRoi_Cluster_FullCallback , "Extract RoI via an ImagJ RoI file, clusterize and apply a full call-back"   , "aInFile" , "aImageJ" , "aScale" , "aR" , "aT" , "aCallback" );
+  ADAPTED_FN( ImageJRoi_Cluster_SimpleCallback  , "Extract RoI via an ImagJ RoI file, clusterize and apply a simple call-back" , "aInFile" , "aImageJ" , "aScale" , "aR" , "aT" , "aCallback" );
+          FN( ImageJRoi_Cluster_ToJson          , "Extract RoI via an ImagJ RoI file, clusterize and dump to JSON file"        , "aInFile" , "aImageJ" , "aScale" , "aR" , "aT" , "aOutputPattern" );
 
   // ------------------------------------------
 
 
   def( "GetLocalizations" , &GetLocalizations );
   def( "GetRoIs" , &GetRoIs );
+  def( "CheckRoIs" , &CheckRoIs );
 
 
 }
