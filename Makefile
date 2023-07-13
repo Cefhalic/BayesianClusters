@@ -9,8 +9,8 @@ LIBRARY_FILE = libBayesianClusteringCore.so
 
 # Files for the python-bindings library
 PYTHON_SOURCES = $(sort $(wildcard src/PythonBindings/*.cpp) )
-PYTHON_OBJECT_FILES = $(patsubst src/%.cpp,obj/lib/%.o,${PYTHON_SOURCES})
-PYTHON_LIBRARY_FILE = python/BayesianClustering.so
+PYTHON_OBJECT_FILES = $(patsubst src/PythonBindings/%.cpp,obj/py/%.o,${PYTHON_SOURCES})
+PYTHON_LIBRARY_FILE = $(patsubst src/PythonBindings/%.cpp,python/%.so,${PYTHON_SOURCES})
 
 # Files for executables
 EXECUTABLE_SOURCES = $(sort $(wildcard src/*.cxx) )
@@ -101,7 +101,7 @@ obj/lib/%.o : src/%.cpp | $$(dir obj/lib/%.o) CONDA GIT
 	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , ${CXX} $< -o $@ -c ${FLAGS} )
 
 .SECONDEXPANSION:
-obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBindings/%.o) CONDA GIT
+obj/py/%.o : src/PythonBindings/%.cpp | $$(dir obj/py/%.o) CONDA GIT
 	$(call switch_verbose, "Building Object Files | g++ -c ... $< -o $@" , ${CXX} $< -o $@ -c ${PYTHONFLAGS} ${FLAGS} )
 
 -include $(LIBRARY_OBJECT_FILES:.o=.d)
@@ -111,7 +111,7 @@ obj/lib/PythonBindings/%.o : src/PythonBindings/%.cpp | $$(dir obj/lib/PythonBin
 ${LIBRARY_FILE}: ${LIBRARY_OBJECT_FILES}
 	$(call switch_verbose, "Building Library      | g++ ... -o $@" , ${CXX} $^ -o $@ -shared ${FLAGS} )
 
-${PYTHON_LIBRARY_FILE}: ${LIBRARY_FILE} ${PYTHON_OBJECT_FILES}
+${PYTHON_LIBRARY_FILE}: python/%.so: obj/py/%.o ${LIBRARY_FILE}
 	$(call switch_verbose, "Building Library      | g++ ... -o $@" , ${CXX} $^ -o $@ -shared -L. -lBayesianClusteringCore ${PYTHONFLAGS} ${FLAGS} ${RPATHFLAG} )
 
 ${EXECUTABLES}: %.exe: obj/bin/%.o ${LIBRARY_FILE}

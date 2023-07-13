@@ -21,6 +21,22 @@ struct ManualRoI {
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//! A struct for storing the parameters for automatically extracting the RoIs
+struct AutoRoI {  
+};
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//! A struct for storing the parameters of an ImageJ RoI file
+struct ImageJRoI {  
+  std::string filename; //!< The ImageJ zipped RoI file
+  double scale; //!< The pixel scale
+};
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A class to store the raw data-points
 class LocalizationFile
 {
@@ -54,13 +70,12 @@ class LocalizationFile
 
     //! Automatically extract the RoIs
     //! \param aCallback A handler for each RoI found
-    void ExtractRoIs( const std::function< void( RoI& ) >& aCallback ) const;
+    void ExtractRoIs( const AutoRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const;
 
     //! Manually extract an RoI 
-    //! \param aImageJfile The name of an ImageJ RoI file
-    //! \param aScale The size of the LSB in the ImageJ file
+    //! \param aRoI Wrapper for an ImageJ RoI file
     //! \param aCallback A handler for each RoI found
-    void ExtractRoIs( const std::string& aImageJfile , const double& aScale , const std::function< void( RoI& ) >& aCallback ) const;
+    void ExtractRoIs( const ImageJRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const;
 
     //! Accessor to the raw data
     //! \return Reference to the raw data

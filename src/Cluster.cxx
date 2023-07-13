@@ -33,6 +33,6 @@ int main(int argc, char** argv)
   AuxConfiguration lMasterConfig( argc, argv );
   std::cout << "+------------------------------------+" << std::endl;
 
-  // AutoRoi_Cluster_SimpleCallback( lMasterConfig.inputFile() , lMasterConfig.ClusterR(), lMasterConfig.ClusterT() , &ReportClusters );
-  AutoRoi_Cluster_ToJson( lMasterConfig.inputFile() , lMasterConfig.ClusterR(), lMasterConfig.ClusterT() , lMasterConfig.outputFile() );
+  // RunClustering( lMasterConfig.inputFile() , lMasterConfig.ClusterR(), lMasterConfig.ClusterT() , &ReportClusters );
+  RunClustering( lMasterConfig.inputFile() , AutoRoI() , lMasterConfig.ClusterR(), lMasterConfig.ClusterT() , lMasterConfig.outputFile() );
 }

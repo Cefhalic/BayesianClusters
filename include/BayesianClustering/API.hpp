@@ -6,10 +6,13 @@
 #include <vector>
 #include <functional>
 
+/* ===== Cluster sources ===== */
+#include "BayesianClustering/LocalizationFile.hpp"
+#include "BayesianClustering/RoI.hpp"
+
 class RoIproxy;
 class ScanConfiguration;
-class ManualRoI;
-class LocalizationFile;
+
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A struct for storing a result of an individual scan configuration
@@ -78,24 +81,65 @@ typedef std::function< void( RoIproxy& ) > tFullClusterCallback;
 typedef std::function< void( const std::string& , const std::vector< ClusterWrapper >& ) > tSimpleClusterCallback;
 
 
+
+//! A callback to dump a scan to a JSON file
+//! \param aRoiId       The RoI ID
+//! \param aVector   A vector of scan results
+//! \param aInFile   The name of the localization file
+//! \param aOutputPattern  The name of the output JSON file
+void _ScanCallback_Json_( const std::string& aRoiId , const std::vector< ScanEntry >& aVector, const std::string& aInFile , const std::string& aOutputPattern );
+
+// ScanEntry _BestScore_( const ScanConfiguration& aScanConfig , const std::vector< ScanEntry >& aResults );
+
+//! A callback to neatly package the scan results for easy consumption
+//! \param aRoI        The region of interest
+//! \param aScanConfig The configuration for the scan
+//! \param aCallback   The simple callback to be applied
+void _FullScanToSimpleScan_( RoI& aRoI , const ScanConfiguration& aScanConfig , const tSimpleScanCallback& aCallback );
+
+//! A callback to dump a clustering run to a JSON file
+//! \param aRoiId    The RoI ID
+//! \param aVector   A vector of cluster-wrappers
+//! \param aInFile   The name of the localization file
+//! \param aOutputPattern  The name of the output JSON file
+void _ClusterCallback_Json_( const std::string& aRoiId , const std::vector< ClusterWrapper >& aVector, const std::string& aInFile , const std::string& aOutputPattern );
+
+//! A callback to neatly package the scan results for easy consumption
+//! \param aRoIproxy   The region-proxy containing the clusters
+//! \param aCallback   The simple callback to be applied
+void _FullClusterToSimpleCluster_( RoIproxy& aRoIproxy , const tSimpleClusterCallback& aCallback );
+
+
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! Automatically extract RoI, run scan and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The full callback to be applied
-void AutoRoi_Scan_FullCallback( const std::string& aInFile , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback );
+template< typename RoIConfig >
+void RunScan( const std::string& aInFile , const RoIConfig&& aRoIConfig , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback )
+{
+  LocalizationFile( aInFile ).ExtractRoIs( std::move( aRoIConfig ) , [&]( RoI& aRoI ) { aRoI.ScanRT( aScanConfig, aCallback ); } );
+}
 
 //! Automatically extract RoI, run scan and apply a simple call-back
 //! \param aInFile     The name of the localization file
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The simple callback to be applied
-void AutoRoi_Scan_SimpleCallback( const std::string& aInFile , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback );
+template< typename RoIConfig >
+void RunScan( const std::string& aInFile , const RoIConfig&& aRoIConfig , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback )
+{
+  LocalizationFile( aInFile ).ExtractRoIs( std::move( aRoIConfig ) , [&]( RoI& aRoI ) { _FullScanToSimpleScan_( aRoI , aScanConfig, aCallback ); } );
+}
 
 //! Automatically extract RoI, run scan and dump to JSON file
 //! \param aInFile     The name of the localization file
 //! \param aScanConfig The configuration for the scan
 //! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
-void AutoRoi_Scan_ToJson( const std::string& aInFile , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern );
+template< typename RoIConfig >
+void RunScan( const std::string& aInFile , const RoIConfig&& aRoIConfig , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern )
+{
+  RunScan( aInFile , std::move( aRoIConfig ) , aScanConfig , [&]( const std::string& aRoiId , const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aRoiId , aVector , aInFile , aOutputPattern ); } );
+}
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -105,128 +149,32 @@ void AutoRoi_Scan_ToJson( const std::string& aInFile , const ScanConfiguration& 
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aCallback   The callback to be applied
-void AutoRoi_Cluster_FullCallback( const std::string& aInFile , const double& aR, const double& aT, const tFullClusterCallback& aCallback );
+template< typename RoIConfig >
+void RunClustering( const std::string& aInFile , const RoIConfig&& aRoIConfig , const double& aR, const double& aT, const tFullClusterCallback& aCallback )
+{  
+  LocalizationFile( aInFile ).ExtractRoIs( std::move( aRoIConfig ) , [&]( RoI& aRoI ) { aRoI.Clusterize( aR, aT, aCallback ); } );
+}
 
 //! Automatically extract RoI, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aCallback   The callback to be applied
-void AutoRoi_Cluster_SimpleCallback( const std::string& aInFile , const double& aR, const double& aT, const tSimpleClusterCallback& aCallback );
+template< typename RoIConfig >
+void RunClustering( const std::string& aInFile , const RoIConfig&& aRoIConfig , const double& aR, const double& aT, const tSimpleClusterCallback& aCallback )
+{
+  RunClustering( aInFile , std::move( aRoIConfig ) , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
+}
 
 //! Automatically specify RoI, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
-void AutoRoi_Cluster_ToJson( const std::string& aInFile , const double& aR, const double& aT, const std::string& aOutputPattern );
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Manually specify RoI, run scan and apply a full call-back
-//! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
-//! \param aScanConfig The configuration for the scan
-//! \param aCallback   The full callback to be applied
-void ManualRoi_Scan_FullCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback );
-
-//! Manually specify RoI, run scan and apply a simple call-back
-//! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
-//! \param aScanConfig The configuration for the scan
-//! \param aCallback   The simple callback to be applied
-void ManualRoi_Scan_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback );
-
-//! Manually specify RoI, run scan and dump to JSON file
-//! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
-//! \param aScanConfig The configuration for the scan
-//! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
-void ManualRoi_Scan_ToJson( const std::string& aInFile , const ManualRoI& aManualRoI , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern );
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Manually specify RoI, clusterize and apply a full call-back
-//! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
-//! \param aR          The R value of the clusterizer
-//! \param aT          The T value of the clusterizer
-//! \param aCallback   The callback to be applied
-void ManualRoi_Cluster_FullCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const tFullClusterCallback& aCallback );
-
-//! Manually specify RoI, clusterize and apply a full call-back
-//! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
-//! \param aR          The R value of the clusterizer
-//! \param aT          The T value of the clusterizer
-//! \param aCallback   The callback to be applied
-void ManualRoi_Cluster_SimpleCallback( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const tSimpleClusterCallback& aCallback );
-
-//! Manually specify RoI, clusterize and apply a full call-back
-//! \param aInFile     The name of the localization file
-//! \param aManualRoI  The manually-specified RoI window
-//! \param aR          The R value of the clusterizer
-//! \param aT          The T value of the clusterizer
-//! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
-void ManualRoi_Cluster_ToJson( const std::string& aInFile , const ManualRoI& aManualRoI , const double& aR, const double& aT, const std::string& aOutputPattern );
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Extract RoI using an image-map, run scan and apply a full call-back
-//! \param aInFile     The name of the localization file
-//! \param aImageJfile  The name of an ImageJ RoI file file
-//! \param aScale The size of the LSB in the ImageJ file
-//! \param aScanConfig The configuration for the scan
-//! \param aCallback   The full callback to be applied
-void ImageJRoi_Scan_FullCallback( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback );
-
-//! Extract RoI using an image-map, run scan and apply a simple call-back
-//! \param aInFile     The name of the localization file
-//! \param aImageJfile  The name of an ImageJ RoI file file
-//! \param aScale The size of the LSB in the ImageJ file
-//! \param aScanConfig The configuration for the scan
-//! \param aCallback   The simple callback to be applied
-void ImageJRoi_Scan_SimpleCallback( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback );
-
-//! Extract RoI using an image-map, run scan and dump to JSON file
-//! \param aInFile     The name of the localization file
-//! \param aImageJfile  The name of an ImageJ RoI file file
-//! \param aScale The size of the LSB in the ImageJ file
-//! \param aScanConfig The configuration for the scan
-//! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
-void ImageJRoi_Scan_ToJson( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern );
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Extract RoI using an image-map, clusterize and apply a full call-back
-//! \param aInFile     The name of the localization file
-//! \param aImageJfile  The name of an ImageJ RoI file file
-//! \param aScale The size of the LSB in the ImageJ file
-//! \param aR          The R value of the clusterizer
-//! \param aT          The T value of the clusterizer
-//! \param aCallback   The callback to be applied
-void ImageJRoi_Cluster_FullCallback( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const double& aR, const double& aT, const tFullClusterCallback& aCallback );
-
-//! Extract RoI using an image-map, clusterize and apply a full call-back
-//! \param aInFile     The name of the localization file
-//! \param aImageJfile  The name of an ImageJ RoI file file
-//! \param aScale The size of the LSB in the ImageJ file
-//! \param aR          The R value of the clusterizer
-//! \param aT          The T value of the clusterizer
-//! \param aCallback   The callback to be applied
-void ImageJRoi_Cluster_SimpleCallback( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const double& aR, const double& aT, const tSimpleClusterCallback& aCallback );
-
-//! Extract RoI using an image-map, clusterize and apply a full call-back
-//! \param aInFile     The name of the localization file
-//! \param aImageJfile  The name of an ImageJ RoI file file
-//! \param aScale The size of the LSB in the ImageJ file
-//! \param aR          The R value of the clusterizer
-//! \param aT          The T value of the clusterizer
-//! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
-void ImageJRoi_Cluster_ToJson( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const double& aR, const double& aT, const std::string& aOutputPattern );
+template< typename RoIConfig >
+void RunClustering( const std::string& aInFile , const RoIConfig&& aRoIConfig , const double& aR, const double& aT, const std::string& aOutputPattern )
+{
+  RunClustering( aInFile , std::move( aRoIConfig ) , aR , aT , [&]( const std::string& aRoiId , const std::vector< ClusterWrapper >& aVector ){ _ClusterCallback_Json_( aRoiId , aVector , aInFile , aOutputPattern ); } );
+}
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

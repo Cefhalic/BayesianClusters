@@ -1,4 +1,4 @@
-from BayesianClustering import *
+from BayesianClusteringTools import *
 import matplotlib.pyplot as plt
 import numpy as np
 

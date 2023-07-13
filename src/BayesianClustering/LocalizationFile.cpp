@@ -139,7 +139,7 @@ void __RecursiveSearch__( tArray& aHist, const int& aRoIid, const int& i, const 
   if( j != 511 and aHist[i][j+1] < 0 ) __RecursiveSearch__( aHist, aRoIid, i, j+1 );
 }
 
-void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallback ) const
+void LocalizationFile::ExtractRoIs( const AutoRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const
 {
   // Calculate our scaling factor
   std::pair< double, double> lXbound( std::make_pair( 9e99, -9e99 ) ), lYbound( std::make_pair( 9e99, -9e99 ) );
@@ -318,9 +318,9 @@ void LocalizationFile::ExtractRoIs( const std::function< void( RoI& ) >& aCallba
 }
 
 
-void LocalizationFile::ExtractRoIs( const std::string& aImageJfile , const double& aScale , const std::function< void( RoI& ) >& aCallback ) const
+void LocalizationFile::ExtractRoIs( const ImageJRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const
 {
-  std::map< std::string , roi_polygon > lRoIs = OpenRoiZipfile( aImageJfile );
+  std::map< std::string , roi_polygon > lRoIs = OpenRoiZipfile( aRoI.filename );
 
   typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> geo_point;
   typedef boost::geometry::model::ring<geo_point> geo_polygon;
@@ -328,7 +328,7 @@ void LocalizationFile::ExtractRoIs( const std::string& aImageJfile , const doubl
   for( const auto& j : lRoIs )
   {
     geo_polygon lPoly;
-    for( const auto& point : j.second ) boost::geometry::append( lPoly , geo_point( boost::geometry::get<0>(point) * aScale , boost::geometry::get<1>(point) * aScale ) );
+    for( const auto& point : j.second ) boost::geometry::append( lPoly , geo_point( boost::geometry::get<0>(point) * aRoI.scale , boost::geometry::get<1>(point) * aRoI.scale ) );
     boost::geometry::correct( lPoly ); // Add closing points, etc.
 
     geo_point lCentroid( 0 , 0 );
