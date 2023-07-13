@@ -1,4 +1,4 @@
-//! \file PythonBindings.cpp
+//! \file BayesianClusteringTools.cpp
 //! Self-contained sourcefile for producing python-bindings
 
 /* ===== BOOST libraries ===== */
@@ -94,8 +94,8 @@ BOOST_PYTHON_MODULE( BayesianClusteringTools )
   scope().attr( "nanometer" ) = nanometer;
   scope().attr( "micrometer" ) = micrometer;
 
-  def( "GetLocalizations" , &GetLocalizations );
-  def( "GetRoIs" , &GetRoIs );
-  def( "CheckRoIs" , &CheckRoIs );
+  def( "GetLocalizations" , &GetLocalizations , args( "aFile" ) );
+  def( "GetRoIs" , &GetRoIs , args( "aFile" ) );
+  def( "CheckRoIs" , &CheckRoIs , args( "aFile" , "aRoIFile" , "aScale" ) );
 }
 // =====================================================================================================================

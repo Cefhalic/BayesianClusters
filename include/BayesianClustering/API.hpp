@@ -113,32 +113,35 @@ void _FullClusterToSimpleCluster_( RoIproxy& aRoIproxy , const tSimpleClusterCal
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! Automatically extract RoI, run scan and apply a full call-back
 //! \param aInFile     The name of the localization file
+//! \param aRoIConfig  Specify the mechanism used to extract the RoIs
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The full callback to be applied
 template< typename RoIConfig >
-void RunScan( const std::string& aInFile , const RoIConfig&& aRoIConfig , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback )
+void RunScan( const std::string& aInFile , const RoIConfig& aRoIConfig , const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback )
 {
-  LocalizationFile( aInFile ).ExtractRoIs( std::move( aRoIConfig ) , [&]( RoI& aRoI ) { aRoI.ScanRT( aScanConfig, aCallback ); } );
+  LocalizationFile( aInFile ).ExtractRoIs( aRoIConfig , [&]( RoI& aRoI ) { aRoI.ScanRT( aScanConfig, aCallback ); } );
 }
 
 //! Automatically extract RoI, run scan and apply a simple call-back
 //! \param aInFile     The name of the localization file
+//! \param aRoIConfig  Specify the mechanism used to extract the RoIs
 //! \param aScanConfig The configuration for the scan
 //! \param aCallback   The simple callback to be applied
 template< typename RoIConfig >
-void RunScan( const std::string& aInFile , const RoIConfig&& aRoIConfig , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback )
+void RunScan( const std::string& aInFile , const RoIConfig& aRoIConfig , const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback )
 {
-  LocalizationFile( aInFile ).ExtractRoIs( std::move( aRoIConfig ) , [&]( RoI& aRoI ) { _FullScanToSimpleScan_( aRoI , aScanConfig, aCallback ); } );
+  LocalizationFile( aInFile ).ExtractRoIs( aRoIConfig , [&]( RoI& aRoI ) { _FullScanToSimpleScan_( aRoI , aScanConfig, aCallback ); } );
 }
 
 //! Automatically extract RoI, run scan and dump to JSON file
 //! \param aInFile     The name of the localization file
+//! \param aRoIConfig  Specify the mechanism used to extract the RoIs
 //! \param aScanConfig The configuration for the scan
 //! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
 template< typename RoIConfig >
-void RunScan( const std::string& aInFile , const RoIConfig&& aRoIConfig , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern )
+void RunScan( const std::string& aInFile , const RoIConfig& aRoIConfig , const ScanConfiguration& aScanConfig, const std::string& aOutputPattern )
 {
-  RunScan( aInFile , std::move( aRoIConfig ) , aScanConfig , [&]( const std::string& aRoiId , const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aRoiId , aVector , aInFile , aOutputPattern ); } );
+  RunScan( aInFile , aRoIConfig , aScanConfig , [&]( const std::string& aRoiId , const std::vector< ScanEntry >& aVector ){ _ScanCallback_Json_( aRoiId , aVector , aInFile , aOutputPattern ); } );
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -146,35 +149,38 @@ void RunScan( const std::string& aInFile , const RoIConfig&& aRoIConfig , const 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! Automatically extract RoI, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
+//! \param aRoIConfig  Specify the mechanism used to extract the RoIs
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aCallback   The callback to be applied
 template< typename RoIConfig >
-void RunClustering( const std::string& aInFile , const RoIConfig&& aRoIConfig , const double& aR, const double& aT, const tFullClusterCallback& aCallback )
+void RunClustering( const std::string& aInFile , const RoIConfig& aRoIConfig , const double& aR, const double& aT, const tFullClusterCallback& aCallback )
 {  
-  LocalizationFile( aInFile ).ExtractRoIs( std::move( aRoIConfig ) , [&]( RoI& aRoI ) { aRoI.Clusterize( aR, aT, aCallback ); } );
+  LocalizationFile( aInFile ).ExtractRoIs( aRoIConfig , [&]( RoI& aRoI ) { aRoI.Clusterize( aR, aT, aCallback ); } );
 }
 
 //! Automatically extract RoI, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
+//! \param aRoIConfig  Specify the mechanism used to extract the RoIs
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aCallback   The callback to be applied
 template< typename RoIConfig >
-void RunClustering( const std::string& aInFile , const RoIConfig&& aRoIConfig , const double& aR, const double& aT, const tSimpleClusterCallback& aCallback )
+void RunClustering( const std::string& aInFile , const RoIConfig& aRoIConfig , const double& aR, const double& aT, const tSimpleClusterCallback& aCallback )
 {
-  RunClustering( aInFile , std::move( aRoIConfig ) , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
+  RunClustering( aInFile , aRoIConfig , aR , aT , [&]( RoIproxy& aRoIproxy ){ _FullClusterToSimpleCluster_( aRoIproxy , aCallback ); } );
 }
 
 //! Automatically specify RoI, clusterize and apply a full call-back
 //! \param aInFile     The name of the localization file
+//! \param aRoIConfig  Specify the mechanism used to extract the RoIs
 //! \param aR          The R value of the clusterizer
 //! \param aT          The T value of the clusterizer
 //! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
 template< typename RoIConfig >
-void RunClustering( const std::string& aInFile , const RoIConfig&& aRoIConfig , const double& aR, const double& aT, const std::string& aOutputPattern )
+void RunClustering( const std::string& aInFile , const RoIConfig& aRoIConfig , const double& aR, const double& aT, const std::string& aOutputPattern )
 {
-  RunClustering( aInFile , std::move( aRoIConfig ) , aR , aT , [&]( const std::string& aRoiId , const std::vector< ClusterWrapper >& aVector ){ _ClusterCallback_Json_( aRoiId , aVector , aInFile , aOutputPattern ); } );
+  RunClustering( aInFile , aRoIConfig , aR , aT , [&]( const std::string& aRoiId , const std::vector< ClusterWrapper >& aVector ){ _ClusterCallback_Json_( aRoiId , aVector , aInFile , aOutputPattern ); } );
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -13,6 +13,11 @@ class RoI;
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A struct for storing the parameters of a manual RoI
 struct ManualRoI {  
+  //! Constructor
+  ManualRoI( const double& aX /*!< The x-centre of the RoI */,
+             const double& aY /*!< The x-centre of the RoI */, 
+             const double& aWidth /*!< The width of the RoI */, 
+             const double& aHeight /*!< The height of the RoI */ ) : x( aX ) , y( aY ) , width( aWidth ) , height( aHeight ) {} 
   double x; //!< The x-centre of the RoI
   double y; //!< The y-centre of the RoI
   double width; //!< The width of the RoI
@@ -28,7 +33,10 @@ struct AutoRoI {
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //! A struct for storing the parameters of an ImageJ RoI file
-struct ImageJRoI {  
+struct ImageJRoI { 
+  //! Constructor  
+  ImageJRoI( const std::string& aFilename /*!< The ImageJ zipped RoI file */, 
+             const double& aScale /*!< The pixel scale */) : filename( aFilename ) , scale( aScale ) {} 
   std::string filename; //!< The ImageJ zipped RoI file
   double scale; //!< The pixel scale
 };
@@ -69,6 +77,7 @@ class LocalizationFile
     void ExtractRoIs( const ManualRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const;
 
     //! Automatically extract the RoIs
+    //! \param aRoI Parameters for automatically extracting RoIs
     //! \param aCallback A handler for each RoI found
     void ExtractRoIs( const AutoRoI& aRoI , const std::function< void( RoI& ) >& aCallback ) const;
 
