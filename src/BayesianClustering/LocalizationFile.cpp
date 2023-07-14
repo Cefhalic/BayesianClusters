@@ -375,8 +375,8 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
        }
 
        std::cout << lwidth << " " << lheight << std::endl;
-       std::cout << "min x " << lxbound.first/nanometer << ", max x " << lxbound.second/nanometer << std::endl;
-       std::cout << "min y " << lybound.first/nanometer << ", max y " << lybound.second/nanometer << std::endl;
+       std::cout << "min x " << lxbound.first/nanometer/aScale << ", max x " << lxbound.second/nanometer/aScale << std::endl;
+       std::cout << "min y " << lybound.first/nanometer/aScale << ", max y " << lybound.second/nanometer/aScale << std::endl;
        std::cout << aScale << std::endl;
        // ?? 
 
@@ -424,20 +424,23 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
         {
             std::vector< Data > lData;
 
-            double  lCentreX = CX[k] * aScale / nanometer,
-                    lCentreY = CY[k] * aScale / nanometer;
+            double  lCentreX = CX[k] * aScale * nanometer,
+                    lCentreY = CY[k] * aScale * nanometer;
 
             for (const auto& i : mData)
             {
-                int x = (int)(i.x * nanometer / aScale), // coordinates at segmented image
-                    y = (int)(i.y * nanometer / aScale);
+                int x = (int)(i.x / nanometer / aScale), // coordinates at segmented image
+                    y = (int)(i.y / nanometer / aScale);
+                //
+                if (x < 0 || y < 0 || x >= (int)lwidth || y >= (int)lheight) continue;
+                //
                 if ((k+1)==(int)get_color(view(x, y), bg::red_t()))
                     lData.emplace_back(i.x - lCentreX, i.y - lCentreY, i.s);
             }
 
-            RoI lRoI(std::to_string(k+1), std::move(lData), lCentreX, lCentreY, Area[k]*aScale*aScale/nanometer/nanometer);
+            RoI lRoI(std::to_string(k+1), std::move(lData), lCentreX, lCentreY, Area[k]*aScale*aScale*nanometer*nanometer);
             aCallback(lRoI);
-        }
+        }        
 }
 
 // void LocalizationFile::ExtractRoIs( const std::string& aImageMap , const std::function< void( RoI& ) >& aCallback ) const
