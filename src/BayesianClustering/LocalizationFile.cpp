@@ -18,9 +18,12 @@
 /* ===== BOOST C++ ===== */
 #include <boost/filesystem.hpp>
 #include <boost/geometry.hpp>
-// #include <boost/gil/extension/io/bmp.hpp>
-// #include <boost/gil/image.hpp>
+#include <boost/gil/extension/io/bmp.hpp>
+#include <boost/gil/image.hpp>
 
+// YA
+// this dosen't work by some reason..
+//#include <boost/gil/extension/io/tiff.hpp>
 
 //! Multithreading handler for loading a chunk of data from CSV file
 //! \param aFilename The name of the file to open
@@ -350,7 +353,92 @@ void LocalizationFile::ExtractRoIs( const std::string& aImageJfile , const doubl
 
 }
 
+// YA
+void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegmentedImagefile, const double& aScale, const std::function< void(RoI&) >& aCallback) const
+{  
+       namespace bg = boost::gil;
+       bg::rgb8_image_t img;
+       bg::read_image(aSegmentedImagefile, img , bg::bmp_tag() );
+       auto view = bg::view(img);
 
+       std::size_t lwidth = view.width();
+       std::size_t lheight = view.height();
+
+       // min and max values of coordinates
+       std::pair< double, double> lxbound( std::make_pair( 9e99, -9e99 ) ), lybound( std::make_pair( 9e99, -9e99 ) );
+
+       for( auto& k : mData ) {
+         if ( k.x < lxbound.first  ) lxbound.first  = k.x;
+         if ( k.x > lxbound.second ) lxbound.second = k.x;
+         if ( k.y < lybound.first  ) lybound.first  = k.y;
+         if ( k.y > lybound.second ) lybound.second = k.y;
+       }
+
+       std::cout << lwidth << " " << lheight << std::endl;
+       std::cout << "min x " << lxbound.first/nanometer << ", max x " << lxbound.second/nanometer << std::endl;
+       std::cout << "min y " << lybound.first/nanometer << ", max y " << lybound.second/nanometer << std::endl;
+       std::cout << aScale << std::endl;
+       // ?? 
+
+       // find number of ROIs in the image
+       int roi_number = 0;
+       for (int y = 0; y < view.height(); ++y)
+       {
+           for (int x = 0; x < view.width(); ++x)
+           {
+               int label = get_color(view(x,y),bg::red_t());
+               if (label > roi_number) roi_number = label;
+           }
+       }
+       std::cout << " roi number " << roi_number << std::endl;
+       //
+       // calculate areas and centroids of these ROIs - in segmented image pixels
+       auto *Area = new double[roi_number](),
+            *CX = new double[roi_number](),
+            *CY = new double[roi_number]();
+        for (int y = 0; y < view.height(); ++y)
+        {
+            for (int x = 0; x < view.width(); ++x)
+            {
+                int label = get_color(view(x, y), bg::red_t());
+                if (0 != label)
+                {
+                    Area[label-1]++;
+                    CX[label-1] += x;
+                    CY[label-1] += y;
+                }
+            }
+        }
+        // calculate centroids
+        for (int k = 0; k < roi_number; k++)
+        {
+            CX[k] = CX[k] / Area[k];
+            CY[k] = CY[k] / Area[k];
+        }
+        // display   
+        for (int k = 0; k < roi_number; k++)
+            std::cout << k << " " << Area[k] << " " << CX[k] << " " << CY[k] << std::endl;
+        //
+        //do the actual job
+        for (int k = 0; k < roi_number; k++)
+        {
+            std::vector< Data > lData;
+
+            double  lCentreX = CX[k] * aScale / nanometer,
+                    lCentreY = CY[k] * aScale / nanometer;
+
+            for (const auto& i : mData)
+            {
+                int x = (int)(i.x * nanometer / aScale), // coordinates at segmented image
+                    y = (int)(i.y * nanometer / aScale);
+                if ((k+1)==(int)get_color(view(x, y), bg::red_t()))
+                    lData.emplace_back(i.x - lCentreX, i.y - lCentreY, i.s);
+            }
+
+            RoI lRoI(std::to_string(k+1), std::move(lData), lCentreX, lCentreY, Area[k]*aScale*aScale/nanometer/nanometer);
+            aCallback(lRoI);
+        }
+}
 
 // void LocalizationFile::ExtractRoIs( const std::string& aImageMap , const std::function< void( RoI& ) >& aCallback ) const
 // {

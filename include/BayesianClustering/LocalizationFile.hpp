@@ -62,6 +62,9 @@ class LocalizationFile
     //! \param aCallback A handler for each RoI found
     void ExtractRoIs( const std::string& aImageJfile , const double& aScale , const std::function< void( RoI& ) >& aCallback ) const;
 
+    // YA 
+    void ExtractRoIsFromSegmentedImage(const std::string& aSegmentedImagefile, const double& aScale, const std::function< void(RoI&) >& aCallback) const;
+
     //! Accessor to the raw data
     //! \return Reference to the raw data
     inline const std::vector< Data >& data()
