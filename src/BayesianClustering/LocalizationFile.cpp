@@ -359,23 +359,7 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
 
        std::size_t lwidth = view.width();
        std::size_t lheight = view.height();
-/*
-       // min and max values of coordinates
-       std::pair< double, double> lxbound( std::make_pair( 9e99, -9e99 ) ), lybound( std::make_pair( 9e99, -9e99 ) );
 
-       for( auto& k : mData ) {
-         if ( k.x < lxbound.first  ) lxbound.first  = k.x;
-         if ( k.x > lxbound.second ) lxbound.second = k.x;
-         if ( k.y < lybound.first  ) lybound.first  = k.y;
-         if ( k.y > lybound.second ) lybound.second = k.y;
-       }
-
-       std::cout << lwidth << " " << lheight << std::endl;
-       std::cout << "min x " << lxbound.first/nanometer/aScale << ", max x " << lxbound.second/nanometer/aScale << std::endl;
-       std::cout << "min y " << lybound.first/nanometer/aScale << ", max y " << lybound.second/nanometer/aScale << std::endl;
-       std::cout << aScale << std::endl;
-       // ?? 
-*/
        // find number of ROIs in the image
        int roi_number = 0;
        for (int y = 0; y < view.height(); ++y)
@@ -386,7 +370,6 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
                if (label > roi_number) roi_number = label;
            }
        }
-       // std::cout << " roi number " << roi_number << std::endl;
        //
        std::vector<double>  Area(roi_number, 0), 
                             CX(roi_number, 0), 
@@ -411,9 +394,6 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
             CX[k] = CX[k] / Area[k];
             CY[k] = CY[k] / Area[k];
         }        
-        // display   
-        //for (int k = 0; k < roi_number; k++)
-        //    std::cout << k << " " << Area[k] << " " << CX[k] << " " << CY[k] << std::endl;
         //
         //do actual job
         for (int k = 0; k < roi_number; k++)
@@ -436,7 +416,7 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
 
             RoI lRoI(std::to_string(k+1), std::move(lData), lCentreX, lCentreY, Area[k]*aScale*aScale*nanometer*nanometer);
             aCallback(lRoI);
-        }        
+        } 
 }
 
 // void LocalizationFile::ExtractRoIs( const std::string& aImageMap , const std::function< void( RoI& ) >& aCallback ) const
