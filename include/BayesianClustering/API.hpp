@@ -228,10 +228,9 @@ void ImageJRoi_Cluster_SimpleCallback( const std::string& aInFile , const std::s
 //! \param aT          The T value of the clusterizer
 //! \param aOutputPattern    A formattable-string specifying the name of the output JSON files. Substitutable fields are {input} (giving the stem of the input file name) and {roi} (giving the RoI id).
 void ImageJRoi_Cluster_ToJson( const std::string& aInFile , const std::string& aImageJfile , const double& aScale , const double& aR, const double& aT, const std::string& aOutputPattern );
-// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-// YA
 void SegmentedImage_Cluster_FullCallback(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const double& aR, const double& aT, const tFullClusterCallback& aCallback);
 void SegmentedImage_Cluster_SimpleCallback(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const double& aR, const double& aT, const tSimpleClusterCallback& aCallback);
 void SegmentedImage_Cluster_ToJson(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const double& aR, const double& aT, const std::string& aOutputPattern);
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

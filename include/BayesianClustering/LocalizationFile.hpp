@@ -62,7 +62,7 @@ class LocalizationFile
     //! \param aCallback A handler for each RoI found
     void ExtractRoIs( const std::string& aImageJfile , const double& aScale , const std::function< void( RoI& ) >& aCallback ) const;
 
-    // YA 
+    //! \param aScale number of nanometers per pixel for aSegmentedImagefile
     void ExtractRoIsFromSegmentedImage(const std::string& aSegmentedImagefile, const double& aScale, const std::function< void(RoI&) >& aCallback) const;
 
     //! Accessor to the raw data

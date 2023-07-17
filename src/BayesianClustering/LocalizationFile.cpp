@@ -21,10 +21,6 @@
 #include <boost/gil/extension/io/bmp.hpp>
 #include <boost/gil/image.hpp>
 
-// YA
-// this dosen't work by some reason..
-//#include <boost/gil/extension/io/tiff.hpp>
-
 //! Multithreading handler for loading a chunk of data from CSV file
 //! \param aFilename The name of the file to open
 //! \param aData     A vector into which to fill data
@@ -353,7 +349,7 @@ void LocalizationFile::ExtractRoIs( const std::string& aImageJfile , const doubl
 
 }
 
-// YA
+
 void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegmentedImagefile, const double& aScale, const std::function< void(RoI&) >& aCallback) const
 {  
        namespace bg = boost::gil;
@@ -363,7 +359,7 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
 
        std::size_t lwidth = view.width();
        std::size_t lheight = view.height();
-
+/*
        // min and max values of coordinates
        std::pair< double, double> lxbound( std::make_pair( 9e99, -9e99 ) ), lybound( std::make_pair( 9e99, -9e99 ) );
 
@@ -379,7 +375,7 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
        std::cout << "min y " << lybound.first/nanometer/aScale << ", max y " << lybound.second/nanometer/aScale << std::endl;
        std::cout << aScale << std::endl;
        // ?? 
-
+*/
        // find number of ROIs in the image
        int roi_number = 0;
        for (int y = 0; y < view.height(); ++y)
@@ -390,12 +386,12 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
                if (label > roi_number) roi_number = label;
            }
        }
-       std::cout << " roi number " << roi_number << std::endl;
+       // std::cout << " roi number " << roi_number << std::endl;
        //
+       std::vector<double>  Area(roi_number, 0), 
+                            CX(roi_number, 0), 
+                            CY(roi_number, 0);
        // calculate areas and centroids of these ROIs - in segmented image pixels
-       auto *Area = new double[roi_number](),
-            *CX = new double[roi_number](),
-            *CY = new double[roi_number]();
         for (int y = 0; y < view.height(); ++y)
         {
             for (int x = 0; x < view.width(); ++x)
@@ -409,17 +405,17 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
                 }
             }
         }
-        // calculate centroids
+        // normalize centroids accumulators
         for (int k = 0; k < roi_number; k++)
         {
             CX[k] = CX[k] / Area[k];
             CY[k] = CY[k] / Area[k];
-        }
+        }        
         // display   
-        for (int k = 0; k < roi_number; k++)
-            std::cout << k << " " << Area[k] << " " << CX[k] << " " << CY[k] << std::endl;
+        //for (int k = 0; k < roi_number; k++)
+        //    std::cout << k << " " << Area[k] << " " << CX[k] << " " << CY[k] << std::endl;
         //
-        //do the actual job
+        //do actual job
         for (int k = 0; k < roi_number; k++)
         {
             std::vector< Data > lData;

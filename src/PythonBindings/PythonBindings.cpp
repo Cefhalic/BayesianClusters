@@ -248,11 +248,10 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   ADAPTED_FN( ImageJRoi_Cluster_SimpleCallback  , "Extract RoI via an ImagJ RoI file, clusterize and apply a simple call-back" , "aInFile" , "aImageJ" , "aScale" , "aR" , "aT" , "aCallback" );
           FN( ImageJRoi_Cluster_ToJson          , "Extract RoI via an ImagJ RoI file, clusterize and dump to JSON file"        , "aInFile" , "aImageJ" , "aScale" , "aR" , "aT" , "aOutputPattern" );
 
-  // ------------------------------------------
-
-  // YA   
   ADAPTED_FN(SegmentedImage_Cluster_SimpleCallback, "Extract RoI via segmented image file, clusterize and apply a simple call-back", "aInFile", "aSegmentedImagefile", "aScale", "aR", "aT", "aCallback");
           FN(SegmentedImage_Cluster_ToJson, "Extract RoI via segmented image file, clusterize and dump to JSON file", "aInFile", "aSegmentedImagefile", "aScale", "aR", "aT", "aOutputPattern");
+  // ------------------------------------------
+
 
   def( "GetLocalizations" , &GetLocalizations );
   def( "GetRoIs" , &GetRoIs );
