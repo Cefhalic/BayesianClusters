@@ -400,13 +400,13 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
         {
             std::vector< Data > lData;
 
-            double  lCentreX = CX[k] * aScale * nanometer,
-                    lCentreY = CY[k] * aScale * nanometer;
+            double  lCentreX = CX[k] * aScale,
+                    lCentreY = CY[k] * aScale;
 
             for (const auto& i : mData)
             {
-                int x = (int)(i.x / nanometer / aScale), // coordinates at segmented image
-                    y = (int)(i.y / nanometer / aScale);
+                int x = (int)(i.x / aScale), // coordinates at segmented image
+                    y = (int)(i.y / aScale);
                 //
                 if (x < 0 || y < 0 || x >= (int)lwidth || y >= (int)lheight) continue;
                 //
@@ -414,7 +414,7 @@ void LocalizationFile::ExtractRoIsFromSegmentedImage(const std::string& aSegment
                     lData.emplace_back(i.x - lCentreX, i.y - lCentreY, i.s);
             }
 
-            RoI lRoI(std::to_string(k+1), std::move(lData), lCentreX, lCentreY, Area[k]*aScale*aScale*nanometer*nanometer);
+            RoI lRoI(std::to_string(k+1), std::move(lData), lCentreX, lCentreY, Area[k]*aScale*aScale);
             aCallback(lRoI);
         } 
 }
