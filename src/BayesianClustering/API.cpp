@@ -255,7 +255,7 @@ void ImageJRoi_Cluster_ToJson( const std::string& aInFile , const std::string& a
   ImageJRoi_Cluster_SimpleCallback( aInFile , aImageJfile , aScale , aR , aT , [&]( const std::string& aRoiId , const std::vector< ClusterWrapper >& aVector ){ _ClusterCallback_Json_( aRoiId , aVector , aInFile , aOutputPattern ); } );
 }
 
-//YA
+
 __attribute__((flatten))
 void SegmentedImage_Cluster_FullCallback(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const double& aR, const double& aT, const tFullClusterCallback& aCallback)
 {

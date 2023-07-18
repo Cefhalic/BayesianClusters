@@ -101,7 +101,7 @@ namespace Adapted
   // auto ImageJRoi_Cluster_FullCallback = []( const std::string& aInFile , const std::string& aImageJ , const double& aScale , const double& aR , const double& aT ,  const object& aCallback ){ ::ImageJRoi_Cluster_FullCallback(   aInFile , aImageJ , aScale , aR , aT ,     aCallback ); }; //!< Lambda to extract RoI via an ImagJ RoI file, clusterize and apply a full python callback
   auto ImageJRoi_Cluster_SimpleCallback  = []( const std::string& aInFile , const std::string& aImageJ , const double& aScale , const double& aR , const double& aT ,  const object& aCallback ){ ::ImageJRoi_Cluster_SimpleCallback( aInFile , aImageJ , aScale , aR , aT ,     aCallback ); }; //!< Lambda to extract RoI via an ImagJ RoI file, clusterize and apply a simple python callback
   //
-  //YA
+
   auto SegmentedImage_Cluster_SimpleCallback = [](const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const double& aR, const double& aT, const object& aCallback) { ::ImageJRoi_Cluster_SimpleCallback(aInFile, aSegmentedImagefile, aScale, aR, aT, aCallback); }; //!< Lambda to extract RoI via segmented iamge file, clusterize and apply a simple python callback
 } 
 // =====================================================================================================================
