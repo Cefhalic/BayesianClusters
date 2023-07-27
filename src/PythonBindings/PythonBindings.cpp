@@ -103,6 +103,7 @@ namespace Adapted
   //
 
   auto SegmentedImage_Cluster_SimpleCallback = [](const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const double& aR, const double& aT, const object& aCallback) { ::ImageJRoi_Cluster_SimpleCallback(aInFile, aSegmentedImagefile, aScale, aR, aT, aCallback); }; //!< Lambda to extract RoI via segmented iamge file, clusterize and apply a simple python callback
+  auto SegmentedImage_Scan_SimpleCallback = [](const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const ScanConfiguration& aScanConfig, const object& aCallback) { ::ImageJRoi_Scan_SimpleCallback(aInFile, aSegmentedImagefile, aScale, aScanConfig, aCallback); }; //!< Lambda to extract RoI via an segmented image file, run scan and apply a simple python callback
 } 
 // =====================================================================================================================
 
@@ -250,6 +251,9 @@ BOOST_PYTHON_MODULE( BayesianClustering )
 
   ADAPTED_FN(SegmentedImage_Cluster_SimpleCallback, "Extract RoI via segmented image file, clusterize and apply a simple call-back", "aInFile", "aSegmentedImagefile", "aScale", "aR", "aT", "aCallback");
           FN(SegmentedImage_Cluster_ToJson, "Extract RoI via segmented image file, clusterize and dump to JSON file", "aInFile", "aSegmentedImagefile", "aScale", "aR", "aT", "aOutputPattern");
+
+  ADAPTED_FN(SegmentedImage_Scan_SimpleCallback, "Extract RoI via an segmented image file, run scan and apply a simple call-back", "aInFile", "aImageJ", "aScale", "aScanConfig", "aCallback");
+          FN(SegmentedImage_Scan_ToJson, "Extract RoI via an segmented image file, run scan and dump to JSON file", "aInFile", "aImageJ", "aScale", "aScanConfig", "aOutputPattern");
   // ------------------------------------------
 
 

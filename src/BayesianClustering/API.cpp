@@ -273,3 +273,22 @@ void SegmentedImage_Cluster_ToJson(const std::string& aInFile, const std::string
 {
     SegmentedImage_Cluster_SimpleCallback(aInFile, aSegmentedImagefile, aScale, aR, aT, [&](const std::string& aRoiId, const std::vector< ClusterWrapper >& aVector) { _ClusterCallback_Json_(aRoiId, aVector, aInFile, aOutputPattern); });
 }
+
+
+__attribute__((flatten))
+void SegmentedImage_Scan_FullCallback(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback)
+{
+    LocalizationFile(aInFile).ExtractRoIsFromSegmentedImage(aSegmentedImagefile, aScale, [&](RoI& aRoI) { aRoI.ScanRT(aScanConfig, aCallback); });
+}
+
+__attribute__((flatten))
+void SegmentedImage_Scan_SimpleCallback(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback)
+{
+    LocalizationFile(aInFile).ExtractRoIs(aSegmentedImagefile, aScale, [&](RoI& aRoI) { _FullScanToSimpleScan_(aRoI, aScanConfig, aCallback); });
+}
+
+__attribute__((flatten))
+void SegmentedImage_Scan_ToJson(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const ScanConfiguration& aScanConfig, const std::string& aOutputPattern)
+{
+    ImageJRoi_Scan_SimpleCallback(aInFile, aSegmentedImagefile, aScale, aScanConfig, [&](const std::string& aRoiId, const std::vector< ScanEntry >& aVector) { _ScanCallback_Json_(aRoiId, aVector, aInFile, aOutputPattern); });
+}

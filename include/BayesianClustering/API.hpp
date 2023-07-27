@@ -232,5 +232,9 @@ void ImageJRoi_Cluster_ToJson( const std::string& aInFile , const std::string& a
 void SegmentedImage_Cluster_FullCallback(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const double& aR, const double& aT, const tFullClusterCallback& aCallback);
 void SegmentedImage_Cluster_SimpleCallback(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const double& aR, const double& aT, const tSimpleClusterCallback& aCallback);
 void SegmentedImage_Cluster_ToJson(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const double& aR, const double& aT, const std::string& aOutputPattern);
+
+void SegmentedImage_Scan_FullCallback(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const ScanConfiguration& aScanConfig, const tFullScanCallback& aCallback);
+void SegmentedImage_Scan_SimpleCallback(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const ScanConfiguration& aScanConfig, const tSimpleScanCallback& aCallback);
+void SegmentedImage_Scan_ToJson(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const ScanConfiguration& aScanConfig, const std::string& aOutputPattern);
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
