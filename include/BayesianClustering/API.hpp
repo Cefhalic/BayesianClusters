@@ -238,3 +238,5 @@ void SegmentedImage_Scan_SimpleCallback(const std::string& aInFile, const std::s
 void SegmentedImage_Scan_ToJson(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const ScanConfiguration& aScanConfig, const std::string& aOutputPattern);
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void SegmentedImage_FullAnalysis_ToJson(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const ScanConfiguration& aScanConfig, const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_Info);
+void ImageJRoi_FullAnalysis_ToJson(const std::string& aInFile, const std::string& aImageJfile, const double& aScale, const ScanConfiguration& aScanConfig, const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_Info);

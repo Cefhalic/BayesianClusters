@@ -253,14 +253,16 @@ BOOST_PYTHON_MODULE( BayesianClustering )
           FN(SegmentedImage_Cluster_ToJson, "Extract RoI via segmented image file, clusterize and dump to JSON file", "aInFile", "aSegmentedImagefile", "aScale", "aR", "aT", "aOutputPattern");
 
   ADAPTED_FN(SegmentedImage_Scan_SimpleCallback, "Extract RoI via an segmented image file, run scan and apply a simple call-back", "aInFile", "aImageJ", "aScale", "aScanConfig", "aCallback");
-          FN(SegmentedImage_Scan_ToJson, "Extract RoI via an segmented image file, run scan and dump to JSON file", "aInFile", "aImageJ", "aScale", "aScanConfig", "aOutputPattern");
-  // ------------------------------------------
+          FN(SegmentedImage_Scan_ToJson, "Extract RoI via an segmented image file, run scan and dump to JSON file", "aInFile", "aSegmentedImagefile", "aScale", "aScanConfig", "aOutputPattern");
 
+          FN(SegmentedImage_FullAnalysis_ToJson, "Extract RoI via an segmented image file, scan, cluster, get RoI info, and dump outputs to JSON file", "aInFile", "aSegmentedImagefile", "aScale", "aScanConfig", "aOutputPattern_Scan", "aOutputPattern_Cluster", "aOutputPattern_Info");
+          FN(ImageJRoi_FullAnalysis_ToJson, "Extract RoI via an an ImagJ RoI file, scan, cluster, get RoI info, and dump outputs to JSON file", "aInFile", "aImageJfile", "aScale", "aScanConfig", "aOutputPattern_Scan", "aOutputPattern_Cluster", "aOutputPattern_Info");
+  
+  // ------------------------------------------
 
   def( "GetLocalizations" , &GetLocalizations );
   def( "GetRoIs" , &GetRoIs );
   def( "CheckRoIs" , &CheckRoIs );
-
 
 }
 

@@ -6,6 +6,8 @@
 #include "BayesianClustering/Configuration.hpp"
 #include "BayesianClustering/RoI.hpp"
 #include "BayesianClustering/RoIproxy.hpp"
+#include "Utilities/Units.hpp"
+
 
 /* ===== C++ ===== */
 #include <map>
@@ -133,7 +135,53 @@ void _FullClusterToSimpleCluster_( RoIproxy& aRoIproxy , const tSimpleClusterCal
 }
 
 
+void _RoI_Info_Json_(RoI& aRoI, const std::string& aInFile, const std::string& aOutputPattern)
+{
+    auto aRoIid = aRoI.id();
+    using namespace fmt::literals;
+    auto lOutFileName = boost::filesystem::path(fmt::format(aOutputPattern, "input"_a = boost::filesystem::path(aInFile).stem().string(), "roi"_a = aRoIid));
+    boost::filesystem::create_directories(lOutFileName.parent_path());
 
+    FILE* fptr = fopen(lOutFileName.c_str(), "w");
+    if (fptr == NULL) throw std::runtime_error("Could not open file");
+    fprintf(fptr, "[\n");
+
+    long int  localizations = aRoI.data().size();
+    long double        area = aRoI.getArea();
+
+    double centroid_x      = aRoI.getCentreX(),
+           centroid_y      = aRoI.getCentreY();
+
+    std::cout << "nloc " << aRoI.data().size() << " area " << aRoI.getArea() << " cx " << aRoI.getCentreX() << " cy " << aRoI.getCentreY() << std::endl;
+
+    fprintf(fptr, "  { \"localizations\":%ld , \"area\":%.5Le , \"centroid_x\":%.5e , \"centroid_y\":%.5e },\n", localizations, area, centroid_x, centroid_y);
+    fseek(fptr, -2, SEEK_CUR); // Delete the last comma
+    fprintf(fptr, "\n]\n");
+    fclose(fptr);
+}
+
+void _FullAnalysis_(RoI& aRoI, const ScanConfiguration& aScanConfig, const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_Info)
+{    
+    auto RoIid = aRoI.id();    
+    // Scan
+    std::mutex lMtx;
+    std::vector< ScanEntry > lResults;
+    aRoI.ScanRT(aScanConfig, [&](const RoIproxy& aRoI, const double& aR, const double& aT) { lMtx.lock(); lResults.push_back({ aR, aT, aRoI.mLogP }); lMtx.unlock(); });
+    std::sort(lResults.begin(), lResults.end());    
+    // find optimal R,T
+    std::size_t lMax( 0 );
+    for( std::size_t i(1) ; i!= lResults.size() ; ++i )
+        if( lResults[i].score > lResults[lMax].score ) lMax = i;
+    // maybe not the best way - one can try smoothing (?)
+    double  t_star = lResults[lMax].t,
+            r_star = lResults[lMax].r;
+    //save Scan results
+    _ScanCallback_Json_(RoIid, lResults, "", aOutputPattern_Scan);
+    // Clusterize and save clusters info
+    aRoI.Clusterize(r_star, t_star, [RoIid, aOutputPattern_Cluster](RoIproxy& aRoIproxy) { _FullClusterToSimpleCluster_(aRoIproxy, [RoIid,aOutputPattern_Cluster](const std::string& aRoiId, const std::vector< ClusterWrapper >& aVector) { _ClusterCallback_Json_(aRoiId, aVector,"", aOutputPattern_Cluster); }); });
+    // save ROI info
+    _RoI_Info_Json_(aRoI, "", aOutputPattern_Info);
+}
 
 
 
@@ -292,3 +340,26 @@ void SegmentedImage_Scan_ToJson(const std::string& aInFile, const std::string& a
 {
     SegmentedImage_Scan_SimpleCallback(aInFile, aSegmentedImagefile, aScale, aScanConfig, [&](const std::string& aRoiId, const std::vector< ScanEntry >& aVector) { _ScanCallback_Json_(aRoiId, aVector, aInFile, aOutputPattern); });
 }
+
+
+__attribute__((flatten))
+void SegmentedImage_FullAnalysis_ToJson(const std::string& aInFile, 
+                                        const std::string& aSegmentedImagefile, 
+                                        const double& aScale, 
+                                        const ScanConfiguration& aScanConfig, 
+                                        const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster,const std::string& aOutputPattern_Info)
+{
+    LocalizationFile(aInFile).ExtractRoIsFromSegmentedImage(aSegmentedImagefile, aScale, [&](RoI& aRoI) { _FullAnalysis_(aRoI, aScanConfig, aOutputPattern_Scan, aOutputPattern_Cluster, aOutputPattern_Info); });
+}
+
+__attribute__((flatten))
+void ImageJRoi_FullAnalysis_ToJson(const std::string& aInFile,
+    const std::string& aImageJfile,
+    const double& aScale,
+    const ScanConfiguration& aScanConfig,
+    const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_Info)
+{
+    LocalizationFile(aInFile).ExtractRoIs(aImageJfile, aScale, [&](RoI& aRoI) { _FullAnalysis_(aRoI, aScanConfig, aOutputPattern_Scan, aOutputPattern_Cluster, aOutputPattern_Info); });
+}
+
+
