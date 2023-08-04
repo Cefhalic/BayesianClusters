@@ -152,8 +152,6 @@ void _RoI_Info_Json_(RoI& aRoI, const std::string& aInFile, const std::string& a
     double centroid_x      = aRoI.getCentreX(),
            centroid_y      = aRoI.getCentreY();
 
-    std::cout << "nloc " << aRoI.data().size() << " area " << aRoI.getArea() << " cx " << aRoI.getCentreX() << " cy " << aRoI.getCentreY() << std::endl;
-
     fprintf(fptr, "  { \"localizations\":%ld , \"area\":%.5Le , \"centroid_x\":%.5e , \"centroid_y\":%.5e },\n", localizations, area, centroid_x, centroid_y);
     fseek(fptr, -2, SEEK_CUR); // Delete the last comma
     fprintf(fptr, "\n]\n");
@@ -177,7 +175,7 @@ void _FullAnalysis_(RoI& aRoI, const ScanConfiguration& aScanConfig, const std::
             r_star = lResults[lMax].r;
     //save Scan results
     _ScanCallback_Json_(RoIid, lResults, "", aOutputPattern_Scan);
-    // Clusterize and save clusters info
+    // Clusterize and save clusters properties
     aRoI.Clusterize(r_star, t_star, [RoIid, aOutputPattern_Cluster](RoIproxy& aRoIproxy) { _FullClusterToSimpleCluster_(aRoIproxy, [RoIid,aOutputPattern_Cluster](const std::string& aRoiId, const std::vector< ClusterWrapper >& aVector) { _ClusterCallback_Json_(aRoiId, aVector,"", aOutputPattern_Cluster); }); });
     // save ROI info
     _RoI_Info_Json_(aRoI, "", aOutputPattern_Info);
@@ -354,10 +352,10 @@ void SegmentedImage_FullAnalysis_ToJson(const std::string& aInFile,
 
 __attribute__((flatten))
 void ImageJRoi_FullAnalysis_ToJson(const std::string& aInFile,
-    const std::string& aImageJfile,
-    const double& aScale,
-    const ScanConfiguration& aScanConfig,
-    const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_Info)
+                                        const std::string& aImageJfile,
+                                        const double& aScale,
+                                        const ScanConfiguration& aScanConfig,
+                                        const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_Info)
 {
     LocalizationFile(aInFile).ExtractRoIs(aImageJfile, aScale, [&](RoI& aRoI) { _FullAnalysis_(aRoI, aScanConfig, aOutputPattern_Scan, aOutputPattern_Cluster, aOutputPattern_Info); });
 }
