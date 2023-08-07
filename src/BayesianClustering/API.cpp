@@ -167,16 +167,24 @@ void _FullAnalysis_(RoI& aRoI, const ScanConfiguration& aScanConfig, const std::
     aRoI.ScanRT(aScanConfig, [&](const RoIproxy& aRoI, const double& aR, const double& aT) { lMtx.lock(); lResults.push_back({ aR, aT, aRoI.mLogP }); lMtx.unlock(); });
     std::sort(lResults.begin(), lResults.end());    
     // find optimal R,T
-    std::size_t lMax( 0 );
+    long double max_logP = - INFINITY;
     for( std::size_t i(1) ; i!= lResults.size() ; ++i )
-        if( lResults[i].score > lResults[lMax].score ) lMax = i;
-    // maybe not the best way - one can try smoothing (?)
-    double  t_star = lResults[lMax].t,
-            r_star = lResults[lMax].r;
-    //save Scan results
-    _ScanCallback_Json_(RoIid, lResults, "", aOutputPattern_Scan);
-    // Clusterize and save clusters properties
+        if( lResults[i].score > max_logP) max_logP = lResults[i].score;
+    //
+    double sum_t = 0, sum_r = 0, cnt = 0;
+    for (std::size_t i(1); i != lResults.size(); ++i)
+        if (lResults[i].score == max_logP)
+        {
+            sum_t += lResults[i].t;
+            sum_r += lResults[i].r;
+            cnt += 1;
+        }
+    double  t_star = sum_t/cnt, 
+            r_star = sum_r/cnt;
+    // Clusterize with optimal R,T and save clusters' properties
     aRoI.Clusterize(r_star, t_star, [RoIid, aOutputPattern_Cluster](RoIproxy& aRoIproxy) { _FullClusterToSimpleCluster_(aRoIproxy, [RoIid,aOutputPattern_Cluster](const std::string& aRoiId, const std::vector< ClusterWrapper >& aVector) { _ClusterCallback_Json_(aRoiId, aVector,"", aOutputPattern_Cluster); }); });
+    // save Scan results
+    _ScanCallback_Json_(RoIid, lResults, "", aOutputPattern_Scan);
     // save ROI info
     _RoI_Info_Json_(aRoI, "", aOutputPattern_Info);
 }
