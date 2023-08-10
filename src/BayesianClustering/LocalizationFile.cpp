@@ -21,54 +21,111 @@
 #include <boost/gil/extension/io/bmp.hpp>
 #include <boost/gil/image.hpp>
 
+enum class LocalizationTableType { ThunderSTORM, X_Y_Index, Unknown };
+
+// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+LocalizationTableType getLocalizationTableType(const std::string& aFilename)
+{
+    auto f = fopen(aFilename.c_str(), "rb");
+    if (fseek(f, 0, SEEK_SET))
+        throw std::runtime_error("Fseek failed");
+
+    char cbuf[256];
+    fgets(cbuf, sizeof(cbuf), f);
+
+    std::string header(cbuf), 
+                delimiters = ",\t\r\n";
+    
+    std::vector<std::string> caption(1, "Caption");
+    boost::split(caption, header, boost::is_any_of(delimiters));
+    
+    if (caption.size() >= 9) 
+    {   // ThunderSTORM
+        if (boost::algorithm::contains(caption[0], "id") &&
+            boost::algorithm::contains(caption[1], "frame") &&
+            boost::algorithm::contains(caption[2], "x [nm]") &&
+            boost::algorithm::contains(caption[3], "y [nm]") &&
+            boost::algorithm::contains(caption[4], "sigma [nm]") &&
+            boost::algorithm::contains(caption[5], "intensity [photon]") &&
+            boost::algorithm::contains(caption[6], "offset [photon]") &&
+            boost::algorithm::contains(caption[7], "bkgstd [photon]") &&
+            boost::algorithm::contains(caption[8], "uncertainty_xy [nm]"))
+                return LocalizationTableType::ThunderSTORM;
+    }    
+    else if (caption.size() >= 3) 
+    {   // X_Y_Index
+        if (boost::algorithm::contains(caption[0], "x") &&
+            boost::algorithm::contains(caption[1], "y") &&
+            boost::algorithm::contains(caption[2], "index"))
+                return LocalizationTableType::X_Y_Index;
+    }
+
+    return LocalizationTableType::Unknown;
+}
+
 //! Multithreading handler for loading a chunk of data from CSV file
 //! \param aFilename The name of the file to open
 //! \param aData     A vector into which to fill data
 //! \param aOffset   The offset into the file
 //! \param aCount    The (approximate) number of bytes to be handled by this handler
-void __LoadCSV__( const std::string& aFilename, std::vector< Data >& aData, const std::size_t& aOffset, int aCount )
+void __LoadCSV__(const std::string& aFilename, LocalizationTableType aFileType, std::vector< Data >& aData, const std::size_t& aOffset, int aCount)
 {
-  aData.reserve( aCount / 50.0 ); // The minimum line-length appears to be mid-50's bytes long, so by reserving this many entries, we should never have to reallocate
+    aData.reserve(aCount / 50.0); // The minimum line-length appears to be mid-50's bytes long, so by reserving this many entries, we should never have to reallocate
 
-  auto f = fopen( aFilename.c_str(), "rb");
-  if (fseek(f, aOffset, SEEK_SET)) throw std::runtime_error( "Fseek failed" ); // seek to offset from start_point
+    auto f = fopen(aFilename.c_str(), "rb");
+    if (fseek(f, aOffset, SEEK_SET)) throw std::runtime_error("Fseek failed"); // seek to offset from start_point
 
-  char ch[256];
-  char* lPtr( ch );
+    char ch[256];
+    char* lPtr(ch);
 
-  auto ReadUntil = [ & ]( const char& aChar ) {
-    lPtr = ch;
-    while ( ( *lPtr = fgetc(f)) != EOF ) {
-      aCount--;
-      if( *lPtr == aChar ) return;
-      lPtr++;
+    auto ReadUntil = [&](const char& aChar) {
+        lPtr = ch;
+        while ((*lPtr = fgetc(f)) != EOF) {
+            aCount--;
+            if (*lPtr == aChar) return;
+            lPtr++;
+        }
+    };
+
+    ReadUntil('\n'); // Throw away first line, or any partial lines (other thread will handle it)
+
+    switch (aFileType)
+    {
+        case LocalizationTableType::ThunderSTORM :
+            while (aCount > 0) {
+                ReadUntil(','); //"id"
+                if (*lPtr == EOF) break;
+                ReadUntil(','); //"frame"
+                ReadUntil(','); //"x [nm]"
+                double x = strtod(ch, &lPtr) * nanometer;
+                ReadUntil(','); //"y [nm]"
+                double y = strtod(ch, &lPtr) * nanometer;
+                ReadUntil(','); //"sigma [nm]"
+                double sigma = strtod(ch, &lPtr);
+                ReadUntil(','); //"intensity [photon]"
+                ReadUntil(','); //"offset [photon]"
+                ReadUntil(','); //"bkgstd [photon]"
+                ReadUntil(','); //"chi2"
+                ReadUntil('\n'); //"uncertainty_xy [nm]"
+                double s = strtod(ch, &lPtr) * nanometer;
+                if ((sigma < 100) or (sigma > 300)) continue;
+                aData.emplace_back(x, y, s);
+            }
+        case LocalizationTableType::X_Y_Index :
+            while (aCount > 0) {
+                ReadUntil(','); //"x"
+                if (*lPtr == EOF) break;
+                double x = strtod(ch, &lPtr) * nanometer;
+                ReadUntil(','); //"y [nm]"
+                double y = strtod(ch, &lPtr) * nanometer;
+                ReadUntil('\n'); // ignore last value
+                aData.emplace_back(x, y, 1.);
+            }
+        case LocalizationTableType::Unknown: ; // cannot happen
     }
-  };
 
-  ReadUntil( '\n' ); // Throw away first line, or any partial lines (other thread will handle it)
-  while( aCount > 0 ) {
-    ReadUntil( ',' ); //"id"
-    if( *lPtr == EOF ) break;
-    ReadUntil( ',' ); //"frame"
-    ReadUntil( ',' ); //"x [nm]"
-    double x = strtod( ch, &lPtr ) * nanometer;
-    ReadUntil( ',' ); //"y [nm]"
-    double y = strtod( ch, &lPtr ) * nanometer;
-    ReadUntil( ',' ); //"sigma [nm]"
-    double sigma = strtod( ch, &lPtr );
-    ReadUntil( ',' ); //"intensity [photon]"
-    ReadUntil( ',' ); //"offset [photon]"
-    ReadUntil( ',' ); //"bkgstd [photon]"
-    ReadUntil( ',' ); //"chi2"
-    ReadUntil( '\n' ); //"uncertainty_xy [nm]"
-    double s = strtod( ch, &lPtr ) * nanometer;
-    if ( ( sigma < 100 ) or ( sigma  > 300) ) continue;
-    aData.emplace_back( x, y, s );
-  }
-
-  fclose(f);
+    fclose(f);
 }
-
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 LocalizationFile::LocalizationFile( const std::string& aFilename ) : mFilename( aFilename )
@@ -84,9 +141,11 @@ LocalizationFile::LocalizationFile( const std::string& aFilename ) : mFilename( 
   int lChunkSize = ceil( double(lSize) / Nthreads );
   std::vector< std::vector< Data > > lData( Nthreads );
 
+  LocalizationTableType aFileType = getLocalizationTableType(aFilename);
+
   {
     ProgressTimer lProgressTimer( "Reading File" );
-    [ & ]( const std::size_t& i ) { __LoadCSV__( aFilename, lData[i], i*lChunkSize, lChunkSize ); } && range( Nthreads );
+    [ & ]( const std::size_t& i ) { __LoadCSV__( aFilename, aFileType, lData[i], i*lChunkSize, lChunkSize ); } && range( Nthreads );
 
     std::size_t lSize2( 0 );
     for( auto& i : lData ) lSize2 += i.size();
