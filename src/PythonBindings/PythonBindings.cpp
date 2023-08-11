@@ -174,6 +174,37 @@ boost::python::tuple CheckRoIs( const std::string& aFile , const std::string& aR
   
   return boost::python::make_tuple( lLocs , lRoIs );
 }
+
+//! Debugging tool to get the raw x-y coordinates and which RoI they are included in
+//! \param aFile The name of the localizations file
+//! \param aRoIFile  The name of segmentation image file
+//! \param aScale The size of the LSB in the segmentation image file
+//! \return A python tuple of the raw localizations and a list of tuples containing the x-coordinates and the y-coordinates of the localizations in each RoI (both optimised for displaying in MatPlotLib) 
+boost::python::tuple Check_SegmentedImage(const std::string& aFile, const std::string& aRoIFile, const double& aScale)
+{
+    LocalizationFile lFile(aFile);
+    boost::python::list x, y;
+    for (auto& i : lFile.data())
+    {
+        x.append(i.x);
+        y.append(i.y);
+    }
+    auto lLocs = boost::python::make_tuple(x, y);
+
+    boost::python::list lRoIs;
+    lFile.ExtractRoIsFromSegmentedImage(aRoIFile, aScale, [&](RoI& aRoI) {
+        boost::python::list x, y;
+        for (auto& i : aRoI.data())
+        {
+            x.append(i.x + aRoI.getCentreX());
+            y.append(i.y + aRoI.getCentreY());
+        }
+        lRoIs.append(boost::python::make_tuple(x, y));
+        });
+
+    return boost::python::make_tuple(lLocs, lRoIs);
+}
+
 // =====================================================================================================================
 
 
@@ -263,6 +294,7 @@ BOOST_PYTHON_MODULE( BayesianClustering )
   def( "GetLocalizations" , &GetLocalizations );
   def( "GetRoIs" , &GetRoIs );
   def( "CheckRoIs" , &CheckRoIs );
+  def("Check_SegmentedImage", &Check_SegmentedImage);
 
 }
 
