@@ -116,7 +116,7 @@ void __LoadCSV__(const std::string& aFilename, LocalizationTableType aFileType, 
                 ReadUntil(','); //"x"
                 if (*lPtr == EOF) break;
                 double x = strtod(ch, &lPtr) * nanometer;
-                ReadUntil(','); //"y [nm]"
+                ReadUntil(','); //"y"
                 double y = strtod(ch, &lPtr) * nanometer;
                 ReadUntil('\n'); // ignore last value
                 aData.emplace_back(x, y, 1.);
