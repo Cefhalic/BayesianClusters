@@ -287,8 +287,26 @@ BOOST_PYTHON_MODULE( BayesianClustering )
           FN(SegmentedImage_Scan_ToJson, "Extract RoI via an segmented image file, run scan and dump to JSON file", "aInFile", "aSegmentedImagefile", "aScale", "aScanConfig", "aOutputPattern");
 
           FN(SegmentedImage_FullAnalysis_ToJson, "Extract RoI via an segmented image file, scan, cluster, get RoI info, and dump outputs to JSON file", "aInFile", "aSegmentedImagefile", "aScale", "aScanConfig", "aOutputPattern_Scan", "aOutputPattern_Cluster", "aOutputPattern_Info");
-          FN(ImageJRoi_FullAnalysis_ToJson, "Extract RoI via an an ImagJ RoI file, scan, cluster, get RoI info, and dump outputs to JSON file", "aInFile", "aImageJfile", "aScale", "aScanConfig", "aOutputPattern_Scan", "aOutputPattern_Cluster", "aOutputPattern_Info");
-  
+          FN(ImageJRoi_FullAnalysis_ToJson, "Extract RoI via an ImagJ RoI file, scan, cluster, get RoI info, and dump outputs to JSON file", "aInFile", "aImageJfile", "aScale", "aScanConfig", "aOutputPattern_Scan", "aOutputPattern_Cluster", "aOutputPattern_Info");
+
+          FN(Analyse_FOV_SegmentedImage, "Extract RoI via a segmetned image file and analyse according to aTaskSescription flag"
+              "aInFile",
+              "aSegmentedImagefile",
+              "aScale",
+              "aTaskDescription",
+              "aScanConfig",
+              "aR","aT",
+              "aOutputPattern_Scan", "aOutputPattern_Cluster", "aOutputPattern_ClusteredLocalizations", "aOutputPattern_Info");
+
+          FN(Analyse_FOV_ImageJ,"Extract RoI via an ImagJ RoI file and analyse according to aTaskSescription flag",
+              "aInFile",
+              "aImageJfile",
+              "aScale",
+              "aTaskDescription",
+              "aScanConfig",
+              "aR", "aT",
+              "aOutputPattern_Scan", "aOutputPattern_Cluster", "aOutputPattern_ClusteredLocalizations", "aOutputPattern_Info");
+
   // ------------------------------------------
 
   def( "GetLocalizations" , &GetLocalizations );

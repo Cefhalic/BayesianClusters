@@ -22,6 +22,22 @@
 /* ===== FMT library ===== */
 #include <fmt/format.h>
 
+// 
+std::vector<std::string> strsplit(const std::string& str, const std::string& delim)
+{
+    std::vector<std::string> result;
+    std::size_t start = 0;
+
+    for (std::size_t found = str.find(delim); found != std::string::npos; found = str.find(delim, start))
+    {
+        result.emplace_back(str.begin() + start, str.begin() + found);
+        start = found + delim.size();
+    }
+    if (start != str.size())
+        result.emplace_back(str.begin() + start, str.end());
+    return result;
+}
+
 //! A callback to dump a scan to a JSON file
 //! \param aRoiId       The RoI ID
 //! \param aVector   A vector of scan results
@@ -189,6 +205,148 @@ void _FullAnalysis_(RoI& aRoI, const ScanConfiguration& aScanConfig, const std::
     _RoI_Info_Json_(aRoI, "", aOutputPattern_Info);
 }
 
+void _SaveClusteredPartitionCSV_(RoIproxy& aRoIproxy, const std::string& aOutputPattern_Cluster)
+{
+    //USING BOOST STRUCTURES - START
+    //const std::string aRoiId = aRoIproxy.mRoI.id();
+    //// ROI centre
+    //double  CX = aRoIproxy.mRoI.getCentreX(),
+    //        CY = aRoIproxy.mRoI.getCentreY();
+    //// cluster map 
+    //typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> geo_point;
+    //typedef boost::geometry::model::ring<geo_point> geo_polygon;
+
+    //std::map< Cluster*, geo_polygon > cluster_map;
+    //for (auto& i : aRoIproxy.mData)
+    //{
+    //    if (!i.mCluster) continue;
+    //    boost::geometry::append(cluster_map[i.mCluster->GetParent()], geo_point(i.mData->x, i.mData->y));
+    //}
+    //// create csv filename
+    //using namespace fmt::literals;
+    //auto lOutFileName = boost::filesystem::path(fmt::format(aOutputPattern_Cluster, "roi"_a = aRoiId));
+    //boost::filesystem::create_directories(lOutFileName.parent_path());
+    ////
+    //std::string str(lOutFileName.c_str());
+    //std::string csv_filename = str.substr(0, str.find("json")) + "csv";
+    ////
+    //// write clusters with indices to CSV file
+    //FILE* fptr = fopen(csv_filename.c_str(), "w");
+    //if (fptr == NULL) throw std::runtime_error("Could not open file");
+    //fprintf(fptr, "x,y,index\n");
+    ////
+    //long int cluster_index = 0;
+    //for (auto& i : cluster_map)
+    //{
+    //    cluster_index++;
+    //    boost::geometry::correct(i.second);
+    //    for (auto& p : i.second)
+    //    {
+    //        fprintf(fptr, "%f, %f, %ld\n", (CX + p.get<0>()) / nanometer, (CY + p.get<1>()) / nanometer, cluster_index);
+    //    }
+    //}
+    //fclose(fptr);
+    //USING BOOST STRUCTURES - ENDS
+
+    const std::string aRoiId = aRoIproxy.mRoI.id();
+    // ROI centre
+    double  CX = aRoIproxy.mRoI.getCentreX(), 
+            CY = aRoIproxy.mRoI.getCentreY();
+
+    typedef std::vector<std::pair<double,double> >  points;
+
+    std::set<Cluster*> set_of_clusters;    
+    // define unique set_of_clusters
+    for (auto& i : aRoIproxy.mData)
+    {
+        if (!i.mCluster) continue;
+        //set_of_clusters.insert(i.mCluster->GetParent()); // ??
+        set_of_clusters.insert(i.mCluster);
+    }
+    //
+    std::map<Cluster*, points > cluster_map;    
+    // initialize "cluster_map" with "set_of_clusters"
+    for (auto& i : set_of_clusters)
+    {
+        points i_th_points = points(0); 
+        cluster_map.insert(std::pair<Cluster*, points>(i, i_th_points));
+    }    
+    // fill cluster_map entries with localizations
+    for (auto& i : aRoIproxy.mData)
+    {
+        cluster_map[i.mCluster].push_back(std::pair<double, double>(CX + i.mData->x, CY + i.mData->y));
+    }
+    // create csv filename
+    using namespace fmt::literals; 
+    auto lOutFileName = boost::filesystem::path(fmt::format(aOutputPattern_Cluster, "roi"_a = aRoiId));
+    boost::filesystem::create_directories(lOutFileName.parent_path());
+    //
+    //write clusters with indices to CSV file - KLUDGE
+    FILE* fptr = fopen(lOutFileName.c_str(), "w");
+
+    if (fptr == NULL) throw std::runtime_error("Could not open file");
+    fprintf(fptr, "x,y,index\n");
+    //
+    long int cluster_index = 0;
+    for (auto& i : cluster_map)
+    {
+        cluster_index++;
+        for (auto& p : i.second)
+        {
+            fprintf(fptr, "%f, %f, %ld\n", p.first / nanometer, p.second / nanometer, cluster_index);
+        }
+    }
+    fclose(fptr);
+}
+
+void _Analyse_FOV_(RoI& aRoI,
+    const std::string& aTaskDescription,
+    const ScanConfiguration& aScanConfig,
+    const double& aR, const double& aT,
+    const std::string& aOutputPattern_Scan,
+    const std::string& aOutputPattern_Cluster,
+    const std::string& aOutputPattern_ClusteredLocalizations,
+    const std::string& aOutputPattern_Info)
+{
+    if (!(0 == aTaskDescription.compare("SCAN_ONLY") || 0 == aTaskDescription.compare("SCAN_THEN_CLUSTER") || 0 == aTaskDescription.compare("CLUSTER_ONLY")))
+        return;
+
+    auto RoIid = aRoI.id();
+    // will be used for "Cluster"
+    double  r_star = aR, t_star = aT;
+
+    if (0 == aTaskDescription.compare("SCAN_ONLY") || 0 == aTaskDescription.compare("SCAN_THEN_CLUSTER"))
+    {
+        std::mutex lMtx;
+        std::vector< ScanEntry > lResults;
+        aRoI.ScanRT(aScanConfig, [&](const RoIproxy& aRoI, const double& aR, const double& aT) { lMtx.lock(); lResults.push_back({ aR, aT, aRoI.mLogP }); lMtx.unlock(); });
+        std::sort(lResults.begin(), lResults.end());
+        // find optimal r,t
+        long double max_logP = -INFINITY;
+        for (std::size_t i(1); i != lResults.size(); ++i)
+            if (lResults[i].score > max_logP) max_logP = lResults[i].score;
+        //
+        double sum_t = 0, sum_r = 0, cnt = 0;
+        for (std::size_t i(1); i != lResults.size(); ++i)
+            if (lResults[i].score == max_logP)
+            {
+                sum_t += lResults[i].t;
+                sum_r += lResults[i].r;
+                cnt += 1;
+            }
+        r_star = sum_r / cnt, t_star = sum_t / cnt;
+        _ScanCallback_Json_(RoIid, lResults, "", aOutputPattern_Scan);
+    };
+    if (0 == aTaskDescription.compare("CLUSTER_ONLY") || 0 == aTaskDescription.compare("SCAN_THEN_CLUSTER"))
+    {
+        const std::string PARAM_STR = aOutputPattern_Cluster + "*" + aOutputPattern_ClusteredLocalizations;
+        aRoI.Clusterize(r_star, t_star, [RoIid, PARAM_STR](RoIproxy& aRoIproxy){  
+            _FullClusterToSimpleCluster_(aRoIproxy, [RoIid, PARAM_STR](const std::string& aRoiId, const std::vector< ClusterWrapper >& aVector) { _ClusterCallback_Json_(aRoiId, aVector, "", strsplit(PARAM_STR, "*")[0]); }); 
+            _SaveClusteredPartitionCSV_(aRoIproxy, strsplit(PARAM_STR, "*")[1]); });
+        // save ROI info
+        _RoI_Info_Json_(aRoI, "", aOutputPattern_Info);
+    };
+}
 
 
 __attribute__((flatten))
@@ -368,4 +526,38 @@ void ImageJRoi_FullAnalysis_ToJson(const std::string& aInFile,
     LocalizationFile(aInFile).ExtractRoIs(aImageJfile, aScale, [&](RoI& aRoI) { _FullAnalysis_(aRoI, aScanConfig, aOutputPattern_Scan, aOutputPattern_Cluster, aOutputPattern_Info); });
 }
 
+__attribute__((flatten))
+void Analyse_FOV_ImageJ(const std::string& aInFile,
+    const std::string& aImageJfile,
+    const double& aScale,
+    const std::string& aTaskDescription,
+    const ScanConfiguration& aScanConfig,
+    const double& aR, const double& aT,
+    const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_ClusteredLocalizations, const std::string& aOutputPattern_Info)
+{
+    LocalizationFile(aInFile).ExtractRoIs(aImageJfile, aScale, [&](RoI& aRoI) { _Analyse_FOV_(aRoI,
+        aTaskDescription,
+        aScanConfig, aR, aT,
+        aOutputPattern_Scan,
+        aOutputPattern_Cluster,
+        aOutputPattern_ClusteredLocalizations,
+        aOutputPattern_Info); });
+}
 
+__attribute__((flatten))
+void Analyse_FOV_SegmentedImage(const std::string& aInFile,
+    const std::string& aSegmentedImagefile,
+    const double& aScale,
+    const std::string& aTaskDescription,
+    const ScanConfiguration& aScanConfig,
+    const double& aR, const double& aT,
+    const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_ClusteredLocalizations, const std::string& aOutputPattern_Info)
+{
+    LocalizationFile(aInFile).ExtractRoIsFromSegmentedImage(aSegmentedImagefile, aScale, [&](RoI& aRoI) { _Analyse_FOV_(aRoI,
+        aTaskDescription,
+        aScanConfig, aR, aT,
+        aOutputPattern_Scan,
+        aOutputPattern_Cluster,
+        aOutputPattern_ClusteredLocalizations,
+        aOutputPattern_Info); });
+}

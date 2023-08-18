@@ -240,3 +240,19 @@ void SegmentedImage_Scan_ToJson(const std::string& aInFile, const std::string& a
 
 void SegmentedImage_FullAnalysis_ToJson(const std::string& aInFile, const std::string& aSegmentedImagefile, const double& aScale, const ScanConfiguration& aScanConfig, const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_Info);
 void ImageJRoi_FullAnalysis_ToJson(const std::string& aInFile, const std::string& aImageJfile, const double& aScale, const ScanConfiguration& aScanConfig, const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_Info);
+
+void Analyse_FOV_ImageJ(const std::string& aInFile,
+    const std::string& aImageJfile,
+    const double& aScale,
+    const std::string& aTaskDescription,
+    const ScanConfiguration& aScanConfig,
+    const double& aR, const double& aT,
+    const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_ClusteredLocalizations, const std::string& aOutputPattern_Info);
+
+void Analyse_FOV_SegmentedImage(const std::string& aInFile,
+    const std::string& aSegmentedImagefile,
+    const double& aScale,
+    const std::string& aTaskDescription,
+    const ScanConfiguration& aScanConfig,
+    const double& aR, const double& aT,
+    const std::string& aOutputPattern_Scan, const std::string& aOutputPattern_Cluster, const std::string& aOutputPattern_ClusteredLocalizations, const std::string& aOutputPattern_Info);
