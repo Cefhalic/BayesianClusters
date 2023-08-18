@@ -226,12 +226,8 @@ void _SaveClusteredPartitionCSV_(RoIproxy& aRoIproxy, const std::string& aOutput
     //using namespace fmt::literals;
     //auto lOutFileName = boost::filesystem::path(fmt::format(aOutputPattern_Cluster, "roi"_a = aRoiId));
     //boost::filesystem::create_directories(lOutFileName.parent_path());
-    ////
-    //std::string str(lOutFileName.c_str());
-    //std::string csv_filename = str.substr(0, str.find("json")) + "csv";
-    ////
     //// write clusters with indices to CSV file
-    //FILE* fptr = fopen(csv_filename.c_str(), "w");
+    //FILE* fptr = fopen(lOutFileName.c_str(), "w");
     //if (fptr == NULL) throw std::runtime_error("Could not open file");
     //fprintf(fptr, "x,y,index\n");
     ////
