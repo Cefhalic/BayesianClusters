@@ -21,7 +21,7 @@
 #include <boost/gil/extension/io/bmp.hpp>
 #include <boost/gil/image.hpp>
 
-enum class LocalizationTableType { ThunderSTORM, X_Y_Index, Unknown };
+enum class LocalizationTableType { ThunderSTORM, ThunderSTORM2, X_Y_Index, Unknown };
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 LocalizationTableType getLocalizationTableType(const std::string& aFilename)
@@ -39,7 +39,7 @@ LocalizationTableType getLocalizationTableType(const std::string& aFilename)
     std::vector<std::string> caption(1, "Caption");
     boost::split(caption, header, boost::is_any_of(delimiters));
     
-    if (caption.size() >= 9) 
+    if (caption.size() == 11) 
     {   // ThunderSTORM
         if (boost::algorithm::contains(caption[0], "id") &&
             boost::algorithm::contains(caption[1], "frame") &&
@@ -51,6 +51,17 @@ LocalizationTableType getLocalizationTableType(const std::string& aFilename)
             boost::algorithm::contains(caption[7], "bkgstd [photon]") &&
             boost::algorithm::contains(caption[8], "uncertainty_xy [nm]"))
                 return LocalizationTableType::ThunderSTORM;
+        else if (boost::algorithm::contains(caption[0], "id") &&
+            boost::algorithm::contains(caption[1], "frame") &&
+            boost::algorithm::contains(caption[2], "x [nm]") &&
+            boost::algorithm::contains(caption[3], "y [nm]") &&
+            boost::algorithm::contains(caption[4], "sigma [nm]") &&
+            boost::algorithm::contains(caption[5], "intensity [photon]") &&
+            boost::algorithm::contains(caption[6], "offset [photon]") &&
+            boost::algorithm::contains(caption[7], "bkgstd [photon]") &&
+            boost::algorithm::contains(caption[8], "chi2") &&
+            boost::algorithm::contains(caption[9], "uncertainty_xy [nm]"))
+                return LocalizationTableType::ThunderSTORM2;
     }    
     else if (caption.size() >= 3) 
     {   // X_Y_Index
@@ -92,6 +103,26 @@ void __LoadCSV__(const std::string& aFilename, LocalizationTableType aFileType, 
     switch (aFileType)
     {
         case LocalizationTableType::ThunderSTORM :
+            while (aCount > 0) {
+                ReadUntil(','); //"id"
+                if (*lPtr == EOF) break;
+                ReadUntil(','); //"frame"
+                ReadUntil(','); //"x [nm]"
+                double x = strtod(ch, &lPtr) * nanometer;
+                ReadUntil(','); //"y [nm]"
+                double y = strtod(ch, &lPtr) * nanometer;
+                ReadUntil(','); //"sigma [nm]"
+                double sigma = strtod(ch, &lPtr);
+                ReadUntil(','); //"intensity [photon]"
+                ReadUntil(','); //"offset [photon]"
+                ReadUntil(','); //"bkgstd [photon]"
+                //ReadUntil(','); //"chi2"
+                ReadUntil('\n'); //"uncertainty_xy [nm]"
+                double s = strtod(ch, &lPtr) * nanometer;
+                if ((sigma < 100) or (sigma > 300)) continue;
+                aData.emplace_back(x, y, s);
+            }
+        case LocalizationTableType::ThunderSTORM2:
             while (aCount > 0) {
                 ReadUntil(','); //"id"
                 if (*lPtr == EOF) break;
