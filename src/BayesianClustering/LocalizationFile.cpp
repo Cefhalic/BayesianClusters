@@ -67,7 +67,7 @@ LocalizationTableType getLocalizationTableType(const std::string& aFilename)
     {   // X_Y_Index
         if (boost::algorithm::contains(caption[0], "x") &&
             boost::algorithm::contains(caption[1], "y") &&
-            boost::algorithm::contains(caption[2], "index"))
+            (boost::algorithm::contains(caption[2], "index") || boost::algorithm::contains(caption[2], "sd")))
                 return LocalizationTableType::X_Y_Index;
     }
 
@@ -149,8 +149,10 @@ void __LoadCSV__(const std::string& aFilename, LocalizationTableType aFileType, 
                 double x = strtod(ch, &lPtr) * nanometer;
                 ReadUntil(','); //"y"
                 double y = strtod(ch, &lPtr) * nanometer;
+                ReadUntil(','); //"uncertainty"
+                double s = strtod(ch, &lPtr) * nanometer;
                 ReadUntil('\n'); // ignore last value
-                aData.emplace_back(x, y, 1.);
+                aData.emplace_back(x, y, s);
             }
         case LocalizationTableType::Unknown: ; // cannot happen
     }
