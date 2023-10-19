@@ -21,7 +21,7 @@
 #include <boost/gil/extension/io/bmp.hpp>
 #include <boost/gil/image.hpp>
 
-enum class LocalizationTableType { ThunderSTORM, ThunderSTORM2, X_Y_Index, Unknown };
+enum class LocalizationTableType { ThunderSTORM, ThunderSTORM2, X_Y_Index, X_Y_SD, Unknown };
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 LocalizationTableType getLocalizationTableType(const std::string& aFilename)
@@ -67,8 +67,15 @@ LocalizationTableType getLocalizationTableType(const std::string& aFilename)
     {   // X_Y_Index
         if (boost::algorithm::contains(caption[0], "x") &&
             boost::algorithm::contains(caption[1], "y") &&
-            (boost::algorithm::contains(caption[2], "index") || boost::algorithm::contains(caption[2], "sd")))
+            (boost::algorithm::contains(caption[2], "index")))
                 return LocalizationTableType::X_Y_Index;
+    }
+    else if (caption.size() >= 3)
+    {   // X_Y_SD
+        if (boost::algorithm::contains(caption[0], "x") &&
+            boost::algorithm::contains(caption[1], "y") &&
+            (boost::algorithm::contains(caption[2], "sd") || boost::algorithm::contains(caption[2], "SD") || boost::algorithm::contains(caption[2], "precision") || boost::algorithm::contains(caption[2], "uncertainty")))
+            return LocalizationTableType::X_Y_SD;
     }
 
     return LocalizationTableType::Unknown;
@@ -142,7 +149,7 @@ void __LoadCSV__(const std::string& aFilename, LocalizationTableType aFileType, 
                 if ((sigma < 100) or (sigma > 300)) continue;
                 aData.emplace_back(x, y, s);
             }
-        case LocalizationTableType::X_Y_Index :
+        case LocalizationTableType::X_Y_SD :
             while (aCount > 0) {
                 ReadUntil(','); //"x"
                 if (*lPtr == EOF) break;
@@ -153,6 +160,16 @@ void __LoadCSV__(const std::string& aFilename, LocalizationTableType aFileType, 
                 double s = strtod(ch, &lPtr) * nanometer;
                 ReadUntil('\n'); // ignore last value
                 aData.emplace_back(x, y, s);
+            }
+        case LocalizationTableType::X_Y_Index:
+            while (aCount > 0) {
+                ReadUntil(','); //"x"
+                if (*lPtr == EOF) break;
+                double x = strtod(ch, &lPtr) * nanometer;
+                ReadUntil(','); //"y"
+                double y = strtod(ch, &lPtr) * nanometer;
+                ReadUntil('\n'); // ignore last value
+                aData.emplace_back(x, y, 1);
             }
         case LocalizationTableType::Unknown: ; // cannot happen
     }
