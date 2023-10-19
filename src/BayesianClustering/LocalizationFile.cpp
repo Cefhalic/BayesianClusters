@@ -63,19 +63,19 @@ LocalizationTableType getLocalizationTableType(const std::string& aFilename)
             boost::algorithm::contains(caption[9], "uncertainty_xy [nm]"))
                 return LocalizationTableType::ThunderSTORM2;
     }    
-    else if (caption.size() >= 3) 
+    else if (caption.size() >= 3)
     {   // X_Y_Index
         if (boost::algorithm::contains(caption[0], "x") &&
             boost::algorithm::contains(caption[1], "y") &&
             (boost::algorithm::contains(caption[2], "index")))
-                return LocalizationTableType::X_Y_Index;
-    }
-    else if (caption.size() >= 3)
-    {   // X_Y_SD
-        if (boost::algorithm::contains(caption[0], "x") &&
-            boost::algorithm::contains(caption[1], "y") &&
-            (boost::algorithm::contains(caption[2], "sd") || boost::algorithm::contains(caption[2], "SD") || boost::algorithm::contains(caption[2], "precision") || boost::algorithm::contains(caption[2], "uncertainty")))
-            return LocalizationTableType::X_Y_SD;
+            return LocalizationTableType::X_Y_Index;
+        else
+        {   // X_Y_SD
+            if (boost::algorithm::contains(caption[0], "x") &&
+                boost::algorithm::contains(caption[1], "y") &&
+                (boost::algorithm::contains(caption[2], "sd") || boost::algorithm::contains(caption[2], "SD") || boost::algorithm::contains(caption[2], "precision") || boost::algorithm::contains(caption[2], "uncertainty")))
+                return LocalizationTableType::X_Y_SD;
+        }
     }
 
     return LocalizationTableType::Unknown;
