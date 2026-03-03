@@ -7,6 +7,7 @@
 #include "BayesianClustering/Data.hpp"
 #include "BayesianClustering/Cluster.hpp"
 #include "BayesianClustering/Event.hpp"
+#include <cstdint>
 #include "BayesianClustering/Configuration.hpp"
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

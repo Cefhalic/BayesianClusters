@@ -2,6 +2,7 @@
 
 #include <numeric>
 #include <functional>
+#include <cstdint>
 #include <algorithm>
 #include <vector>
 

@@ -6,6 +6,7 @@
 
 /* ===== Cluster sources ===== */
 // #include "BayesianClustering/Configuration.hpp"
+#include <string>
 #include "BayesianClustering/Data.hpp"
 
 class EventProxy;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
 

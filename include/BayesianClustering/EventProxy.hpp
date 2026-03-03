@@ -6,6 +6,7 @@
 
 /* ===== Cluster sources ===== */
 #include "BayesianClustering/Cluster.hpp"
+#include <cstdint>
 #include "BayesianClustering/DataProxy.hpp"
 
 class Event;
